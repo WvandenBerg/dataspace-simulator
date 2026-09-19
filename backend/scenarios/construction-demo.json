@@ -5,15 +5,42 @@
     "participants": [
         {
             "id": "nordbeton",
-            "name": "NordBeton AG"
+            "name": "NordBeton AG",
+            "bpn": "did:web:nordbeton-ag.sim.local",
+            "location": "Hamburg, Deutschland",
+            "domain": "Construction",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "construction", "orgRole": "supplier" },
+            "ontologies": ["IFC", "BOT"],
+            "dataCategories": ["BIM", "Documents"],
+            "formats": ["JSON", "IFC", "CSV"],
+            "tags": ["Infrastruktur", "Tiefbau", "Beton"]
         },
         {
             "id": "bergstein",
-            "name": "Bergstein Bau GmbH"
+            "name": "Bergstein Bau GmbH",
+            "bpn": "did:web:bergstein-bau.sim.local",
+            "location": "Munich, Germany",
+            "domain": "Construction",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "construction", "orgRole": "contractor" },
+            "ontologies": ["IFC", "BOT"],
+            "dataCategories": ["BIM", "Documents", "Schedules"],
+            "formats": ["JSON", "IFC", "PDF"],
+            "tags": ["Hochbau", "Sanierung", "Generalunternehmer"]
         },
         {
             "id": "stahlwerk",
-            "name": "Stahlwerk Weber"
+            "name": "Stahlwerk Weber",
+            "bpn": "did:web:stahlwerk-weber.sim.local",
+            "location": "Essen, Deutschland",
+            "domain": "Manufacturing",
+            "roles": { "provider": true, "consumer": false },
+            "credentials": { "industry": "manufacturing", "orgRole": "manufacturer" },
+            "ontologies": ["IFC"],
+            "dataCategories": ["Documents", "Contracts"],
+            "formats": ["JSON", "PDF", "CSV"],
+            "tags": ["Stahlbau", "Industriehallen", "Zulieferer"]
         }
     ],
     "assets": [

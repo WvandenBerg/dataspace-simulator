@@ -109,13 +109,14 @@ function seedDemoAssets() {
 
     let inserted = 0;
     for (const asset of DEMO_SCENARIO.assets) {
-        if (db.getAsset(asset.assetId)) {
-            continue;
-        }
-        db.insertAsset(scenarios.toAssetRow(asset, {
+        const row = scenarios.toAssetRow(asset, {
             dataspaceId: DEMO_DATASPACE_ID,
             publishedAt: new Date().toISOString(),
-        }));
+        });
+        if (db.getAsset(row.asset_id)) {
+            continue;
+        }
+        db.insertAsset(row);
         inserted += 1;
     }
 
@@ -126,6 +127,28 @@ function seedDemoAssets() {
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function indexAsset(asset) {
+    const owner = db.getNode(asset.owner_node_id);
+    const ownerName = owner?.name || scenarios.participantName(DEMO_SCENARIO, asset.owner_node_id);
+    const dataspaceId = String(asset.dataspace_id || owner?.metadata?.dataspaceId || 'demo');
+
+    await upsertSemanticDataset({
+        datasetId: asset.asset_id,
+        title: asset.name,
+        description: asset.description,
+        keywords: normalizeList(asset?.dcat_fields?.keywords),
+        themes: normalizeList(asset?.dcat_fields?.themes),
+        spatial: normalizeList(asset?.dcat_fields?.spatial),
+        temporalCoverage: asset?.dcat_fields?.temporalCoverage || '',
+        additionalDcat: asset?.dcat_fields?.additionalDcat || [],
+        policyName: asset.policy_id || '',
+        publisherBpn: asset.owner_node_id,
+        publisherName: ownerName,
+        sessionCode: dataspaceId,
+        publishedAt: asset.published_at || new Date().toISOString(),
+    });
 }
 
 async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 1500 } = {}) {
@@ -145,26 +168,8 @@ async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 150
         }
 
         for (const asset of pending) {
-            const owner = db.getNode(asset.owner_node_id);
-            const ownerName = owner?.name || scenarios.participantName(DEMO_SCENARIO, asset.owner_node_id);
-            const dataspaceId = String(asset.dataspace_id || owner?.metadata?.dataspaceId || 'demo');
-
             try {
-                await upsertSemanticDataset({
-                    datasetId: asset.asset_id,
-                    title: asset.name,
-                    description: asset.description,
-                    keywords: normalizeList(asset?.dcat_fields?.keywords),
-                    themes: normalizeList(asset?.dcat_fields?.themes),
-                    spatial: normalizeList(asset?.dcat_fields?.spatial),
-                    temporalCoverage: asset?.dcat_fields?.temporalCoverage || '',
-                    additionalDcat: asset?.dcat_fields?.additionalDcat || [],
-                    policyName: asset.policy_id || '',
-                    publisherBpn: asset.owner_node_id,
-                    publisherName: ownerName,
-                    sessionCode: dataspaceId,
-                    publishedAt: asset.published_at || new Date().toISOString(),
-                });
+                await indexAsset(asset);
                 indexed.add(asset.asset_id);
             } catch (_err) {
                 // Fuseki is usually just not up yet; the next attempt retries.
@@ -447,6 +452,59 @@ app.get('/api/catalog', (req, res) => {
         policyId: a.policy_id,
         dcatFields: a.dcat_fields,
     })));
+});
+
+// ============================================================
+// Scenarios
+// ============================================================
+
+app.get('/api/scenarios', (_req, res) => {
+    res.json(scenarios.listScenarios());
+});
+
+// Load a scenario's participants and assets into a dataspace. Idempotent:
+// re-loading refreshes the participants and leaves existing assets alone.
+app.post('/api/scenarios/:id/load', async (req, res) => {
+    const scenario = scenarios.getScenario(req.params.id);
+    if (!scenario) return res.status(404).json({ error: 'Scenario not found' });
+
+    const dataspaceId = resolveDataspaceId(req.body?.dataspaceId);
+    const publishedAt = new Date().toISOString();
+
+    scenario.participants.forEach((participant, index) => {
+        db.upsertNode(scenarios.toNodeRow(participant, {
+            dataspaceId,
+            index,
+            total: scenario.participants.length,
+        }));
+    });
+
+    const added = [];
+    for (const asset of scenario.assets) {
+        const row = scenarios.toAssetRow(asset, { dataspaceId, publishedAt });
+        if (db.getAsset(row.asset_id)) continue;
+        db.insertAsset(row);
+        added.push(row);
+    }
+
+    const failed = [];
+    for (const row of added) {
+        try {
+            await indexAsset(row);
+        } catch (err) {
+            failed.push({ assetId: row.asset_id, error: err.message });
+        }
+    }
+
+    res.json({
+        success: failed.length === 0,
+        scenarioId: scenario.id,
+        dataspaceId,
+        participants: scenario.participants.length,
+        assetsAdded: added.length,
+        assetsSkipped: scenario.assets.length - added.length,
+        indexingFailures: failed,
+    });
 });
 
 // ============================================================

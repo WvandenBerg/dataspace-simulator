@@ -11,6 +11,13 @@ const path = require('path');
 
 const SCENARIO_DIR = path.join(__dirname, 'scenarios');
 const DEFAULT_SCENARIO_ID = 'construction-demo';
+const RING_RADIUS = 610;
+
+// Same convention the frontend uses (see useDragNodes.js), so loading a scenario
+// twice into different dataspaces cannot collide on a primary key.
+function scopedId(dataspaceId, baseId) {
+    return dataspaceId === 'demo' ? baseId : `${dataspaceId}::${baseId}`;
+}
 
 function validationProblems(scenario) {
     const problems = [];
@@ -68,10 +75,10 @@ function participantName(scenario, participantId) {
 
 // Two-space output matches how the demo content was written when it lived in
 // server.js, so moving it here left the stored asset bytes untouched.
-function toAssetRow(asset, { dataspaceId, ownerNodeId, publishedAt }) {
+function toAssetRow(asset, { dataspaceId, publishedAt }) {
     return {
-        asset_id: asset.assetId,
-        owner_node_id: ownerNodeId || asset.ownerId,
+        asset_id: scopedId(dataspaceId, asset.assetId),
+        owner_node_id: scopedId(dataspaceId, asset.ownerId),
         dataspace_id: dataspaceId,
         name: asset.name,
         description: asset.description || '',
@@ -83,10 +90,36 @@ function toAssetRow(asset, { dataspaceId, ownerNodeId, publishedAt }) {
     };
 }
 
+// Participants are spread evenly around the ring; the frontend lets the user
+// drag them afterwards, so these are only starting positions.
+function toNodeRow(participant, { dataspaceId, index, total }) {
+    const angle = ((90 + (index * 360) / total) * Math.PI) / 180;
+    return {
+        node_id: scopedId(dataspaceId, participant.id),
+        name: participant.name,
+        x: Math.cos(angle) * RING_RADIUS,
+        y: Math.sin(angle) * RING_RADIUS,
+        metadata: {
+            ...(participant.credentials || {}),
+            bpn: participant.bpn || '',
+            dataspaceId,
+            location: participant.location || '',
+            domain: participant.domain || '',
+            roles: participant.roles || { provider: true, consumer: true },
+            ontologies: participant.ontologies || [],
+            dataCategories: participant.dataCategories || [],
+            formats: participant.formats || [],
+            tags: participant.tags || [],
+        },
+    };
+}
+
 module.exports = {
     DEFAULT_SCENARIO_ID,
     listScenarios,
     getScenario,
     participantName,
+    scopedId,
     toAssetRow,
+    toNodeRow,
 };
