@@ -2,6 +2,7 @@
     "id": "fuse4ccam",
     "name": "FUSE4CCAM",
     "description": "Nine CCAM data providers from the FUSE4CCAM pilot sites, describing their datasets in mobilityDCAT-AP 1.1.0. Each distribution declares the data standard its payload follows, and points at the Vocabulary Hub for the schema. Partners, sites and use cases are real; controlled-vocabulary term slugs and one deliberately broken record are illustrative.",
+    "catalogExport": "catalog-exports/fuse4ccam.ttl",
     "participants": [
         {
             "id": "tno",
