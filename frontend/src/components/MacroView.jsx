@@ -150,16 +150,18 @@ const MacroView = forwardRef(({
     // Zoom-basierte Fokus-Logik (ersetzt isZoomed boolean)
     const isFocused = viewState.scale > ZOOM_THRESHOLD_FOCUS;
 
-    // Use preset participants for demo-like spaces; namespace IDs outside the canonical demo space
+    // Only the two built-in dataspaces get the preset participants. A dataspace
+    // the user creates starts empty, or is filled from a scenario, rather than
+    // inheriting three construction firms with nothing to serve.
     const initialNodesForDataspace = React.useMemo(() => {
-        if (!isDemo) return {};
         if (dataspaceId === 'demo') return INITIAL_NODES;
+        if (dataspaceId !== 'simulator') return {};
         const namespaced = {};
         for (const [id, node] of Object.entries(INITIAL_NODES)) {
             namespaced[`${dataspaceId}::${id}`] = node;
         }
         return namespaced;
-    }, [isDemo, dataspaceId]);
+    }, [dataspaceId]);
     const ringRadius = (minimalView ? 330 : 550) + 60;
 
     const {
