@@ -6,6 +6,7 @@ import TransferBeam from './TransferBeam';
 import DataPlaneBeam from './DataPlaneBeam';
 import ControlPlaneBeam from './ControlPlaneBeam';
 import ZoomOutButton from './ZoomOutButton';
+import ZoomControls from './ZoomControls';
 import { useViewState } from './hooks/useViewState';
 import { useDragNodes } from './hooks/useDragNodes';
 import './Components.css';
@@ -144,7 +145,7 @@ const MacroView = forwardRef(({
     const [appearingHostedNodeIds, setAppearingHostedNodeIds] = useState({});
 
     // Custom Hooks
-    const { viewState, setViewState, handleWheel, handlePanStart, isPanning } = useViewState(0.4);
+    const { viewState, setViewState, handleWheel, handlePanStart, isPanning, zoomIn, zoomOut } = useViewState(0.4);
 
     // Zoom-basierte Fokus-Logik (ersetzt isZoomed boolean)
     const isFocused = viewState.scale > ZOOM_THRESHOLD_FOCUS;
@@ -623,6 +624,13 @@ const MacroView = forwardRef(({
             <ZoomOutButton
                 onClick={resetView}
                 isVisible={Boolean(activeConnector) || finalScale > ZOOM_THRESHOLD_FOCUS}
+            />
+
+            {/* Zoom controls for users without a scroll wheel */}
+            <ZoomControls
+                scale={finalScale}
+                onZoomIn={zoomIn}
+                onZoomOut={zoomOut}
             />
         </div>
     );
