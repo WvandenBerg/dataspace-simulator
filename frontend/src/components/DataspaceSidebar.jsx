@@ -22,7 +22,9 @@ export default function DataspaceSidebar({
         if (!trimmed) return;
         onCreate({
             name: trimmed,
-            isDemo: false,
+            // Editable like the built-in dataspaces. isDemo: false models participants
+            // owned by external connectors, which this standalone build never contacts.
+            isDemo: true,
         });
         setDraftName('');
     };
