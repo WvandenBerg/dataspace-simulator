@@ -101,7 +101,10 @@ function seedPolicies() {
 const DEMO_SCENARIO = scenarios.getScenario(scenarios.DEFAULT_SCENARIO_ID);
 const DEMO_DATASPACE_ID = 'demo';
 
-async function seedDemoAssets() {
+// Seeding writes SQLite only. Indexing is left to reindexAllAssetsToSemantic so
+// that seeding never yields partway through, which is what used to let the
+// reindexer start against a half-populated table.
+function seedDemoAssets() {
     console.log('[Seed] Ensuring demo scenario assets ...');
 
     let inserted = 0;
@@ -109,34 +112,11 @@ async function seedDemoAssets() {
         if (db.getAsset(asset.assetId)) {
             continue;
         }
-        const now = new Date().toISOString();
-        const row = scenarios.toAssetRow(asset, {
+        db.insertAsset(scenarios.toAssetRow(asset, {
             dataspaceId: DEMO_DATASPACE_ID,
-            publishedAt: now,
-        });
-
-        db.insertAsset(row);
+            publishedAt: new Date().toISOString(),
+        }));
         inserted += 1;
-
-        try {
-            await upsertSemanticDataset({
-                datasetId: row.asset_id,
-                title: row.name,
-                description: row.description,
-                keywords: [],
-                themes: [],
-                spatial: Array.isArray(row?.dcat_fields?.spatial) ? row.dcat_fields.spatial : [],
-                temporalCoverage: '',
-                additionalDcat: [],
-                policyName: row.policy_id,
-                publisherBpn: row.owner_node_id,
-                publisherName: scenarios.participantName(DEMO_SCENARIO, row.owner_node_id),
-                sessionCode: DEMO_DATASPACE_ID,
-                publishedAt: now,
-            });
-        } catch (err) {
-            console.warn(`[Seed] Semantic index failed for ${row.asset_id}: ${err.message}`);
-        }
     }
 
     if (inserted > 0) {
@@ -149,15 +129,20 @@ function sleep(ms) {
 }
 
 async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 1500 } = {}) {
-    const assets = db.getAllAssets();
-    if (assets.length === 0) {
-        return;
-    }
-
-    let pending = [...assets];
+    const indexed = new Set();
 
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-        const failed = [];
+        // Re-read on every attempt. A snapshot taken once at entry is how this
+        // used to miss assets and still report success.
+        const assets = db.getAllAssets();
+        const pending = assets.filter((a) => !indexed.has(a.asset_id));
+
+        if (pending.length === 0) {
+            if (assets.length > 0 && attempt > 1) {
+                console.log(`[Seed] Semantic index complete (${assets.length} asset(s)).`);
+            }
+            return;
+        }
 
         for (const asset of pending) {
             const owner = db.getNode(asset.owner_node_id);
@@ -180,23 +165,22 @@ async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 150
                     sessionCode: dataspaceId,
                     publishedAt: asset.published_at || new Date().toISOString(),
                 });
+                indexed.add(asset.asset_id);
             } catch (_err) {
-                failed.push(asset);
+                // Fuseki is usually just not up yet; the next attempt retries.
             }
         }
 
-        if (failed.length === 0) {
-            if (attempt > 1) {
-                console.log(`[Seed] Semantic index recovered on retry ${attempt}.`);
-            }
+        if (db.getAllAssets().every((a) => indexed.has(a.asset_id))) {
+            console.log(`[Seed] Semantic index complete (${indexed.size} asset(s)).`);
             return;
         }
 
-        pending = failed;
         await sleep(retryDelayMs);
     }
 
-    console.warn(`[Seed] Semantic index still incomplete after retries (${pending.length} asset(s) not indexed).`);
+    const total = db.getAllAssets().length;
+    throw new Error(`semantic index incomplete after ${maxAttempts} attempts (${indexed.size} of ${total} asset(s) indexed)`);
 }
 
 
@@ -670,11 +654,9 @@ function assetToResponse(a) {
 
 server.listen(PORT, () => {
     seedPolicies();
-    seedDemoAssets().catch((err) => {
-        console.warn(`[Seed] Demo scenario failed: ${err.message}`);
-    });
+    seedDemoAssets();
     reindexAllAssetsToSemantic().catch((err) => {
-        console.warn(`[Seed] Semantic reindex failed: ${err.message}`);
+        console.error(`[Seed] SEARCH WILL BE INCOMPLETE: ${err.message}`);
     });
     console.log('');
 
