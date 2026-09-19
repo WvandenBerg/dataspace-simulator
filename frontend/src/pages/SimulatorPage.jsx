@@ -252,12 +252,33 @@ function SimulatorPage() {
         setActiveConnector(null);
     };
 
-    const handleCreateDataspace = ({ name, isDemo = false }) => {
+    const handleCreateDataspace = async ({ name, isDemo = false, scenarioId = '' }) => {
         const id = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36)}`;
+        let participants = 0;
+
+        // Load before switching. MacroView seeds its own participants when the
+        // backend reports none for a dataspace, so the scenario has to be in
+        // place before that mount happens.
+        if (scenarioId) {
+            try {
+                const res = await fetch(`/api/scenarios/${encodeURIComponent(scenarioId)}/load`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dataspaceId: id }),
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const result = await res.json();
+                participants = result.participants;
+                addLog(`Scenario loaded: ${participants} participant(s), ${result.assetsAdded} asset(s)`);
+            } catch (err) {
+                addLog(`Scenario could not be loaded: ${err.message}`);
+            }
+        }
+
         const next = {
             id,
             name,
-            participants: 0,
+            participants,
             isDemo,
         };
         setDataspaces((prev) => [...prev, next]);

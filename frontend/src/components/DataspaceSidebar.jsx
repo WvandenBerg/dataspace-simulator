@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, ChevronLeft, Plus, Database, Trash2 } from 'lucide-react';
 
 export default function DataspaceSidebar({
@@ -11,22 +11,38 @@ export default function DataspaceSidebar({
     onToggle,
 }) {
     const [draftName, setDraftName] = useState('');
+    const [scenarios, setScenarios] = useState([]);
+    const [scenarioId, setScenarioId] = useState('');
+    const [creating, setCreating] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/scenarios')
+            .then((res) => res.json())
+            .then((list) => setScenarios(Array.isArray(list) ? list : []))
+            .catch(() => setScenarios([]));
+    }, []);
 
     const active = useMemo(
         () => dataspaces.find((d) => d.id === activeDataspaceId),
         [dataspaces, activeDataspaceId]
     );
 
-    const submitCreate = () => {
+    const submitCreate = async () => {
         const trimmed = draftName.trim();
-        if (!trimmed) return;
-        onCreate({
-            name: trimmed,
-            // Editable like the built-in dataspaces. isDemo: false models participants
-            // owned by external connectors, which this standalone build never contacts.
-            isDemo: true,
-        });
-        setDraftName('');
+        if (!trimmed || creating) return;
+        setCreating(true);
+        try {
+            await onCreate({
+                name: trimmed,
+                scenarioId,
+                // Editable like the built-in dataspaces. isDemo: false models participants
+                // owned by external connectors, which this standalone build never contacts.
+                isDemo: true,
+            });
+            setDraftName('');
+        } finally {
+            setCreating(false);
+        }
     };
 
     return (
@@ -84,8 +100,23 @@ export default function DataspaceSidebar({
                             placeholder="New dataspace name"
                             className="dataspace-create-input"
                         />
-                        <button className="dataspace-create-btn" onClick={submitCreate}>
-                            <Plus size={13} /> New
+                        {scenarios.length > 0 && (
+                            <select
+                                value={scenarioId}
+                                onChange={(e) => setScenarioId(e.target.value)}
+                                className="dataspace-create-input"
+                                title="Populate the new dataspace from a scenario"
+                            >
+                                <option value="">Empty dataspace</option>
+                                {scenarios.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.name} ({s.participantCount} participants, {s.assetCount} assets)
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                        <button className="dataspace-create-btn" onClick={submitCreate} disabled={creating}>
+                            <Plus size={13} /> {creating ? 'Creating…' : 'New'}
                         </button>
                     </div>
 
