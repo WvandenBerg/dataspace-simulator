@@ -201,3 +201,6 @@ interaction-centered evaluation.
 ## Related documentation
 
 - `simulator/PRESENTATION.md` for a full talk/demo script and architecture narrative
+- `TEST-LOG.md` for the exploratory test record and known defects
+- `USER-STORIES.md` for the stories those tests imply, including the Vocabulary Hub
+  alignment extension
