@@ -57,6 +57,25 @@ const DCAT_FIELD_TO_PREDICATE = {
     'dcat:contactPoint': 'http://www.w3.org/ns/dcat#contactPoint',
 };
 
+// mobilityDCAT-AP 1.1.0 (NAPCORE Recommendation, January 2025). A Distribution
+// must declare the data standard its payload follows, and that standard may
+// point at the schema registry the profile asks for — which is the hook the
+// Vocabulary Hub resolves.
+const MDCAT = 'https://w3id.org/mobilitydcat-ap#';
+const PREDICATES = {
+    distribution: 'http://www.w3.org/ns/dcat#distribution',
+    accessURL: 'http://www.w3.org/ns/dcat#accessURL',
+    mediaType: 'http://www.w3.org/ns/dcat#mediaType',
+    title: 'http://purl.org/dc/terms/title',
+    format: 'http://purl.org/dc/terms/format',
+    conformsTo: 'http://purl.org/dc/terms/conformsTo',
+    versionInfo: 'http://www.w3.org/2002/07/owl#versionInfo',
+    mobilityDataStandard: `${MDCAT}mobilityDataStandard`,
+    mobilityDataStandardClass: `${MDCAT}MobilityDataStandard`,
+    schema: `${MDCAT}schema`,
+    distributionClass: 'http://www.w3.org/ns/dcat#Distribution',
+};
+
 // Multi-valued results are joined with an ASCII unit separator, not a comma:
 // titles, descriptions and spatial labels routinely contain commas themselves.
 const MULTI_VALUE_SEPARATOR = '\u001F';
@@ -128,8 +147,82 @@ function graphIriForDataset(dataset) {
     return `urn:graph:participant:${publisher}:session:${session}`;
 }
 
+function distributionIri(datasetId, index) {
+    return `urn:distribution:${encodeURIComponent(datasetId)}:${index}`;
+}
+
+function dataStandardIri(datasetId, index) {
+    return `urn:datastandard:${encodeURIComponent(datasetId)}:${index}`;
+}
+
 function escapeLiteral(value) {
     return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+}
+
+// A caller-supplied IRI goes inside <>, where an unescaped '>' would close the
+// term and let the rest of the value be read as SPARQL.
+function escapeIri(value) {
+    return encodeURI(String(value || '').trim()).replace(/[<>"{}|\\^`]/g, '');
+}
+
+// ---------------------------------------------------------------------------
+// Distributions
+//
+// A distribution is a node of its own, not a literal on the dataset, because
+// mobilityDCAT-AP puts the mandatory mobilityDataStandard there. Its IRI is
+// derived from the dataset IRI so a re-publish can find and replace it.
+// ---------------------------------------------------------------------------
+
+function distributionTriples(datasetId, distributions) {
+    const dsIri = datasetIri(datasetId);
+    const triples = [];
+
+    distributions.forEach((dist, index) => {
+        const distIri = distributionIri(datasetId, index);
+        triples.push(`<${dsIri}> <${PREDICATES.distribution}> <${distIri}> .`);
+        triples.push(`<${distIri}> a <${PREDICATES.distributionClass}> .`);
+
+        if (dist.title) triples.push(`<${distIri}> <${PREDICATES.title}> "${escapeLiteral(dist.title)}" .`);
+        if (dist.accessUrl) triples.push(`<${distIri}> <${PREDICATES.accessURL}> <${escapeIri(dist.accessUrl)}> .`);
+        if (dist.mediaType) triples.push(`<${distIri}> <${PREDICATES.mediaType}> "${escapeLiteral(dist.mediaType)}" .`);
+        if (dist.format) triples.push(`<${distIri}> <${PREDICATES.format}> "${escapeLiteral(dist.format)}" .`);
+
+        const standard = dist.dataStandard;
+        if (!standard) return;
+
+        const stdIri = dataStandardIri(datasetId, index);
+        triples.push(`<${distIri}> <${PREDICATES.mobilityDataStandard}> <${stdIri}> .`);
+        triples.push(`<${stdIri}> a <${PREDICATES.mobilityDataStandardClass}> .`);
+        if (standard.conformsTo) {
+            triples.push(`<${stdIri}> <${PREDICATES.conformsTo}> <${escapeIri(standard.conformsTo)}> .`);
+        }
+        if (standard.label) {
+            triples.push(`<${stdIri}> <${PREDICATES.title}> "${escapeLiteral(standard.label)}" .`);
+        }
+        if (standard.version) {
+            triples.push(`<${stdIri}> <${PREDICATES.versionInfo}> "${escapeLiteral(standard.version)}" .`);
+        }
+        for (const schema of (standard.schema ? [].concat(standard.schema) : [])) {
+            triples.push(`<${stdIri}> <${PREDICATES.schema}> <${escapeIri(schema)}> .`);
+        }
+    });
+
+    return triples;
+}
+
+// Deleting `<dataset> ?p ?o` alone would strand the distribution and standard
+// nodes, which keep matching searches long after the dataset is gone. Deepest
+// hop first, because each step is found through the link the next one removes.
+function cascadeDeleteFor(subjectPattern) {
+    return [
+        `DELETE { GRAPH ?g { ?std ?sp ?so } }
+WHERE  { GRAPH ?g { ${subjectPattern} <${PREDICATES.distribution}> ?dist .
+                    ?dist <${PREDICATES.mobilityDataStandard}> ?std .
+                    ?std ?sp ?so } }`,
+        `DELETE { GRAPH ?g { ?dist ?dp ?do } }
+WHERE  { GRAPH ?g { ${subjectPattern} <${PREDICATES.distribution}> ?dist .
+                    ?dist ?dp ?do } }`,
+    ];
 }
 
 // ---------------------------------------------------------------------------
@@ -137,6 +230,8 @@ function escapeLiteral(value) {
 // dataset: {
 //   datasetId, title, description, keywords[], themes[], spatial[], temporalCoverage,
 //   additionalDcat: [{ key, value }],
+//   distributions: [{ title, accessUrl, mediaType, format,
+//                     dataStandard: { conformsTo, label, version, schema } }],
 //   policyName, publisherBpn, publisherName, sessionCode, publishedAt
 // }
 // ---------------------------------------------------------------------------
@@ -188,7 +283,11 @@ async function upsertSemanticDataset(dataset) {
         }
     }
 
+    triples.push(...distributionTriples(dataset.datasetId, dataset.distributions || []));
+
     const updateQuery = `
+${cascadeDeleteFor(`<${dsIri}>`).join(' ;\n\n')} ;
+
 DELETE { GRAPH ?g { <${dsIri}> ?p ?o } }
 WHERE  { GRAPH ?g { <${dsIri}> ?p ?o } } ;
 
@@ -207,7 +306,9 @@ INSERT DATA {
 
 async function deleteSemanticDataset(datasetId) {
     const dsIri = datasetIri(datasetId);
-    const q = `DELETE { GRAPH ?g { <${dsIri}> ?p ?o } } WHERE { GRAPH ?g { <${dsIri}> ?p ?o } }`;
+    const q = `${cascadeDeleteFor(`<${dsIri}>`).join(' ;\n\n')} ;
+
+DELETE { GRAPH ?g { <${dsIri}> ?p ?o } } WHERE { GRAPH ?g { <${dsIri}> ?p ?o } }`;
     await executeUpdate(q);
 }
 
@@ -217,7 +318,10 @@ async function deleteSemanticDataset(datasetId) {
 
 async function deleteSemanticDatasetsForParticipant(publisherBpn) {
     const pubIri = participantIri(publisherBpn);
+    const owned = `?ds <http://purl.org/dc/terms/publisher> <${pubIri}> . ?ds`;
     const q = `
+${cascadeDeleteFor(owned).join(' ;\n\n')} ;
+
 DELETE { GRAPH ?g { ?ds ?p ?o } }
 WHERE {
     GRAPH ?g {

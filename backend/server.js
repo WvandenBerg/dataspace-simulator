@@ -143,6 +143,7 @@ async function indexAsset(asset) {
         spatial: normalizeList(asset?.dcat_fields?.spatial),
         temporalCoverage: asset?.dcat_fields?.temporalCoverage || '',
         additionalDcat: asset?.dcat_fields?.additionalDcat || [],
+        distributions: asset?.dcat_fields?.distributions || [],
         policyName: asset.policy_id || '',
         publisherBpn: asset.owner_node_id,
         publisherName: ownerName,
@@ -345,6 +346,7 @@ app.post('/api/assets', async (req, res) => {
             spatial: normalizeList(row.dcat_fields.spatial),
             temporalCoverage: row.dcat_fields.temporalCoverage || '',
             additionalDcat: row.dcat_fields.additionalDcat || [],
+            distributions: row.dcat_fields.distributions || [],
             policyName: asset.policyId || '',
             publisherBpn: nodeId,  // use nodeId as the "publisher" identifier in Fuseki
             publisherName: node.name,
@@ -404,6 +406,7 @@ app.put('/api/assets/:id', async (req, res) => {
             spatial: normalizeList(updated.dcat_fields.spatial),
             temporalCoverage: updated.dcat_fields.temporalCoverage || '',
             additionalDcat: updated.dcat_fields.additionalDcat || [],
+            distributions: updated.dcat_fields.distributions || [],
             policyName: updated.policy_id || '',
             publisherBpn: ownerNodeId,
             publisherName: ownerNode.name,
