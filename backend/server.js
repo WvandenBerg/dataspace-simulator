@@ -16,6 +16,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const db = require('./db');
 const scenarios = require('./scenarios');
+const vocabhub = require('./vocabhub');
 const { evaluatePolicyAgainstClaims, filterAssetsByClaims } = require('./policy');
 const {
     upsertSemanticDataset,
@@ -513,6 +514,36 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
 });
 
 // ============================================================
+// Vocabulary Hub
+//
+// One registry shared by every dataspace, so these routes take no
+// dataspaceId. Read-only: the contents come from the scenario files.
+// ============================================================
+
+function hubRoute(handler) {
+    return async (req, res) => {
+        try {
+            const result = await handler(req);
+            if (result === null) return res.status(404).json({ error: 'Not found in the Vocabulary Hub' });
+            res.json(result);
+        } catch (err) {
+            res.status(502).json({ error: `Vocabulary Hub unavailable: ${err.message}` });
+        }
+    };
+}
+
+app.get('/api/vocabhub/profiles', hubRoute(() => vocabhub.listProfiles()));
+
+app.get('/api/vocabhub/profiles/:id', hubRoute((req) => vocabhub.getProfile(req.params.id)));
+
+app.get('/api/vocabhub/shapes/:id', hubRoute((req) => vocabhub.shapesFor(req.params.id)));
+
+app.get('/api/vocabhub/alignments', hubRoute((req) => vocabhub.listAlignments({
+    target: req.query.target,
+    minCoverage: req.query.minCoverage,
+})));
+
+// ============================================================
 // Semantic search (SPARQL via Fuseki)
 // Policy-scoping: only search within nodes the consumer can see
 // ============================================================
@@ -725,6 +756,13 @@ server.listen(PORT, () => {
     reindexAllAssetsToSemantic().catch((err) => {
         console.error(`[Seed] SEARCH WILL BE INCOMPLETE: ${err.message}`);
     });
+    vocabhub.rebuildHub()
+        .then(({ files, tripleCount }) => {
+            console.log(`[Hub] ${tripleCount} triple(s) from ${files} catalogue export(s).`);
+        })
+        .catch((err) => {
+            console.error(`[Hub] VOCABULARY HUB IS EMPTY: ${err.message}`);
+        });
     console.log('');
 
     console.log('══════════════════════════════════════════════');

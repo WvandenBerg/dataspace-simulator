@@ -20,6 +20,7 @@ const FUSEKI_USERNAME = process.env.FUSEKI_USERNAME || '';
 const FUSEKI_PASSWORD = process.env.FUSEKI_PASSWORD || '';
 const UPDATE_ENDPOINT = `${FUSEKI_URL}/${FUSEKI_DATASET}/update`;
 const QUERY_ENDPOINT = `${FUSEKI_URL}/${FUSEKI_DATASET}/sparql`;
+const GRAPH_STORE_ENDPOINT = `${FUSEKI_URL}/${FUSEKI_DATASET}/data`;
 
 function withAuth(config = {}) {
     if (!FUSEKI_USERNAME && !FUSEKI_PASSWORD) {
@@ -132,6 +133,16 @@ async function executeSelect(selectQuery) {
         headers: { Accept: 'application/sparql-results+json' }
     }));
     return response.data?.results?.bindings || [];
+}
+
+// Replaces a whole named graph in one request, so a graph built from files can
+// be rebuilt from those files rather than reconciled triple by triple.
+async function replaceGraph(graphIri, turtle) {
+    const response = await axios.put(GRAPH_STORE_ENDPOINT, turtle, withAuth({
+        params: { graph: graphIri },
+        headers: { 'Content-Type': 'text/turtle' }
+    }));
+    return response.data?.tripleCount ?? 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -555,5 +566,8 @@ module.exports = {
     deleteSemanticDatasetsForParticipant,
     semanticSearch,
     distributionsForDatasets,
+    executeSelect,
+    replaceGraph,
+    escapeIri,
     DCAT_FIELD_TO_PREDICATE,
 };
