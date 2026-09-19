@@ -576,12 +576,15 @@ body {
   border-top: 1px solid var(--border-color);
   padding: 10px;
   display: flex;
+  flex-direction: column;
   gap: 7px;
 }
 
-.dataspace-create-input {
-  flex: 1;
+.dataspace-create-input,
+.dataspace-create-select {
+  width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   padding: 8px 9px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
@@ -590,23 +593,47 @@ body {
   font-size: 0.76rem;
 }
 
-.dataspace-create-input:focus {
+.dataspace-create-select {
+  cursor: pointer;
+  /* The UA background would otherwise ignore the theme. */
+  appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+}
+
+.dataspace-create-input:focus,
+.dataspace-create-select:focus {
   outline: none;
   border-color: var(--color-primary);
 }
 
+.dataspace-create-hint {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  padding: 0 2px;
+}
+
 .dataspace-create-btn {
+  width: 100%;
   border: 1px solid var(--color-primary);
   background: var(--color-primary);
   color: #ffffff;
   border-radius: 7px;
-  padding: 0 10px;
+  padding: 8px 10px;
   font-size: 0.74rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   cursor: pointer;
+}
+
+.dataspace-create-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .dataspace-active-note {

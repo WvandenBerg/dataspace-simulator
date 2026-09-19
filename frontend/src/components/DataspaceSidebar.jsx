@@ -27,6 +27,11 @@ export default function DataspaceSidebar({
         [dataspaces, activeDataspaceId]
     );
 
+    const selectedScenario = useMemo(
+        () => scenarios.find((s) => s.id === scenarioId),
+        [scenarios, scenarioId]
+    );
+
     const submitCreate = async () => {
         const trimmed = draftName.trim();
         if (!trimmed || creating) return;
@@ -104,19 +109,24 @@ export default function DataspaceSidebar({
                             <select
                                 value={scenarioId}
                                 onChange={(e) => setScenarioId(e.target.value)}
-                                className="dataspace-create-input"
+                                className="dataspace-create-select"
                                 title="Populate the new dataspace from a scenario"
                             >
                                 <option value="">Empty dataspace</option>
                                 {scenarios.map((s) => (
                                     <option key={s.id} value={s.id}>
-                                        {s.name} ({s.participantCount} participants, {s.assetCount} assets)
+                                        {s.name}
                                     </option>
                                 ))}
                             </select>
                         )}
+                        {selectedScenario && (
+                            <div className="dataspace-create-hint">
+                                {selectedScenario.participantCount} participants, {selectedScenario.assetCount} assets
+                            </div>
+                        )}
                         <button className="dataspace-create-btn" onClick={submitCreate} disabled={creating}>
-                            <Plus size={13} /> {creating ? 'Creating…' : 'New'}
+                            <Plus size={13} /> {creating ? 'Creating…' : 'New dataspace'}
                         </button>
                     </div>
 
