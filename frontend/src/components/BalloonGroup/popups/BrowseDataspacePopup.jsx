@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { Search, X, GripHorizontal, ArrowLeft, Package, Settings2, Download, MapPin, Building, Eye, ChevronUp, ChevronDown, AlertCircle, ArrowRight } from 'lucide-react';
 import { DOMAIN_OPTIONS } from '../constants';
+import DatasetDetail from './DatasetDetail';
 
 const API_BASE = '/api';
 
@@ -394,13 +395,24 @@ const BrowseDataspacePopup = ({
                                 <div>
                                     <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '8px' }}>{providerAssets.length} Asset(s) available</div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        {providerAssets.map((asset) => (
-                                            <Motion.div key={asset.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '10px' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                                                    <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.8rem' }}>{asset.name}</div>
-                                                    <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '0.6rem', background: 'rgba(59,130,246,0.2)', color: '#93c5fd' }}>{asset.type}</span>
+                                        {providerAssets.map((asset) => {
+                                            const isExpanded = expandedResult === asset.id;
+                                            return (
+                                            <Motion.div key={asset.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} style={{ background: 'var(--bg-surface)', border: `1px solid ${isExpanded ? '#2563eb' : 'var(--border-subtle)'}`, borderRadius: '8px', padding: '10px' }}>
+                                                <div onClick={() => setExpandedResult(isExpanded ? null : asset.id)} style={{ cursor: 'pointer' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                                        <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.8rem' }}>{asset.name}</div>
+                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '0.6rem', background: 'rgba(59,130,246,0.2)', color: '#93c5fd' }}>{asset.type}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '8px' }}>
+                                                        {isExpanded ? 'Hide details' : asset.description}
+                                                    </div>
                                                 </div>
-                                                <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '8px' }}>{asset.description}</div>
+                                                {isExpanded && (
+                                                    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', marginBottom: '8px' }}>
+                                                        <DatasetDetail dataset={asset} />
+                                                    </div>
+                                                )}
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onStartNegotiation(asset, selectedProvider); }}
                                                     style={{ width: '100%', padding: '6px', background: 'rgba(34,197,94,0.2)', border: '1px solid #16a34a', borderRadius: '4px', color: '#15803d', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600' }}
@@ -408,7 +420,8 @@ const BrowseDataspacePopup = ({
                                                     Request Contract
                                                 </button>
                                             </Motion.div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
@@ -582,15 +595,12 @@ const BrowseDataspacePopup = ({
                                         <Motion.div key={key} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} style={{ background: 'var(--bg-card)', border: `1px solid ${isExpanded ? '#2563eb' : 'var(--border-subtle)'}`, borderRadius: '8px', overflow: 'hidden' }}>
                                             <div onClick={() => setExpandedResult(isExpanded ? null : key)} style={{ padding: '10px', cursor: 'pointer' }}>
                                                 <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.82rem', marginBottom: '2px' }}>{result.title || result.datasetId}</div>
-                                                {result.description && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{result.description.substring(0, 70)}{result.description.length > 70 ? '…' : ''}</div>}
+                                                {result.description && !isExpanded && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{result.description.substring(0, 70)}{result.description.length > 70 ? '…' : ''}</div>}
                                                 <div style={{ fontSize: '0.68rem', color: '#64748b' }}>by {result.publisherName || result.publisherNodeId || 'Unknown'}</div>
                                             </div>
                                             {isExpanded && (
                                                 <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '10px', background: 'rgba(37,99,235,0.08)' }}>
-                                                    {result.keywords && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}><strong>Keywords:</strong> {result.keywords}</div>}
-                                                    {result.themes && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}><strong>Themes:</strong> {result.themes}</div>}
-                                                    {result.spatial && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}><strong>Region:</strong> {Array.isArray(result.spatial) ? result.spatial.join(', ') : result.spatial}</div>}
-                                                    {result.temporalCoverage && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '10px' }}><strong>Period:</strong> {result.temporalCoverage}</div>}
+                                                    <DatasetDetail dataset={result} />
                                                     <button onClick={() => {
                                                         const providerId = result.publisherNodeId || result.publisherBpn;
                                                         if (!providerId) return;
@@ -605,7 +615,7 @@ const BrowseDataspacePopup = ({
                                                             spatial: result.spatial || [],
                                                         };
                                                         onStartNegotiation(asset, provider, { autoTransfer: true });
-                                                    }} style={{ width: '100%', padding: '6px', background: '#1d4ed8', border: '1px solid #2563eb', borderRadius: '5px', color: '#ffffff', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                                                    }} style={{ width: '100%', padding: '6px', marginTop: '10px', background: '#1d4ed8', border: '1px solid #2563eb', borderRadius: '5px', color: '#ffffff', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
                                                         <ArrowRight size={11} /> Request Contract
                                                     </button>
                                                 </div>

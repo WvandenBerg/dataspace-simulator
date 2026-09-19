@@ -144,7 +144,7 @@ async function indexAsset(asset) {
         temporalCoverage: asset?.dcat_fields?.temporalCoverage || '',
         additionalDcat: asset?.dcat_fields?.additionalDcat || [],
         distributions: asset?.dcat_fields?.distributions || [],
-        policyName: asset.policy_id || '',
+        policyName: policyLabel(asset.policy_id),
         publisherBpn: asset.owner_node_id,
         publisherName: ownerName,
         sessionCode: dataspaceId,
@@ -347,7 +347,7 @@ app.post('/api/assets', async (req, res) => {
             temporalCoverage: row.dcat_fields.temporalCoverage || '',
             additionalDcat: row.dcat_fields.additionalDcat || [],
             distributions: row.dcat_fields.distributions || [],
-            policyName: asset.policyId || '',
+            policyName: policyLabel(asset.policyId),
             publisherBpn: nodeId,  // use nodeId as the "publisher" identifier in Fuseki
             publisherName: node.name,
             sessionCode: dataspaceId,
@@ -407,7 +407,7 @@ app.put('/api/assets/:id', async (req, res) => {
             temporalCoverage: updated.dcat_fields.temporalCoverage || '',
             additionalDcat: updated.dcat_fields.additionalDcat || [],
             distributions: updated.dcat_fields.distributions || [],
-            policyName: updated.policy_id || '',
+            policyName: policyLabel(updated.policy_id),
             publisherBpn: ownerNodeId,
             publisherName: ownerNode.name,
             sessionCode: dataspaceId,
@@ -453,7 +453,7 @@ app.get('/api/catalog', (req, res) => {
         ownerName: db.getNode(a.owner_node_id)?.name || a.owner_node_id,
         publishedAt: a.published_at,
         policyId: a.policy_id,
-        policyName: db.getPolicy(a.policy_id)?.name || a.policy_id,
+        policyName: policyLabel(a.policy_id),
         fileName: a.file_name,
         dcatFields: a.dcat_fields,
     })));
@@ -684,6 +684,10 @@ function normalizeList(value) {
 function resolveDataspaceId(raw) {
     const id = String(raw || '').trim();
     return id || 'demo';
+}
+
+function policyLabel(policyId) {
+    return db.getPolicy(policyId)?.name || policyId || '';
 }
 
 function buildPolicyMap(assets) {
