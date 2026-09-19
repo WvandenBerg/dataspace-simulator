@@ -57,6 +57,41 @@ const DCAT_FIELD_TO_PREDICATE = {
     'dcat:contactPoint': 'http://www.w3.org/ns/dcat#contactPoint',
 };
 
+// Multi-valued results are joined with an ASCII unit separator, not a comma:
+// titles, descriptions and spatial labels routinely contain commas themselves.
+const MULTI_VALUE_SEPARATOR = '\u001F';
+
+// Fields the search query already binds by name, so that filters written
+// against those variables keep working. Every other field gets a generated
+// variable and an OPTIONAL clause.
+const DCAT_QUERY_VARS = {
+    'dct:title': 'title',
+    'dct:description': 'description',
+    'dcat:keyword': 'keyword',
+    'dcat:theme': 'theme',
+    'dct:spatial': 'spatialValue',
+    'dct:temporal': 'temporalValue',
+};
+
+function sparqlSafeName(key) {
+    return key.replace(/[^A-Za-z0-9]/g, '_');
+}
+
+function dcatQueryVar(key) {
+    return DCAT_QUERY_VARS[key] || `dcatValue_${sparqlSafeName(key)}`;
+}
+
+function dcatResultVar(key) {
+    return `dcat_${sparqlSafeName(key)}`;
+}
+
+function splitMultiValue(value) {
+    return String(value || '')
+        .split(MULTI_VALUE_SEPARATOR)
+        .map(part => part.trim())
+        .filter(Boolean);
+}
+
 // ---------------------------------------------------------------------------
 // Low-level SPARQL helpers
 // ---------------------------------------------------------------------------
@@ -257,12 +292,21 @@ async function semanticSearch({
     const whereFilter = filters.length > 0 ? `FILTER(${filters.join(' && ')})` : '';
     const maxLimit = Math.max(1, Math.min(Number(limit) || 25, 200));
 
+    // Every mapped field is projected, not just the handful the query used to
+    // hardcode. A field could previously be filtered on and have its value
+    // discarded by the same query (US-3).
+    const projectionKeys = Object.keys(DCAT_FIELD_TO_PREDICATE);
+    const projectionOptionals = projectionKeys
+        .filter(key => !DCAT_QUERY_VARS[key])
+        .map(key => `OPTIONAL { ?dataset <${DCAT_FIELD_TO_PREDICATE[key]}> ?${dcatQueryVar(key)} . }`)
+        .join('\n        ');
+    const projectionSelects = projectionKeys
+        .map(key => `       (GROUP_CONCAT(DISTINCT STR(?${dcatQueryVar(key)}); separator="${MULTI_VALUE_SEPARATOR}") AS ?${dcatResultVar(key)})`)
+        .join('\n');
+
     const query = `
 SELECT ?datasetId ?title ?description ?publisherBpn ?publisherName ?policyName ?publishedAt ?sessionCode
-       (GROUP_CONCAT(DISTINCT STR(?spatialValue); separator=", ") AS ?spatial)
-       (SAMPLE(STR(?temporalValue)) AS ?temporalCoverage)
-       (GROUP_CONCAT(DISTINCT STR(?keyword); separator=", ") AS ?keywords)
-       (GROUP_CONCAT(DISTINCT STR(?theme); separator=", ") AS ?themes)
+${projectionSelects}
 WHERE {
     GRAPH ?g {
         ?dataset a <http://www.w3.org/ns/dcat#Dataset> ;
@@ -280,6 +324,7 @@ WHERE {
         OPTIONAL { ?dataset <http://purl.org/dc/terms/temporal> ?temporalValue . }
         OPTIONAL { ?dataset <http://www.w3.org/ns/odrl/2/policy> ?policyName . }
         OPTIONAL { ?dataset <http://purl.org/dc/terms/isPartOf> ?sessionCode . }
+        ${projectionOptionals}
         ${fieldTriples.join('\n        ')}
     }
     ${whereFilter}
@@ -289,20 +334,30 @@ ORDER BY DESC(?publishedAt)
 LIMIT ${maxLimit}`;
 
     const bindings = await executeSelect(query);
-    return bindings.map(row => ({
-        datasetId: row.datasetId?.value || '',
-        title: row.title?.value || '',
-        description: row.description?.value || '',
-        publisherBpn: row.publisherBpn?.value || '',
-        publisherName: row.publisherName?.value || '',
-        policyName: row.policyName?.value || '',
-        publishedAt: row.publishedAt?.value || '',
-        sessionCode: row.sessionCode?.value || '',
-        spatial: (row.spatial?.value || '').split(',').map(s => s.trim()).filter(Boolean),
-        temporalCoverage: row.temporalCoverage?.value || '',
-        keywords: (row.keywords?.value || '').split(',').map(s => s.trim()).filter(Boolean),
-        themes: (row.themes?.value || '').split(',').map(s => s.trim()).filter(Boolean),
-    }));
+    return bindings.map(row => {
+        const dcat = {};
+        for (const key of projectionKeys) {
+            const values = splitMultiValue(row[dcatResultVar(key)]?.value);
+            if (values.length > 0) {
+                dcat[key] = values;
+            }
+        }
+        return {
+            datasetId: row.datasetId?.value || '',
+            title: row.title?.value || '',
+            description: row.description?.value || '',
+            publisherBpn: row.publisherBpn?.value || '',
+            publisherName: row.publisherName?.value || '',
+            policyName: row.policyName?.value || '',
+            publishedAt: row.publishedAt?.value || '',
+            sessionCode: row.sessionCode?.value || '',
+            spatial: dcat['dct:spatial'] || [],
+            temporalCoverage: (dcat['dct:temporal'] || [])[0] || '',
+            keywords: dcat['dcat:keyword'] || [],
+            themes: dcat['dcat:theme'] || [],
+            dcat,
+        };
+    });
 }
 
 module.exports = {
