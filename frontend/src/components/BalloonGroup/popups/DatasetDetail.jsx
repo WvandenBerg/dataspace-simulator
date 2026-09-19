@@ -1,5 +1,7 @@
-import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+
+const API_BASE = '/api';
 
 // dct:conformsTo is labelled "Reference system" because that is what
 // mobilityDCAT-AP means by it. The profile a payload follows lives on the
@@ -92,6 +94,70 @@ const renderFields = (fields, definitions) => definitions
     .filter(([key]) => (fields[key] || []).length > 0)
     .map(([key, label]) => <Field key={key} label={label} values={fields[key]} />);
 
+const noteStyle = { fontSize: '0.66rem', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' };
+
+// mobilitydcatap:schema is where the spec asks a portal to point at its schema
+// registry, so this is the one place the catalogue meets the Vocabulary Hub.
+const SchemaLink = ({ uri }) => {
+    const [open, setOpen] = useState(false);
+    const [status, setStatus] = useState('idle');
+    const [profile, setProfile] = useState(null);
+
+    const toggle = async () => {
+        if (open) return setOpen(false);
+        setOpen(true);
+        if (status !== 'idle') return;
+
+        setStatus('loading');
+        try {
+            const response = await fetch(`${API_BASE}/vocabhub/profiles/${encodeURIComponent(uri)}`);
+            if (response.status === 404) return setStatus('missing');
+            if (!response.ok) throw new Error(response.status);
+            setProfile(await response.json());
+            setStatus('found');
+        } catch {
+            setStatus('unavailable');
+        }
+    };
+
+    const Chevron = open ? ChevronDown : ChevronRight;
+
+    return (
+        <div style={{ marginBottom: '3px' }}>
+            <div
+                onClick={toggle}
+                style={{ ...uriStyle, cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '3px' }}
+            >
+                <Chevron size={11} style={{ flexShrink: 0, marginTop: '1px' }} />
+                <span>{uri}</span>
+            </div>
+
+            {open && status === 'loading' && <div style={{ ...labelStyle, marginLeft: '14px' }}>Resolving...</div>}
+
+            {open && (status === 'missing' || status === 'unavailable') && (
+                <div style={{ ...noteStyle, color: '#d97706', marginLeft: '14px' }}>
+                    <AlertTriangle size={11} />
+                    {status === 'missing' ? 'Not in the Vocabulary Hub' : 'Vocabulary Hub unavailable'}
+                </div>
+            )}
+
+            {open && status === 'found' && profile && (
+                <div style={{ marginLeft: '14px', marginTop: '4px', padding: '6px 8px', background: 'rgba(37, 99, 235, 0.06)', borderRadius: '4px' }}>
+                    <div style={{ ...valueStyle, fontWeight: 600 }}>{profile.title}</div>
+                    {profile.publisher && <div style={labelStyle}>{profile.publisher}</div>}
+                    {profile.description && <div style={{ ...valueStyle, marginTop: '4px' }}>{profile.description}</div>}
+                    {(profile.resources || []).map((resource) => (
+                        <div key={resource.roleIri + resource.artifact} style={{ marginTop: '4px' }}>
+                            <div style={labelStyle}>{resource.role}</div>
+                            <div style={uriStyle}>{resource.artifact}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const DataStandard = ({ standard }) => (
     <div style={{ marginTop: '6px', paddingLeft: '8px', borderLeft: '2px solid var(--color-primary)' }}>
         <div style={labelStyle}>Data standard</div>
@@ -103,7 +169,7 @@ const DataStandard = ({ standard }) => (
             <div style={{ marginTop: '4px' }}>
                 <div style={labelStyle}>Schema</div>
                 {asList(standard.schema).map((uri) => (
-                    <div key={uri} data-schema-uri={uri} style={uriStyle}>{uri}</div>
+                    <SchemaLink key={uri} uri={uri} />
                 ))}
             </div>
         )}
