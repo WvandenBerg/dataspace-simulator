@@ -18,6 +18,11 @@ const SEMANTIC_DCAT_OPTIONS = [
     { key: 'dct:accrualPeriodicity', label: 'Update Frequency' },
     { key: 'dcat:landingPage', label: 'Landing Page' },
     { key: 'dcat:contactPoint', label: 'Contact Point' },
+    { key: 'mobilitydcatap:mobilityTheme', label: 'Mobility Theme' },
+    { key: 'mobilitydcatap:transportMode', label: 'Transport Mode' },
+    { key: 'mobilitydcatap:networkCoverage', label: 'Network Coverage' },
+    { key: 'mobilitydcatap:georeferencingMethod', label: 'Georeferencing Method' },
+    { key: 'mobilitydcatap:intendedInformationService', label: 'Intended Information Service' },
 ];
 
 const BrowseDataspacePopup = ({

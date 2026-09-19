@@ -22,6 +22,11 @@ const DCAT_OPTIONS = [
     { key: 'dcat:landingPage', label: 'Landing Page', placeholder: 'https://…', multi: false },
     { key: 'dcat:contactPoint', label: 'Contact Point', placeholder: 'data@company.com', multi: false },
     { key: 'dct:accrualPeriodicity', label: 'Update Frequency', placeholder: 'daily, weekly', multi: false },
+    { key: 'mobilitydcatap:mobilityTheme', label: 'Mobility Theme', placeholder: 'Traffic data…', multi: true },
+    { key: 'mobilitydcatap:transportMode', label: 'Transport Mode', placeholder: 'Road…', multi: true },
+    { key: 'mobilitydcatap:networkCoverage', label: 'Network Coverage', placeholder: 'Urban road network…', multi: false },
+    { key: 'mobilitydcatap:georeferencingMethod', label: 'Georeferencing Method', placeholder: 'WGS84 coordinates…', multi: false },
+    { key: 'mobilitydcatap:intendedInformationService', label: 'Intended Information Service', placeholder: 'Real-time traffic information…', multi: true },
 ];
 
 /* ── fixed credential option sets ──────────────────────────────── */

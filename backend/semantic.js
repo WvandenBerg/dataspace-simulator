@@ -55,6 +55,11 @@ const DCAT_FIELD_TO_PREDICATE = {
     'dct:relation': 'http://purl.org/dc/terms/relation',
     'dcat:landingPage': 'http://www.w3.org/ns/dcat#landingPage',
     'dcat:contactPoint': 'http://www.w3.org/ns/dcat#contactPoint',
+    'mobilitydcatap:mobilityTheme': 'https://w3id.org/mobilitydcat-ap#mobilityTheme',
+    'mobilitydcatap:transportMode': 'https://w3id.org/mobilitydcat-ap#transportMode',
+    'mobilitydcatap:networkCoverage': 'https://w3id.org/mobilitydcat-ap#networkCoverage',
+    'mobilitydcatap:georeferencingMethod': 'https://w3id.org/mobilitydcat-ap#georeferencingMethod',
+    'mobilitydcatap:intendedInformationService': 'https://w3id.org/mobilitydcat-ap#intendedInformationService',
 };
 
 // mobilityDCAT-AP 1.1.0 (NAPCORE Recommendation, January 2025). A Distribution
