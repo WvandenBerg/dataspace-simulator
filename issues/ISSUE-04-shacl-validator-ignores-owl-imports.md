@@ -1,3 +1,7 @@
+<!-- TARGET REPO: json-ld-validator, NOT this one. Nothing here fixes it. -->
+<!-- The simulator only consumes the validator, so this is filed upstream and -->
+<!-- mocked locally in the meantime. -->
+
 <!-- This is the template for a BUG REPORT. You can select other issue templates -->
 
 ### What is the current *bug* behavior?
@@ -60,5 +64,6 @@ as a testbed. A validator that fetches arbitrary imported URLs at request time i
 different security posture from one that does not. A cached or pre-flattened shapes bundle
 avoids both the network calls and the silent pass.
 
-Blocks using the validator against mobilityDCAT-AP as published. Workaround for now is to
-pre-flatten the shapes into a single graph and validate against that.
+Blocks using the validator against mobilityDCAT-AP as published. Not a blocker for the
+dataspace simulator demo, which mocks the validator and the shapes for as long as it needs
+to. Worth fixing upstream on its own merits rather than for the demo's sake.

@@ -1,3 +1,7 @@
+<!-- TARGET REPO: semantic-treehouse, NOT this one. Relates to epic &50. -->
+<!-- The simulator consumes the export, so this is filed upstream and the -->
+<!-- missing data is carried as local fixture data in the meantime. -->
+
 <!-- This is the template for a FEATURE REQUEST. You can select other issue templates -->
 
 ### Problem / goal
