@@ -33,7 +33,6 @@ const BalloonGroup = ({
     onDeleteAsset = () => { },
     onAddAsset = () => { },
     onEditAsset = () => { },
-    allNodeAssets = {},
     onAction,
     isDemo = true,
     minimalView = false
@@ -66,7 +65,6 @@ const BalloonGroup = ({
         startNegotiation,
         startTransfer
     } = useContractNegotiation({
-        allNodeAssets,
         currentNodeId,
         allNodes,
         onLocalSearchChange,
@@ -299,7 +297,7 @@ const BalloonGroup = ({
                 setShowFilters={setShowFilters}
 
                 onSearch={handleSearch}
-                onViewProviderCatalog={(provider) => handleViewProviderCatalog(provider, allNodeAssets)}
+                onViewProviderCatalog={handleViewProviderCatalog}
                 onDiscoveryPulse={onDiscoveryPulse}
                 onLocalSearchChange={onLocalSearchChange}
                 setControlPlaneGlow={setControlPlaneGlow}

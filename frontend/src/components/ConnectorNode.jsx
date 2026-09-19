@@ -69,7 +69,6 @@ const ConnectorNode = ({
     onDeleteAsset = () => { },
     onAddAsset = () => { },
     onEditAsset = () => { },
-    allNodeAssets = {},
     // Demo vs hosted mode
     isDemo = true,
     // Minimal view mode
@@ -210,7 +209,6 @@ const ConnectorNode = ({
                 onDeleteAsset={onDeleteAsset}
                 onAddAsset={onAddAsset}
                 onEditAsset={onEditAsset}
-                allNodeAssets={allNodeAssets}
                 isDemo={isDemo}
                 minimalView={minimalView}
             />

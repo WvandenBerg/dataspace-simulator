@@ -3,10 +3,45 @@ import { useState, useRef } from 'react';
 const API_BASE = '/api';
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// A provider card carries whatever identifier the view it came from had to hand,
+// while /api/catalog filters on node id only.
+const resolveProviderNodeId = (provider, allNodes) => {
+    if (provider?.id && allNodes?.[provider.id]) return provider.id;
+    const bpn = String(provider?.bpn || '').toLowerCase();
+    if (!bpn) return provider?.id || '';
+    const match = Object.entries(allNodes || {})
+        .find(([, node]) => String(node?.bpn || '').toLowerCase() === bpn);
+    return match ? match[0] : (provider?.id || '');
+};
+
+const catalogAssetType = (dataset) => {
+    const fields = dataset?.dcatFields || {};
+    const distribution = (fields.distributions || [])[0] || {};
+    const declaredFormat = (fields.additionalDcat || [])
+        .find(entry => entry?.key === 'dct:format')?.value;
+    const extension = String(dataset?.fileName || '').split('.').pop();
+    return distribution.format || distribution.mediaType || declaredFormat
+        || (extension && extension !== dataset?.fileName ? extension.toUpperCase() : '')
+        || 'JSON';
+};
+
+const toCatalogAsset = (dataset) => ({
+    id: dataset['@id'],
+    sourceId: dataset['@id'],
+    name: dataset.name || dataset['@id'],
+    description: dataset.description || '',
+    type: catalogAssetType(dataset),
+    ownerNodeId: dataset.ownerNodeId,
+    ownerName: dataset.ownerName,
+    policyId: dataset.policyId,
+    policyName: dataset.policyName,
+    publishedAt: dataset.publishedAt,
+    dcatFields: dataset.dcatFields || {},
+});
+
 export const useContractNegotiation = ({
     currentNodeId,
     allNodes,
-    allNodeAssets,
     onLocalSearchChange,
     setControlPlaneGlow,
     setRingLight,
@@ -117,89 +152,15 @@ export const useContractNegotiation = ({
         onLocalSearchChange(false);
 
         try {
-            const providerBpnLower = (provider?.bpn || '').toLowerCase();
-            const providerNameLower = (provider?.name || '').toLowerCase();
-            const providerId = provider?.id;
-            const matchingNodeIdsByBpn = Object.entries(allNodes)
-                .filter(([, node]) => (node?.bpn || '').toLowerCase() === providerBpnLower)
-                .map(([nodeId]) => nodeId);
+            const providerNodeId = resolveProviderNodeId(provider, allNodes);
+            const query = new URLSearchParams({ dataspaceId, consumerNodeId: currentNodeId });
+            if (providerNodeId) query.set('providerNodeId', providerNodeId);
 
-            const candidateProviderIds = Array.from(new Set([
-                providerId,
-                providerId?.toLowerCase(),
-                providerId?.toUpperCase(),
-                provider?.bpn,
-                provider?.bpn?.toLowerCase(),
-                provider?.bpn?.toUpperCase(),
-                ...matchingNodeIdsByBpn
-            ].filter(Boolean)));
+            const response = await fetch(`${API_BASE}/catalog?${query}`);
+            if (!response.ok) throw new Error(`Catalog request failed: ${response.status}`);
 
-            const providerLocalAssetsById = candidateProviderIds
-                .flatMap((providerKey) => allNodeAssets[providerKey] || []);
-
-            const providerLocalAssetsByOwner = Object.values(allNodeAssets)
-                .flatMap((assets) => Array.isArray(assets) ? assets : [])
-                .filter((asset) => {
-                    const ownerNodeId = asset?.ownerNodeId;
-                    const ownerBpnLower = (asset?.ownerBpn || '').toLowerCase();
-                    const ownerNameLower = (asset?.ownerName || '').toLowerCase();
-                    const fromNameLower = (asset?.from || '').toLowerCase();
-                    return candidateProviderIds.includes(ownerNodeId) ||
-                        (providerBpnLower && ownerBpnLower === providerBpnLower) ||
-                        (providerNameLower && (ownerNameLower === providerNameLower || fromNameLower === providerNameLower));
-                });
-
-            const seenAssetKeys = new Set();
-            const providerLocalAssets = [...providerLocalAssetsById, ...providerLocalAssetsByOwner]
-                .filter((asset) => {
-                    const key = `${asset?.id || ''}|${asset?.sourceId || ''}|${asset?.name || ''}|${asset?.receivedAt || ''}`;
-                    if (seenAssetKeys.has(key)) {
-                        return false;
-                    }
-                    seenAssetKeys.add(key);
-                    return true;
-                });
-
-            if (providerLocalAssets.length > 0) {
-                console.log(`[Catalog] Using local assets for ${provider.id || provider.bpn}:`, providerLocalAssets.length);
-                setProviderAssets(providerLocalAssets.map(asset => ({
-                    ...asset,
-                    id: asset.id || `local-${Date.now()}`,
-                    name: asset.name || 'Unnamed Asset',
-                    type: asset.type || 'JSON',
-                    description: asset.description || 'No description'
-                })));
-                setIsLoadingCatalog(false);
-                return;
-            }
-
-            const providerBpn = provider?.bpn || provider?.id;
-            const catalogUrl = providerBpn
-                ? `${window.location.origin}/api/participant/${providerBpn}/catalog`
-                : `${window.location.origin}/api/consumer/catalog`;
-
-            console.log(`[Catalog] Fetching from: ${catalogUrl}`);
-
-            const response = await fetch(catalogUrl, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (response.ok) {
-                const catalog = await response.json();
-                const datasets = catalog['dcat:dataset'] || [];
-                const assets = (Array.isArray(datasets) ? datasets : [datasets]).map(dataset => ({
-                    id: dataset['@id'] || dataset.id || 'unknown',
-                    name: dataset['dct:title'] || dataset.name || dataset['@id'] || 'Unnamed Asset',
-                    type: dataset['dct:format'] || 'JSON',
-                    description: dataset['dct:description'] || dataset.description || 'No description',
-                    policy: dataset['odrl:hasPolicy'] || null
-                }));
-                setProviderAssets(assets);
-            } else {
-                setProviderAssets([]);
-                console.error('Catalog request failed:', response.status);
-            }
+            const datasets = await response.json();
+            setProviderAssets((Array.isArray(datasets) ? datasets : []).map(toCatalogAsset));
         } catch (error) {
             console.error('Failed to fetch catalog:', error);
             setProviderAssets([]);

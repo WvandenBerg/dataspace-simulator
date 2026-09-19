@@ -453,6 +453,8 @@ app.get('/api/catalog', (req, res) => {
         ownerName: db.getNode(a.owner_node_id)?.name || a.owner_node_id,
         publishedAt: a.published_at,
         policyId: a.policy_id,
+        policyName: db.getPolicy(a.policy_id)?.name || a.policy_id,
+        fileName: a.file_name,
         dcatFields: a.dcat_fields,
     })));
 });

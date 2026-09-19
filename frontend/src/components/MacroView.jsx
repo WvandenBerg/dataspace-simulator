@@ -580,7 +580,6 @@ const MacroView = forwardRef(({
                             onDeleteAsset={(assetId) => handleDeleteAsset(id, assetId)}
                             onAddAsset={(asset) => handleAddAsset(id, asset)}
                             onEditAsset={(assetId, payload, currentNodeId) => handleEditAsset(assetId, payload, currentNodeId || id)}
-                            allNodeAssets={nodeAssets}
                             isDemo={isDemo}
                             isNewlyAdded={Boolean(appearingHostedNodeIds[id])}
                         />
