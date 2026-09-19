@@ -333,6 +333,79 @@ WHERE {
 }
 
 // ---------------------------------------------------------------------------
+// Distributions for a set of datasets.
+//
+// Deliberately a second query. Folding these into the search SELECT would mean
+// GROUP_CONCAT over a cross-product, which loses which standard belongs to
+// which distribution the moment a dataset has more than one.
+// ---------------------------------------------------------------------------
+
+async function distributionsForDatasets(datasetIds) {
+    if (!datasetIds || datasetIds.length === 0) return new Map();
+
+    const idList = datasetIds.map(id => `"${escapeLiteral(id)}"`).join(', ');
+    const query = `
+SELECT ?datasetId ?dist ?distTitle ?accessURL ?mediaType ?format ?stdLabel ?stdConformsTo ?stdVersion ?schema
+WHERE {
+    GRAPH ?g {
+        ?dataset <http://purl.org/dc/terms/identifier> ?datasetId ;
+            <${PREDICATES.distribution}> ?dist .
+        FILTER(STR(?datasetId) IN (${idList}))
+        OPTIONAL { ?dist <${PREDICATES.title}> ?distTitle . }
+        OPTIONAL { ?dist <${PREDICATES.accessURL}> ?accessURL . }
+        OPTIONAL { ?dist <${PREDICATES.mediaType}> ?mediaType . }
+        OPTIONAL { ?dist <${PREDICATES.format}> ?format . }
+        OPTIONAL {
+            ?dist <${PREDICATES.mobilityDataStandard}> ?std .
+            OPTIONAL { ?std <${PREDICATES.title}> ?stdLabel . }
+            OPTIONAL { ?std <${PREDICATES.conformsTo}> ?stdConformsTo . }
+            OPTIONAL { ?std <${PREDICATES.versionInfo}> ?stdVersion . }
+            OPTIONAL { ?std <${PREDICATES.schema}> ?schema . }
+        }
+    }
+}
+ORDER BY ?datasetId ?dist`;
+
+    const byDataset = new Map();
+    const byIri = new Map();
+
+    for (const row of await executeSelect(query)) {
+        const datasetId = row.datasetId?.value || '';
+        const iri = row.dist?.value || '';
+        if (!iri) continue;
+
+        let dist = byIri.get(iri);
+        if (!dist) {
+            dist = {
+                title: row.distTitle?.value || '',
+                accessUrl: row.accessURL?.value || '',
+                mediaType: row.mediaType?.value || '',
+                format: row.format?.value || '',
+                dataStandard: null,
+            };
+            byIri.set(iri, dist);
+            if (!byDataset.has(datasetId)) byDataset.set(datasetId, []);
+            byDataset.get(datasetId).push(dist);
+        }
+
+        const conformsTo = row.stdConformsTo?.value || '';
+        const label = row.stdLabel?.value || '';
+        if (conformsTo || label) {
+            dist.dataStandard = dist.dataStandard || { label: '', conformsTo: '', version: '', schema: [] };
+            dist.dataStandard.label = label || dist.dataStandard.label;
+            dist.dataStandard.conformsTo = conformsTo || dist.dataStandard.conformsTo;
+            dist.dataStandard.version = row.stdVersion?.value || dist.dataStandard.version;
+        }
+        const schema = row.schema?.value;
+        if (schema && dist.dataStandard && !dist.dataStandard.schema.includes(schema)) {
+            dist.dataStandard.schema.push(schema);
+        }
+    }
+
+    return byDataset;
+}
+
+// ---------------------------------------------------------------------------
 // Search: full parameterized SPARQL SELECT
 // Returns an array of result objects.
 // ---------------------------------------------------------------------------
@@ -438,7 +511,7 @@ ORDER BY DESC(?publishedAt)
 LIMIT ${maxLimit}`;
 
     const bindings = await executeSelect(query);
-    return bindings.map(row => {
+    const results = bindings.map(row => {
         const dcat = {};
         for (const key of projectionKeys) {
             const values = splitMultiValue(row[dcatResultVar(key)]?.value);
@@ -460,8 +533,15 @@ LIMIT ${maxLimit}`;
             keywords: dcat['dcat:keyword'] || [],
             themes: dcat['dcat:theme'] || [],
             dcat,
+            distributions: [],
         };
     });
+
+    const distributions = await distributionsForDatasets(results.map(r => r.datasetId));
+    for (const result of results) {
+        result.distributions = distributions.get(result.datasetId) || [];
+    }
+    return results;
 }
 
 module.exports = {
@@ -469,5 +549,6 @@ module.exports = {
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
     semanticSearch,
+    distributionsForDatasets,
     DCAT_FIELD_TO_PREDICATE,
 };
