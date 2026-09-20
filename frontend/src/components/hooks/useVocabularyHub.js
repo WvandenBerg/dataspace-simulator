@@ -9,8 +9,10 @@ import { useCallback, useRef, useState } from 'react';
  * in front of you. The position is a view concern rather than dataspace data,
  * so it stays in localStorage instead of the nodes table.
  */
-const OFFSET_FROM_RING = 180;
-const CONNECT_MARGIN = 340;
+// Participant cards occupy a wide band just outside the ring, so the hub parks
+// beside them rather than in them, and stays connected across a long drag.
+const OFFSET_FROM_RING = 640;
+const CONNECT_MARGIN = 940;
 
 const storageKey = (dataspaceId) => `vocabhub-position:${dataspaceId}`;
 
@@ -21,7 +23,7 @@ function loadPosition(dataspaceId, ringRadius) {
     } catch {
         // Fall through to the default placement.
     }
-    return { x: 0, y: -(ringRadius + OFFSET_FROM_RING) };
+    return { x: ringRadius + OFFSET_FROM_RING, y: 0 };
 }
 
 export function useVocabularyHub(dataspaceId, ringRadius) {

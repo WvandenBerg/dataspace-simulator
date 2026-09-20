@@ -509,14 +509,15 @@ const MacroView = forwardRef(({
                     );
                 })()}
 
-                {/* Vocabulary Hub tether - drawn to the ring edge, not the centre */}
+                {/* Vocabulary Hub tether - only meaningful while the hub sits outside the ring */}
                 {vocabHub.isConnected && (() => {
                     const { x, y } = vocabHub.position;
                     const dist = Math.sqrt(x * x + y * y) || 1;
                     const edgeRadius = minimalView ? 330 : 550;
+                    if (dist <= edgeRadius) return null;
                     return (
                         <svg
-                            style={{ position: 'absolute', left: 0, top: 0, width: 0, height: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 4 }}
+                            style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none', zIndex: 11 }}
                         >
                             <line
                                 x1={(x / dist) * edgeRadius}
@@ -524,9 +525,9 @@ const MacroView = forwardRef(({
                                 x2={x}
                                 y2={y}
                                 stroke="#22c55e"
-                                strokeWidth={3}
-                                strokeDasharray="8 6"
-                                opacity={0.7}
+                                strokeWidth={4 / finalScale}
+                                strokeDasharray={`${11 / finalScale} ${8 / finalScale}`}
+                                opacity={0.9}
                             />
                         </svg>
                     );
@@ -535,6 +536,7 @@ const MacroView = forwardRef(({
                 <VocabularyHubNode
                     position={vocabHub.position}
                     isConnected={vocabHub.isConnected}
+                    scale={finalScale}
                     onDragStart={vocabHub.onDragStart}
                     onDrag={vocabHub.onDrag}
                     onDragEnd={vocabHub.onDragEnd}
