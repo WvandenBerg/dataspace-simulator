@@ -13,11 +13,11 @@ import { useCallback, useRef, useState } from 'react';
 // The connect margin is deliberately short: losing the service should take one
 // deliberate drag, not a journey across the canvas. Participant cards reach as
 // far as ~1180 from the centre, so within that margin there is no radius that
-// clears them at every angle. The default parks in the gap above the card due
-// east instead.
-const OFFSET_FROM_RING = 210;
+// clears them at every angle. The default parks in the diagonal gap between two
+// cards, which leaves the space the caption needs under the disc.
+const OFFSET_FROM_RING = 325;
 const CONNECT_MARGIN = 470;
-const PARK_ANGLE = -10 * (Math.PI / 180);
+const PARK_ANGLE = -50 * (Math.PI / 180);
 
 const storageKey = (dataspaceId) => `vocabhub-position:${dataspaceId}`;
 const enabledKey = (dataspaceId) => `vocabhub-enabled:${dataspaceId}`;

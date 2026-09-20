@@ -80,11 +80,11 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
                     style={{ width: `${LOGO_SIZE}px`, height: `${LOGO_SIZE}px` }}
                 />
 
-                {/* Parked this close to the ring, the space below the hub belongs to
-                    a participant card, so the caption goes above it. */}
+                {/* Absolutely positioned so the disc, not the disc plus caption,
+                    is what sits on the hub's coordinates and takes the tether. */}
                 <div style={{
                     position: 'absolute',
-                    bottom: `${HUB_SIZE}px`,
+                    top: `${HUB_SIZE}px`,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
