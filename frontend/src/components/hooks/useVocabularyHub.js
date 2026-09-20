@@ -1,13 +1,14 @@
 import { useCallback, useRef, useState } from 'react';
 
 /**
- * Position of the Vocabulary Hub node, and whether it currently reaches this
- * dataspace.
+ * Whether this dataspace has a vocabulary service at all, where its node sits,
+ * and whether that node currently reaches the ring.
  *
- * Connection is proximity, the same rule participants already live by, so the
- * hub can be pulled away and the dataspace loses alignment-widened discovery
- * in front of you. The position is a view concern rather than dataspace data,
- * so it stays in localStorage instead of the nodes table.
+ * Presence and reachability are deliberately separate. Switching the service
+ * off models a dataspace that never adopted one; dragging the node out of range
+ * models one it has but cannot reach. Both disable alignment-widened discovery,
+ * and they should not look alike. Neither is dataspace data, so both live in
+ * localStorage rather than the nodes table.
  */
 // Participant cards occupy a wide band just outside the ring, so the hub parks
 // beside them rather than in them, and stays connected across a long drag.
@@ -15,6 +16,9 @@ const OFFSET_FROM_RING = 640;
 const CONNECT_MARGIN = 940;
 
 const storageKey = (dataspaceId) => `vocabhub-position:${dataspaceId}`;
+const enabledKey = (dataspaceId) => `vocabhub-enabled:${dataspaceId}`;
+
+const defaultPosition = (ringRadius) => ({ x: ringRadius + OFFSET_FROM_RING, y: 0 });
 
 function loadPosition(dataspaceId, ringRadius) {
     try {
@@ -23,23 +27,33 @@ function loadPosition(dataspaceId, ringRadius) {
     } catch {
         // Fall through to the default placement.
     }
-    return { x: ringRadius + OFFSET_FROM_RING, y: 0 };
+    return defaultPosition(ringRadius);
+}
+
+// A dataspace has no vocabulary service until someone adds one.
+function loadEnabled(dataspaceId) {
+    return localStorage.getItem(enabledKey(dataspaceId)) === 'true';
+}
+
+function loadState(dataspaceId, ringRadius) {
+    return {
+        dataspaceId,
+        position: loadPosition(dataspaceId, ringRadius),
+        isEnabled: loadEnabled(dataspaceId),
+    };
 }
 
 export function useVocabularyHub(dataspaceId, ringRadius) {
-    const [state, setState] = useState(() => ({
-        dataspaceId,
-        position: loadPosition(dataspaceId, ringRadius),
-    }));
+    const [state, setState] = useState(() => loadState(dataspaceId, ringRadius));
     const dragStartRef = useRef(null);
 
     if (state.dataspaceId !== dataspaceId) {
-        setState({ dataspaceId, position: loadPosition(dataspaceId, ringRadius) });
+        setState(loadState(dataspaceId, ringRadius));
     }
 
-    const { position } = state;
+    const { position, isEnabled } = state;
     const distance = Math.sqrt(position.x * position.x + position.y * position.y);
-    const isConnected = distance < ringRadius + CONNECT_MARGIN;
+    const isConnected = isEnabled && distance < ringRadius + CONNECT_MARGIN;
 
     const move = (start, info) => ({ x: start.x + info.offset.x, y: start.y + info.offset.y });
 
@@ -68,5 +82,20 @@ export function useVocabularyHub(dataspaceId, ringRadius) {
         }
     }, [dataspaceId]);
 
-    return { position, isConnected, onDragStart, onDrag, onDragEnd };
+    const setEnabled = useCallback((next) => {
+        setState((prev) => {
+            // Restoring a far-away position would show the service arriving already
+            // out of range, which reads as a fault rather than a choice.
+            const position = next ? defaultPosition(ringRadius) : prev.position;
+            try {
+                localStorage.setItem(enabledKey(dataspaceId), String(next));
+                if (next) localStorage.setItem(storageKey(dataspaceId), JSON.stringify(position));
+            } catch {
+                // The toggle still works for this session.
+            }
+            return { ...prev, isEnabled: next, position };
+        });
+    }, [dataspaceId, ringRadius]);
+
+    return { position, isEnabled, isConnected, setEnabled, onDragStart, onDrag, onDragEnd };
 }

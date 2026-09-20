@@ -7,6 +7,7 @@ import DataPlaneBeam from './DataPlaneBeam';
 import ControlPlaneBeam from './ControlPlaneBeam';
 import ZoomOutButton from './ZoomOutButton';
 import ZoomControls from './ZoomControls';
+import DataspaceServicesPanel from './DataspaceServicesPanel';
 import VocabularyHubNode from './VocabularyHubNode';
 import VocabularyHubDialog from './VocabularyHubDialog';
 import { useViewState } from './hooks/useViewState';
@@ -457,15 +458,17 @@ const MacroView = forwardRef(({
                     );
                 })()}
 
-                <VocabularyHubNode
-                    position={vocabHub.position}
-                    isConnected={vocabHub.isConnected}
-                    scale={finalScale}
-                    onDragStart={vocabHub.onDragStart}
-                    onDrag={vocabHub.onDrag}
-                    onDragEnd={vocabHub.onDragEnd}
-                    onClick={() => setHubDialogOpen(true)}
-                />
+                {vocabHub.isEnabled && (
+                    <VocabularyHubNode
+                        position={vocabHub.position}
+                        isConnected={vocabHub.isConnected}
+                        scale={finalScale}
+                        onDragStart={vocabHub.onDragStart}
+                        onDrag={vocabHub.onDrag}
+                        onDragEnd={vocabHub.onDragEnd}
+                        onClick={() => setHubDialogOpen(true)}
+                    />
+                )}
 
                 {/* Connectors */}
                 {Object.keys(nodes).map(id => {
@@ -595,6 +598,14 @@ const MacroView = forwardRef(({
                 scale={finalScale}
                 onZoomIn={zoomIn}
                 onZoomOut={zoomOut}
+            />
+
+            <DataspaceServicesPanel
+                vocabularyEnabled={vocabHub.isEnabled}
+                onVocabularyChange={(next) => {
+                    vocabHub.setEnabled(next);
+                    if (!next) setHubDialogOpen(false);
+                }}
             />
 
             {hubDialogOpen && (
