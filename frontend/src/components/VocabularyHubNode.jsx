@@ -32,6 +32,7 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
                 e.stopPropagation();
                 onClick?.();
             }}
+            initial={false}
             animate={{
                 x: position.x,
                 y: position.y,
