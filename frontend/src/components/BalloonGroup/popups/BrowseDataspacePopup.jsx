@@ -233,8 +233,8 @@ const BrowseDataspacePopup = ({
     };
 
     const handleBrowseClick = () => {
-        const popupWidth = 320;
-        const popupHeight = 400;
+        const popupWidth = 400;
+        const popupHeight = 560;
         const spawnX = balloonX > 0 ? -popupWidth - 30 : 320;
         const spawnY = -popupHeight / 4;
         setPopupPosition({ x: spawnX, y: spawnY });
@@ -259,10 +259,13 @@ const BrowseDataspacePopup = ({
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
             style={{
-                position: 'absolute', left: 0, top: 0, width: '320px',
+                position: 'absolute', left: 0, top: 0,
+                width: '400px', height: '560px', minWidth: '320px', minHeight: '340px',
+                resize: 'both',
+                display: 'flex', flexDirection: 'column',
                 background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
                 borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-                zIndex: 100, overflowX: 'hidden', overflowY: 'hidden'
+                zIndex: 100, overflow: 'hidden'
             }}
         >
             {/* Drag Header */}
@@ -287,7 +290,8 @@ const BrowseDataspacePopup = ({
                 style={{
                     padding: '10px 14px', borderBottom: '1px solid var(--border-color)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: 'rgba(59, 130, 246, 0.1)', cursor: 'grab', userSelect: 'none'
+                    background: 'rgba(59, 130, 246, 0.1)', cursor: 'grab', userSelect: 'none',
+                    flexShrink: 0
                 }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -308,7 +312,7 @@ const BrowseDataspacePopup = ({
 
             {/* Tab strip — only when not inside a provider view */}
             {!selectedProvider && (
-                <div style={{ display: 'flex', gap: '4px', padding: '8px 10px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                <div style={{ display: 'flex', gap: '4px', padding: '8px 10px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-card)', flexShrink: 0 }}>
                     {[
                         { id: 'browse', icon: <Search size={12} />, label: 'Browse' },
                         { id: 'semantic', icon: <Search size={12} />, label: 'Semantic Search' }
@@ -336,7 +340,7 @@ const BrowseDataspacePopup = ({
 
             {/* ─────────────── PROVIDER VIEW ─────────────── */}
             {selectedProvider && (
-                <div onWheel={(e) => e.stopPropagation()} style={{ padding: '12px 14px', maxHeight: '440px', overflow: 'auto' }}>
+                <div onWheel={(e) => e.stopPropagation()} style={{ padding: '12px 14px', flex: 1, minHeight: 0, overflow: 'auto', scrollbarGutter: 'stable' }}>
                     {negotiationState !== 'idle' ? (
                         <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                             <div style={{ fontSize: '1rem', fontWeight: 'bold', color: negotiationState === 'connecting' ? '#3b82f6' : '#60a5fa', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -432,7 +436,7 @@ const BrowseDataspacePopup = ({
 
             {/* ─────────────── BROWSE TAB ─────────────── */}
             {!selectedProvider && activeTab === 'browse' && (
-                <div onWheel={(e) => e.stopPropagation()} style={{ padding: '12px 14px', maxHeight: '400px', overflow: 'auto' }}>
+                <div onWheel={(e) => e.stopPropagation()} style={{ padding: '12px 14px', flex: 1, minHeight: 0, overflow: 'auto', scrollbarGutter: 'stable' }}>
                     <button
                         onClick={(e) => { e.stopPropagation(); onSearch(); }}
                         disabled={isSearchingLocal}
@@ -474,7 +478,7 @@ const BrowseDataspacePopup = ({
 
             {/* ─────────────── SEMANTIC SEARCH TAB ─────────────── */}
             {!selectedProvider && activeTab === 'semantic' && (
-                <div onWheel={(e) => e.stopPropagation()} style={{ padding: '12px 14px', maxHeight: '440px', overflow: 'auto' }}>
+                <div onWheel={(e) => e.stopPropagation()} style={{ padding: '12px 14px', flex: 1, minHeight: 0, overflow: 'auto', scrollbarGutter: 'stable' }}>
                     {negotiationState !== 'idle' && (
                         <div style={{ marginBottom: '10px', padding: '8px', border: '1px solid var(--border-subtle)', borderRadius: '7px', background: 'var(--bg-card)' }}>
                             <div style={{ fontSize: '0.72rem', color: 'var(--text-primary)', marginBottom: '4px', fontWeight: 600 }}>
