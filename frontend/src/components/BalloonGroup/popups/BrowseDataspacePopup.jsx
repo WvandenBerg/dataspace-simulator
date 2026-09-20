@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { Search, X, GripHorizontal, ArrowLeft, Package, Settings2, Download, MapPin, Building, Eye, ChevronUp, ChevronDown, AlertCircle, ArrowRight } from 'lucide-react';
 import { DOMAIN_OPTIONS } from '../constants';
@@ -68,6 +68,11 @@ const BrowseDataspacePopup = ({
     const [semanticFieldKey, setSemanticFieldKey] = useState('dcat:keyword');
     const [semanticFieldValue, setSemanticFieldValue] = useState('');
     const [semanticFieldFilters, setSemanticFieldFilters] = useState([]);
+    const [hubProfiles, setHubProfiles] = useState([]);
+    const [schemaProfiles, setSchemaProfiles] = useState([]);
+    const [profileQuery, setProfileQuery] = useState('');
+    const [profileListOpen, setProfileListOpen] = useState(false);
+    const [hoveredProfile, setHoveredProfile] = useState(null);
     const [semanticResults, setSemanticResults] = useState(null);
     const [semanticLoading, setSemanticLoading] = useState(false);
     const [semanticError, setSemanticError] = useState(null);
@@ -82,6 +87,16 @@ const BrowseDataspacePopup = ({
     });
 
     const dataspaceId = String(allNodes?.[currentNodeId]?.dataspaceId || 'demo');
+
+    // A scenario need not ship a catalogue export, so an empty hub is expected.
+    useEffect(() => {
+        let cancelled = false;
+        fetch(`${API_BASE}/vocabhub/profiles`)
+            .then((r) => (r.ok ? r.json() : []))
+            .then((data) => { if (!cancelled) setHubProfiles(Array.isArray(data) ? data : []); })
+            .catch(() => { if (!cancelled) setHubProfiles([]); });
+        return () => { cancelled = true; };
+    }, []);
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -108,7 +123,7 @@ const BrowseDataspacePopup = ({
     const handleSemanticSearch = async () => {
         const hasFreeText = semanticQuery.trim().length > 0;
         const hasPendingFieldFilter = semanticFieldValue.trim().length > 0;
-        const hasFilter = semanticFieldFilters.length > 0 || hasPendingFieldFilter;
+        const hasFilter = semanticFieldFilters.length > 0 || hasPendingFieldFilter || schemaProfiles.length > 0;
         if (!hasFreeText && !hasFilter) return;
         setSemanticLoading(true); setSemanticError(null); setSemanticResults(null); setHiddenOwnResults(0);
         try {
@@ -193,6 +208,7 @@ const BrowseDataspacePopup = ({
                     consumerNodeId: currentNodeId,
                     providerNodeIds: providerIds,
                     dcatFieldFilters: fieldFilters,
+                    schemaProfiles,
                     limit: 30
                 })
             });
@@ -226,6 +242,19 @@ const BrowseDataspacePopup = ({
         if (!semanticFieldKey || !value) return;
         setSemanticFieldFilters((prev) => [...prev, { key: semanticFieldKey, value }]);
         setSemanticFieldValue('');
+    };
+
+    // Matching on the title alone is enough because it carries the version, so
+    // "asam open" narrows to a family and "1.7" to a release within it.
+    const matchingProfiles = hubProfiles.filter((p) => (
+        !schemaProfiles.includes(p.id)
+        && String(p.title).toLowerCase().includes(profileQuery.trim().toLowerCase())
+    ));
+
+    const addSchemaProfile = (id) => {
+        setSchemaProfiles((prev) => (prev.includes(id) ? prev : [...prev, id]));
+        setProfileQuery('');
+        setProfileListOpen(false);
     };
 
     const resetFilters = () => {
@@ -502,7 +531,7 @@ const BrowseDataspacePopup = ({
                         />
                         <button
                             onClick={(e) => { e.stopPropagation(); handleSemanticSearch(); }}
-                            disabled={semanticLoading || (!semanticQuery.trim() && semanticFieldFilters.length === 0 && !semanticFieldValue.trim())}
+                            disabled={semanticLoading || (!semanticQuery.trim() && semanticFieldFilters.length === 0 && !semanticFieldValue.trim() && schemaProfiles.length === 0)}
                             style={{ padding: '7px 12px', background: semanticLoading ? '#1d4ed8' : '#2563eb', border: 'none', borderRadius: '6px', color: '#f8fafc', cursor: semanticLoading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', fontWeight: 600 }}
                         >
                             {semanticLoading ? '...' : 'Go'}
@@ -561,6 +590,64 @@ const BrowseDataspacePopup = ({
                             >
                                 Clear
                             </button>
+                        </div>
+                    )}
+
+                    {hubProfiles.length > 0 && (
+                        <div style={{ marginBottom: '10px' }}>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    value={profileQuery}
+                                    onChange={(e) => { setProfileQuery(e.target.value); setProfileListOpen(true); }}
+                                    onFocus={() => setProfileListOpen(true)}
+                                    onBlur={() => setProfileListOpen(false)}
+                                    onClick={e => e.stopPropagation()}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && matchingProfiles.length > 0) {
+                                            e.preventDefault();
+                                            addSchemaProfile(matchingProfiles[0].id);
+                                        }
+                                        if (e.key === 'Escape') setProfileListOpen(false);
+                                    }}
+                                    placeholder="Data standard from the Vocabulary Hub..."
+                                    style={{ width: '100%', boxSizing: 'border-box', padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
+                                />
+
+                                {profileListOpen && matchingProfiles.length > 0 && (
+                                    <div
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: '2px', maxHeight: '150px', overflowY: 'auto', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px' }}
+                                    >
+                                        {matchingProfiles.map((p) => (
+                                            <div
+                                                key={p.id}
+                                                onClick={() => addSchemaProfile(p.id)}
+                                                onMouseEnter={() => setHoveredProfile(p.id)}
+                                                onMouseLeave={() => setHoveredProfile(null)}
+                                                style={{ padding: '5px 8px', fontSize: '0.74rem', color: 'var(--text-primary)', cursor: 'pointer', background: hoveredProfile === p.id ? 'var(--color-primary-bg)' : 'transparent' }}
+                                            >
+                                                {p.title}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {schemaProfiles.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px', minWidth: 0 }}>
+                                    {schemaProfiles.map((id) => (
+                                        <button
+                                            key={id}
+                                            onClick={() => setSchemaProfiles((prev) => prev.filter((p) => p !== id))}
+                                            style={{ maxWidth: '100%', padding: '3px 8px', borderRadius: '999px', border: '1px solid #22c55e', background: '#14532d', color: '#dcfce7', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                            title="Remove profile"
+                                        >
+                                            {hubProfiles.find((p) => p.id === id)?.title || id} x
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 
