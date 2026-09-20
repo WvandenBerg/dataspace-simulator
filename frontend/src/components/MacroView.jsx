@@ -126,8 +126,6 @@ const MacroView = forwardRef(({
     onAction,
     logs,
     catalog,
-    catalogRequestLine,
-    onViewCatalog,
     discoveryPulse,
     onDiscoveryPulse,
     controlPlaneGlow,
@@ -428,87 +426,6 @@ const MacroView = forwardRef(({
                     minimalView={minimalView}
                 />
 
-                {/* Catalog Request Line - Control Plane zu Control Plane (blau) */}
-                {catalogRequestLine && nodes[catalogRequestLine.from] && nodes[catalogRequestLine.to] && (() => {
-                    // Calculate shortened positions (80px offset toward center from each node)
-                    const fromNode = nodes[catalogRequestLine.from];
-                    const toNode = nodes[catalogRequestLine.to];
-                    const BEAM_OFFSET = 80; // Distance to shorten from each end
-
-                    // Calculate direction vector
-                    const dx = toNode.x - fromNode.x;
-                    const dy = toNode.y - fromNode.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    const ux = dx / dist; // Unit vector
-                    const uy = dy / dist;
-
-                    // Offset start and end points
-                    const x1 = fromNode.x + ux * BEAM_OFFSET;
-                    const y1 = fromNode.y + uy * BEAM_OFFSET;
-                    const x2 = toNode.x - ux * BEAM_OFFSET;
-                    const y2 = toNode.y - uy * BEAM_OFFSET;
-
-                    return (
-                        <svg
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                height: '100%',
-                                overflow: 'visible',
-                                pointerEvents: 'none',
-                                zIndex: 5
-                            }}
-                        >
-                            <defs>
-                                <linearGradient id="catalogLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
-                                    <stop offset="50%" stopColor="#60a5fa" stopOpacity="1" />
-                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
-                                </linearGradient>
-                                <filter id="catalogGlow">
-                                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                                    <feMerge>
-                                        <feMergeNode in="coloredBlur" />
-                                        <feMergeNode in="SourceGraphic" />
-                                    </feMerge>
-                                </filter>
-                            </defs>
-                            <motion.line
-                                x1={x1}
-                                y1={y1}
-                                x2={x2}
-                                y2={y2}
-                                stroke="url(#catalogLineGradient)"
-                                strokeWidth="4"
-                                strokeLinecap="round"
-                                filter="url(#catalogGlow)"
-                                initial={{ pathLength: 0, opacity: 0 }}
-                                animate={{ pathLength: 1, opacity: 1 }}
-                                transition={{ duration: 0.8, ease: "easeOut" }}
-                            />
-                            {/* Animated pulse along the line */}
-                            <motion.circle
-                                r="8"
-                                fill="#60a5fa"
-                                filter="url(#catalogGlow)"
-                                initial={{ opacity: 0 }}
-                                animate={{
-                                    cx: [x1, x2],
-                                    cy: [y1, y2],
-                                    opacity: [0, 1, 1, 0]
-                                }}
-                                transition={{
-                                    duration: 1.5,
-                                    repeat: Infinity,
-                                    ease: "linear"
-                                }}
-                            />
-                        </svg>
-                    );
-                })()}
-
                 {/* Vocabulary Hub tether - only meaningful while the hub sits outside the ring */}
                 {vocabHub.isConnected && (() => {
                     const { x, y } = vocabHub.position;
@@ -583,7 +500,6 @@ const MacroView = forwardRef(({
                             scale={viewState.scale}
                             participantData={node}
                             allNodes={nodes}
-                            onViewCatalog={onViewCatalog}
                             onDiscoveryPulse={onDiscoveryPulse}
                             minimalView={minimalView}
                             controlPlaneGlow={

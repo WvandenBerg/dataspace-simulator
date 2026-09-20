@@ -49,7 +49,6 @@ const ConnectorNode = ({
     // Neue Props für Browse Dataspace
     participantData = {},
     allNodes = {},
-    onViewCatalog = () => { },
     onDiscoveryPulse = () => { },
     controlPlaneGlow = 0,
     dataPlaneGlowExternal = 0,
@@ -193,7 +192,6 @@ const ConnectorNode = ({
                 participantData={participantData}
                 allNodes={allNodes}
                 currentNodeId={id}
-                onViewCatalog={onViewCatalog}
                 onDiscoveryPulse={onDiscoveryPulse}
                 onRequestContract={onRequestContract}
                 onLocalSearchChange={setSearchAnimationState}

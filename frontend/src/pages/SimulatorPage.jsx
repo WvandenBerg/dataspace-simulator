@@ -39,7 +39,6 @@ function SimulatorPage() {
     // Animation States
     const [discoveryPulse, setDiscoveryPulse] = useState(false);
     const [controlPlaneGlow, setControlPlaneGlow] = useState(null);
-    const [catalogRequestLine, setCatalogRequestLine] = useState(null);
     const [ringLight, setRingLight] = useState(null);
     const [dataPlaneConnection, setDataPlaneConnection] = useState(null);
     const [dataTransfer, setDataTransfer] = useState(null);
@@ -110,17 +109,6 @@ function SimulatorPage() {
 
     const handleConnectorClick = (id) => {
         setActiveConnector(id);
-    };
-
-    const handleViewCatalog = async (provider) => {
-        setControlPlaneGlow({ nodeId: provider.id, intensity: 1 });
-        if (activeConnector) {
-            setCatalogRequestLine({ from: activeConnector, to: provider.id });
-        }
-        setTimeout(() => {
-            setControlPlaneGlow(null);
-            setCatalogRequestLine(null);
-        }, 3000);
     };
 
     const handleRequestContract = async (asset, provider, consumerNodeId) => {
@@ -350,8 +338,6 @@ function SimulatorPage() {
                     onAction={handleAction}
                     logs={logs}
                     catalog={catalog}
-                    catalogRequestLine={catalogRequestLine}
-                    onViewCatalog={handleViewCatalog}
                     discoveryPulse={discoveryPulse}
                     onDiscoveryPulse={setDiscoveryPulse}
                     controlPlaneGlow={controlPlaneGlow}
