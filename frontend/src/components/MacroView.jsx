@@ -515,15 +515,22 @@ const MacroView = forwardRef(({
                     const dist = Math.sqrt(x * x + y * y) || 1;
                     const edgeRadius = minimalView ? 330 : 550;
                     if (dist <= edgeRadius) return null;
+
+                    // A zero-sized <svg> is not rendered at all, whatever overflow says,
+                    // so give it real dimensions and put the canvas origin at its centre.
+                    const SIZE = 6000;
+                    const HALF = SIZE / 2;
                     return (
                         <svg
-                            style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none', zIndex: 11 }}
+                            width={SIZE}
+                            height={SIZE}
+                            style={{ position: 'absolute', left: -HALF, top: -HALF, pointerEvents: 'none', zIndex: 11 }}
                         >
                             <line
-                                x1={(x / dist) * edgeRadius}
-                                y1={(y / dist) * edgeRadius}
-                                x2={x}
-                                y2={y}
+                                x1={HALF + (x / dist) * edgeRadius}
+                                y1={HALF + (y / dist) * edgeRadius}
+                                x2={HALF + x}
+                                y2={HALF + y}
                                 stroke="#22c55e"
                                 strokeWidth={4 / finalScale}
                                 strokeDasharray={`${11 / finalScale} ${8 / finalScale}`}
