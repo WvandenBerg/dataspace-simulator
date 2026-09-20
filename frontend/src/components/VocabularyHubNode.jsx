@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
+import { useNodeDrag } from './hooks/useNodeDrag';
 
 /**
  * The Vocabulary Hub as a node you can connect to a dataspace, or not.
@@ -14,26 +15,18 @@ const HUB_SIZE = 84;
 // eslint here has no react plugin, so a lowercase JSX root never counts as used.
 const MotionDiv = motion.div;
 
-const VocabularyHubNode = ({ position, isConnected, onDragStart, onDrag, onDragEnd, onClick }) => {
-    const [isDragging, setIsDragging] = useState(false);
-    const hasDragged = useRef(false);
+const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, onDragEnd, onClick }) => {
+    const { isDragging, hasDragged, handlePointerDown } = useNodeDrag({
+        isZoomed: false,
+        scale,
+        onDragStart,
+        onDrag,
+        onDragEnd,
+    });
 
     return (
         <MotionDiv
-            drag
-            dragMomentum={false}
-            onDragStart={(e, info) => {
-                hasDragged.current = true;
-                setIsDragging(true);
-                onDragStart?.(e, info);
-            }}
-            onDrag={onDrag}
-            onDragEnd={(e, info) => {
-                setIsDragging(false);
-                onDragEnd?.(e, info);
-                setTimeout(() => { hasDragged.current = false; }, 0);
-            }}
-            onPointerDown={() => { hasDragged.current = false; }}
+            onPointerDown={handlePointerDown}
             onClick={(e) => {
                 if (hasDragged.current) return;
                 e.stopPropagation();
@@ -46,8 +39,8 @@ const VocabularyHubNode = ({ position, isConnected, onDragStart, onDrag, onDragE
                 opacity: isConnected ? 1 : 0.55,
             }}
             transition={{
-                x: { type: 'spring', stiffness: 180, damping: 24 },
-                y: { type: 'spring', stiffness: 180, damping: 24 },
+                x: isDragging ? { duration: 0 } : { type: 'spring', stiffness: 180, damping: 24 },
+                y: isDragging ? { duration: 0 } : { type: 'spring', stiffness: 180, damping: 24 },
                 scale: { type: 'spring', stiffness: 300, damping: 30 },
                 opacity: { duration: 0.3 },
             }}
@@ -58,7 +51,7 @@ const VocabularyHubNode = ({ position, isConnected, onDragStart, onDrag, onDragE
                 width: 0,
                 height: 0,
                 overflow: 'visible',
-                zIndex: 8,
+                zIndex: 12,
                 filter: isConnected ? 'none' : 'grayscale(100%)',
                 cursor: isDragging ? 'grabbing' : 'grab',
             }}
