@@ -548,8 +548,30 @@ app.get('/api/vocabhub/alignments', hubRoute((req) => vocabhub.listAlignments({
 // Policy-scoping: only search within nodes the consumer can see
 // ============================================================
 
+// Maps every searchable profile to how it became searchable: null for the ones
+// the consumer picked, an alignment for the ones the hub reaches from them.
+// One hop only, so a reached profile is never itself expanded.
+async function widenByAlignments(requested, minCoverage) {
+    const reach = new Map(requested.map((id) => [id, null]));
+    for (const target of requested) {
+        for (const alignment of await vocabhub.listAlignments({ target, minCoverage })) {
+            const source = alignment.source?.id;
+            if (source && !reach.has(source)) {
+                reach.set(source, {
+                    alignmentId: alignment.id,
+                    alignmentTitle: alignment.title,
+                    sourceProfile: alignment.source,
+                    targetProfile: alignment.target,
+                    coverage: alignment.coverage,
+                });
+            }
+        }
+    }
+    return reach;
+}
+
 app.post('/api/semantic/search', async (req, res) => {
-    const { searchText = '', consumerNodeId, providerNodeIds = null, dcatFilters = {}, dcatFieldFilters = [], schemaProfiles = null, limit = 25 } = req.body || {};
+    const { searchText = '', consumerNodeId, providerNodeIds = null, dcatFilters = {}, dcatFieldFilters = [], schemaProfiles = null, useAlignments = false, minCoverage = null, limit = 25 } = req.body || {};
     const dataspaceId = resolveDataspaceId(req.body?.dataspaceId);
 
     // Catalog-first visibility: determine exactly which assets are visible
@@ -572,6 +594,21 @@ app.post('/api/semantic/search', async (req, res) => {
         return res.json({ success: true, results: [], mode: 'catalog-first-fuseki' });
     }
 
+    const requestedProfiles = Array.isArray(schemaProfiles) ? schemaProfiles.filter(Boolean) : [];
+    let reach = new Map(requestedProfiles.map((id) => [id, null]));
+    let alignmentsUsed = useAlignments && requestedProfiles.length > 0;
+    let hubUnavailable = null;
+    if (alignmentsUsed) {
+        try {
+            reach = await widenByAlignments(requestedProfiles, minCoverage);
+        } catch (err) {
+            // Losing the hub narrows discovery back to the picked profiles; it
+            // is not a reason to fail a search the store can still answer.
+            hubUnavailable = err.message;
+            alignmentsUsed = false;
+        }
+    }
+
     try {
         const rawResults = await semanticSearch({
             searchText,
@@ -579,7 +616,7 @@ app.post('/api/semantic/search', async (req, res) => {
             datasetIds: visibleDatasetIds,
             dcatFilters,
             dcatFieldFilters,
-            schemaProfiles,
+            schemaProfiles: requestedProfiles.length > 0 ? [...reach.keys()] : null,
             limit: Math.min(Number(limit) || 25, 100),
         });
 
@@ -589,11 +626,23 @@ app.post('/api/semantic/search', async (req, res) => {
                 .map((n) => [String(n.metadata.bpn).toLowerCase(), n.node_id])
         );
 
-        const results = rawResults.map((result) => ({
-            ...result,
-            publisherNodeId: bpnToNodeId.get(String(result.publisherBpn || '').toLowerCase()) || result.publisherBpn,
-        }));
-        res.json({ success: true, results, mode: 'catalog-first-fuseki' });
+        // A result that declares a picked profile needs no explanation, even if
+        // it also declares a reached one. Only the rest get labelled.
+        const reachedVia = (result) => {
+            const declared = (result.distributions || []).flatMap((d) => d.dataStandard?.schema || []);
+            if (declared.some((s) => reach.has(s) && reach.get(s) === null)) return null;
+            return declared.map((s) => reach.get(s)).find(Boolean) || null;
+        };
+
+        const results = rawResults.map((result) => {
+            const via = reachedVia(result);
+            return {
+                ...result,
+                publisherNodeId: bpnToNodeId.get(String(result.publisherBpn || '').toLowerCase()) || result.publisherBpn,
+                ...(via ? { reachableVia: via } : {}),
+            };
+        });
+        res.json({ success: true, results, mode: 'catalog-first-fuseki', alignmentsUsed, ...(hubUnavailable ? { hubUnavailable } : {}) });
     } catch (err) {
         console.error('[Semantic] Search failed:', err.message);
         res.status(502).json({ success: false, error: 'Semantic search failed', details: err.message });
