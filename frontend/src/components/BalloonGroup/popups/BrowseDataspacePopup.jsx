@@ -76,6 +76,7 @@ const BrowseDataspacePopup = ({
     const [hoveredProfile, setHoveredProfile] = useState(null);
     const [useAlignments, setUseAlignments] = useState(false);
     const [minCoverage, setMinCoverage] = useState(0.5);
+    const [alignmentsApplied, setAlignmentsApplied] = useState(false);
     const [semanticResults, setSemanticResults] = useState(null);
     const [semanticLoading, setSemanticLoading] = useState(false);
     const [semanticError, setSemanticError] = useState(null);
@@ -225,6 +226,7 @@ const BrowseDataspacePopup = ({
                 return publisherNodeId !== String(currentNodeId || '').toLowerCase();
             });
             setHiddenOwnResults(Math.max(0, all.length - filtered.length));
+            setAlignmentsApplied(Boolean(data.alignmentsUsed));
             setSemanticPhase('rendering');
             setSemanticStatusText('Preparing results...');
             await sleep(260);
@@ -725,6 +727,24 @@ const BrowseDataspacePopup = ({
                                                 <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.82rem', marginBottom: '2px' }}>{result.title || result.datasetId}</div>
                                                 {result.description && !isExpanded && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{result.description.substring(0, 70)}{result.description.length > 70 ? '…' : ''}</div>}
                                                 <div style={{ fontSize: '0.68rem', color: '#64748b' }}>by {result.publisherName || result.publisherNodeId || 'Unknown'}</div>
+                                                {/* Without widening every hit is direct, so saying so would tell nobody anything. */}
+                                                {alignmentsApplied && (
+                                                    result.reachableVia ? (
+                                                        <div
+                                                            title={`Declares ${result.reachableVia.sourceProfile?.title || result.reachableVia.sourceProfile?.id}, which the hub aligns to ${result.reachableVia.targetProfile?.title || result.reachableVia.targetProfile?.id}`}
+                                                            style={{ display: 'inline-block', marginTop: '5px', padding: '2px 7px', borderRadius: '999px', border: '1px solid rgba(245,158,11,0.5)', background: 'rgba(245,158,11,0.16)', color: '#b45309', fontSize: '0.65rem', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                                        >
+                                                            via {result.reachableVia.sourceProfile?.title || result.reachableVia.sourceProfile?.id}
+                                                            {result.reachableVia.coverage !== null && result.reachableVia.coverage !== undefined
+                                                                ? ` · ${Math.round(result.reachableVia.coverage * 100)}%`
+                                                                : ''}
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ display: 'inline-block', marginTop: '5px', padding: '2px 7px', borderRadius: '999px', border: '1px solid rgba(34,197,94,0.45)', background: 'rgba(34,197,94,0.14)', color: '#15803d', fontSize: '0.65rem' }}>
+                                                            direct match
+                                                        </div>
+                                                    )
+                                                )}
                                             </div>
                                             {isExpanded && (
                                                 <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '10px', background: 'rgba(37,99,235,0.08)' }}>
