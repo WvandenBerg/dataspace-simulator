@@ -70,8 +70,11 @@ nothing here, since nothing external is ever contacted.
 Every other dataspace starts empty. An empty Data Storage panel renders as three static dots
 that look exactly like a loading spinner.
 
-**`BrowseDataspacePanel.jsx` is dead code** — 420 lines, never imported. The live component
-is `BalloonGroup/popups/BrowseDataspacePopup.jsx`. Check imports before editing a component.
+**The Browse Dataspace UI lives in `BalloonGroup/popups/BrowseDataspacePopup.jsx`.** An older
+`BrowseDataspacePanel.jsx` was deleted once it was confirmed unreachable, along with the
+`onViewCatalog` prop chain and `catalogRequestLine` that existed only to serve it. The line
+you see between two control planes is `ControlPlaneBeam`, driven by `setRingLight`. Check
+imports before editing a component.
 
 ## 5) Conventions
 
@@ -112,7 +115,7 @@ chore: translate German comments to English
 ## 7) Checks before committing
 
 ```bash
-cd frontend && npx eslint src        # 65 problems is the known baseline — do not add to it
+cd frontend && npx eslint src        # 60 problems is the known baseline — do not add to it
 cd frontend && npx vite build        # must succeed
 ```
 
