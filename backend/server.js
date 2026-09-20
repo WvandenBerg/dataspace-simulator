@@ -549,7 +549,7 @@ app.get('/api/vocabhub/alignments', hubRoute((req) => vocabhub.listAlignments({
 // ============================================================
 
 app.post('/api/semantic/search', async (req, res) => {
-    const { searchText = '', consumerNodeId, providerNodeIds = null, dcatFilters = {}, dcatFieldFilters = [], limit = 25 } = req.body || {};
+    const { searchText = '', consumerNodeId, providerNodeIds = null, dcatFilters = {}, dcatFieldFilters = [], schemaProfiles = null, limit = 25 } = req.body || {};
     const dataspaceId = resolveDataspaceId(req.body?.dataspaceId);
 
     // Catalog-first visibility: determine exactly which assets are visible
@@ -579,6 +579,7 @@ app.post('/api/semantic/search', async (req, res) => {
             datasetIds: visibleDatasetIds,
             dcatFilters,
             dcatFieldFilters,
+            schemaProfiles,
             limit: Math.min(Number(limit) || 25, 100),
         });
 

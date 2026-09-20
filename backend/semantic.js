@@ -434,6 +434,7 @@ async function semanticSearch({
     policyName = null,
     dcatFilters = {},
     dcatFieldFilters = [],
+    schemaProfiles = null,
     limit = 25
 }) {
     const filters = [];
@@ -482,6 +483,20 @@ async function semanticSearch({
         filters.push(`CONTAINS(LCASE(STR(${varName})), LCASE("${safe(value)}"))`);
     });
 
+    // The schema a distribution declares is two hops from the dataset, so this
+    // cannot go through DCAT_FIELD_TO_PREDICATE like the one-hop filters above.
+    // Set membership rather than substring: a profile IRI either is or is not
+    // the one asked for, and VALUES lets the store do that join.
+    const schemaSet = Array.isArray(schemaProfiles)
+        ? [...new Set(schemaProfiles.map(p => escapeIri(p)).filter(Boolean))]
+        : [];
+    const schemaTriples = schemaSet.length > 0
+        ? [
+            `?dataset <${PREDICATES.distribution}>/<${PREDICATES.mobilityDataStandard}>/<${PREDICATES.schema}> ?schemaMatch .`,
+            `VALUES ?schemaMatch { ${schemaSet.map(p => `<${p}>`).join(' ')} }`,
+        ]
+        : [];
+
     const whereFilter = filters.length > 0 ? `FILTER(${filters.join(' && ')})` : '';
     const maxLimit = Math.max(1, Math.min(Number(limit) || 25, 200));
 
@@ -519,6 +534,7 @@ WHERE {
         OPTIONAL { ?dataset <http://purl.org/dc/terms/isPartOf> ?sessionCode . }
         ${projectionOptionals}
         ${fieldTriples.join('\n        ')}
+        ${schemaTriples.join('\n        ')}
     }
     ${whereFilter}
 }
