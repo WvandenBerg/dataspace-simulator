@@ -10,7 +10,10 @@ import { useNodeDrag } from './hooks/useNodeDrag';
  * widen a search along profile alignments. Drag it out of range and that
  * ability goes away, which is the whole argument for the hub made draggable.
  */
-const HUB_SIZE = 84;
+// Matches the height of a participant card, so the hub reads as a peer of the
+// nodes on the ring rather than an annotation next to them.
+const HUB_SIZE = 176;
+const LOGO_SIZE = 96;
 
 // eslint here has no react plugin, so a lowercase JSX root never counts as used.
 const MotionDiv = motion.div;
@@ -70,8 +73,8 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
                     height: `${HUB_SIZE}px`,
                     borderRadius: '50%',
                     background: '#14532d',
-                    border: `3px solid ${isConnected ? '#22c55e' : 'var(--border-subtle)'}`,
-                    boxShadow: isConnected ? '0 0 24px rgba(34, 197, 94, 0.45)' : 'none',
+                    border: `4px solid ${isConnected ? '#22c55e' : 'var(--border-subtle)'}`,
+                    boxShadow: isConnected ? '0 0 40px rgba(34, 197, 94, 0.45)' : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -80,12 +83,12 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
                         src="/assets/sth-logo.svg"
                         alt="Semantic Treehouse"
                         draggable={false}
-                        style={{ width: '46px', height: '46px' }}
+                        style={{ width: `${LOGO_SIZE}px`, height: `${LOGO_SIZE}px` }}
                     />
                 </div>
 
                 <div style={{
-                    fontSize: '0.78rem',
+                    fontSize: '0.9rem',
                     fontWeight: 700,
                     color: 'var(--text-primary)',
                     whiteSpace: 'nowrap',
@@ -93,7 +96,7 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
                     Vocabulary Hub
                 </div>
                 <div style={{
-                    fontSize: '0.62rem',
+                    fontSize: '0.7rem',
                     color: isConnected ? '#16a34a' : 'var(--text-muted)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
