@@ -63,46 +63,50 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
             <div style={{
                 position: 'absolute',
                 transform: 'translate(-50%, -50%)',
+                width: `${HUB_SIZE}px`,
+                height: `${HUB_SIZE}px`,
+                borderRadius: '50%',
+                background: '#14532d',
+                border: `4px solid ${isConnected ? '#22c55e' : 'var(--border-subtle)'}`,
+                boxShadow: isConnected ? '0 0 40px rgba(34, 197, 94, 0.45)' : 'none',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                gap: '6px',
+                justifyContent: 'center',
             }}>
-                <div style={{
-                    width: `${HUB_SIZE}px`,
-                    height: `${HUB_SIZE}px`,
-                    borderRadius: '50%',
-                    background: '#14532d',
-                    border: `4px solid ${isConnected ? '#22c55e' : 'var(--border-subtle)'}`,
-                    boxShadow: isConnected ? '0 0 40px rgba(34, 197, 94, 0.45)' : 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}>
-                    <img
-                        src="/assets/sth-logo.svg"
-                        alt="Semantic Treehouse"
-                        draggable={false}
-                        style={{ width: `${LOGO_SIZE}px`, height: `${LOGO_SIZE}px` }}
-                    />
-                </div>
+                <img
+                    src="/assets/sth-logo.svg"
+                    alt="Semantic Treehouse"
+                    draggable={false}
+                    style={{ width: `${LOGO_SIZE}px`, height: `${LOGO_SIZE}px` }}
+                />
 
+                {/* Parked this close to the ring, the space below the hub belongs to
+                    a participant card, so the caption goes above it. */}
                 <div style={{
-                    fontSize: '0.9rem',
-                    fontWeight: 700,
-                    color: 'var(--text-primary)',
-                    whiteSpace: 'nowrap',
+                    position: 'absolute',
+                    bottom: `${HUB_SIZE}px`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
                 }}>
-                    Vocabulary Hub
-                </div>
-                <div style={{
-                    fontSize: '0.7rem',
-                    color: isConnected ? '#16a34a' : 'var(--text-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    whiteSpace: 'nowrap',
-                }}>
-                    {isConnected ? 'Connected' : 'Not connected'}
+                    <div style={{
+                        fontSize: '0.9rem',
+                        fontWeight: 700,
+                        color: 'var(--text-primary)',
+                        whiteSpace: 'nowrap',
+                    }}>
+                        Vocabulary Hub
+                    </div>
+                    <div style={{
+                        fontSize: '0.7rem',
+                        color: isConnected ? '#16a34a' : 'var(--text-muted)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                        whiteSpace: 'nowrap',
+                    }}>
+                        {isConnected ? 'Connected' : 'Not connected'}
+                    </div>
                 </div>
             </div>
         </MotionDiv>

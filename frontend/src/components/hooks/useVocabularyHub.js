@@ -10,15 +10,22 @@ import { useCallback, useRef, useState } from 'react';
  * and they should not look alike. Neither is dataspace data, so both live in
  * localStorage rather than the nodes table.
  */
-// Participant cards occupy a wide band just outside the ring, so the hub parks
-// beside them rather than in them, and stays connected across a long drag.
-const OFFSET_FROM_RING = 640;
-const CONNECT_MARGIN = 940;
+// The connect margin is deliberately short: losing the service should take one
+// deliberate drag, not a journey across the canvas. Participant cards reach as
+// far as ~1180 from the centre, so within that margin there is no radius that
+// clears them at every angle. The default parks in the gap above the card due
+// east instead.
+const OFFSET_FROM_RING = 210;
+const CONNECT_MARGIN = 470;
+const PARK_ANGLE = -10 * (Math.PI / 180);
 
 const storageKey = (dataspaceId) => `vocabhub-position:${dataspaceId}`;
 const enabledKey = (dataspaceId) => `vocabhub-enabled:${dataspaceId}`;
 
-const defaultPosition = (ringRadius) => ({ x: ringRadius + OFFSET_FROM_RING, y: 0 });
+const defaultPosition = (ringRadius) => {
+    const radius = ringRadius + OFFSET_FROM_RING;
+    return { x: Math.round(radius * Math.cos(PARK_ANGLE)), y: Math.round(radius * Math.sin(PARK_ANGLE)) };
+};
 
 function loadPosition(dataspaceId, ringRadius) {
     try {
