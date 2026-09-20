@@ -91,12 +91,15 @@ export function useVocabularyHub(dataspaceId, ringRadius) {
 
     const setEnabled = useCallback((next) => {
         setState((prev) => {
-            // Restoring a far-away position would show the service arriving already
-            // out of range, which reads as a fault rather than a choice.
-            const position = next ? defaultPosition(ringRadius) : prev.position;
+            // Keep where the user put it, unless that is out of range: a service
+            // arriving already disconnected reads as a fault rather than a choice.
+            const inRange = Math.hypot(prev.position.x, prev.position.y) < ringRadius + CONNECT_MARGIN;
+            const position = next && !inRange ? defaultPosition(ringRadius) : prev.position;
             try {
                 localStorage.setItem(enabledKey(dataspaceId), String(next));
-                if (next) localStorage.setItem(storageKey(dataspaceId), JSON.stringify(position));
+                if (position !== prev.position) {
+                    localStorage.setItem(storageKey(dataspaceId), JSON.stringify(position));
+                }
             } catch {
                 // The toggle still works for this session.
             }
