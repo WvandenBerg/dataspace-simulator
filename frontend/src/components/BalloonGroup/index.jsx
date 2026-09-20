@@ -35,7 +35,8 @@ const BalloonGroup = ({
     onEditAsset = () => { },
     onAction,
     isDemo = true,
-    minimalView = false
+    minimalView = false,
+    vocabularyConnected = false
 }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -280,6 +281,7 @@ const BalloonGroup = ({
                 onClose={() => setShowBrowsePopup(false)}
                 allNodes={allNodes}
                 currentNodeId={currentNodeId}
+                vocabularyConnected={vocabularyConnected}
                 negotiationState={negotiationState}
                 negotiationStatusText={negotiationStatusText}
                 negotiationProtocolState={negotiationProtocolState}

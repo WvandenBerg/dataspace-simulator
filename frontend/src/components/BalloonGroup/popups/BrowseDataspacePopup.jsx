@@ -33,6 +33,7 @@ const BrowseDataspacePopup = ({
     onClose,
     allNodes,
     currentNodeId,
+    vocabularyConnected = false,
     negotiationState,
     negotiationStatusText,
     negotiationProtocolState,
@@ -73,6 +74,8 @@ const BrowseDataspacePopup = ({
     const [profileQuery, setProfileQuery] = useState('');
     const [profileListOpen, setProfileListOpen] = useState(false);
     const [hoveredProfile, setHoveredProfile] = useState(null);
+    const [useAlignments, setUseAlignments] = useState(false);
+    const [minCoverage, setMinCoverage] = useState(0.5);
     const [semanticResults, setSemanticResults] = useState(null);
     const [semanticLoading, setSemanticLoading] = useState(false);
     const [semanticError, setSemanticError] = useState(null);
@@ -209,6 +212,8 @@ const BrowseDataspacePopup = ({
                     providerNodeIds: providerIds,
                     dcatFieldFilters: fieldFilters,
                     schemaProfiles,
+                    useAlignments: useAlignments && vocabularyConnected,
+                    minCoverage,
                     limit: 30
                 })
             });
@@ -646,6 +651,38 @@ const BrowseDataspacePopup = ({
                                             {hubProfiles.find((p) => p.id === id)?.title || id} x
                                         </button>
                                     ))}
+                                </div>
+                            )}
+
+                            {/* Widening asks the hub a question at search time, so it needs a hub to ask. */}
+                            {vocabularyConnected && schemaProfiles.length > 0 && (
+                                <div style={{ marginTop: '8px', padding: '7px 8px', border: '1px solid var(--border-subtle)', borderRadius: '6px', background: 'var(--bg-elevated)' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={useAlignments}
+                                            onChange={(e) => setUseAlignments(e.target.checked)}
+                                            style={{ cursor: 'pointer' }}
+                                        />
+                                        Also find aligned standards
+                                    </label>
+
+                                    {useAlignments && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="1"
+                                                step="0.05"
+                                                value={minCoverage}
+                                                onChange={(e) => setMinCoverage(Number(e.target.value))}
+                                                style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                                            />
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                                {Math.round(minCoverage * 100)}% coverage
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

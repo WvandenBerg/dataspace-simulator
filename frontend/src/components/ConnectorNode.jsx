@@ -58,6 +58,7 @@ const ConnectorNode = ({
     setRingLight = () => { },
     allNodesPositions = {},
     onRequestContract = () => { },
+    vocabularyConnected = false,
     runContractAnimation = () => { },
     dataPlaneConnection = null,
     setDataPlaneConnection = () => { },
@@ -194,6 +195,7 @@ const ConnectorNode = ({
                 currentNodeId={id}
                 onDiscoveryPulse={onDiscoveryPulse}
                 onRequestContract={onRequestContract}
+                vocabularyConnected={vocabularyConnected}
                 onLocalSearchChange={setSearchAnimationState}
                 setControlPlaneGlow={setControlPlaneGlow}
                 setRingLight={setRingLight}

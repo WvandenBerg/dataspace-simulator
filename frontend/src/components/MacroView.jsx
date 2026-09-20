@@ -505,6 +505,7 @@ const MacroView = forwardRef(({
                             allNodes={nodes}
                             onDiscoveryPulse={onDiscoveryPulse}
                             minimalView={minimalView}
+                            vocabularyConnected={vocabHub.isConnected}
                             controlPlaneGlow={
                                 // Glow wenn spezifischer Node (Catalog-Anfrage) und NICHT dataPlane/dataWire type
                                 // Unterstützt sowohl einzelnes Objekt als auch Array
