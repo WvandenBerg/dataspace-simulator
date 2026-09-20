@@ -84,16 +84,20 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
                     is what sits on the hub's coordinates and takes the tether. */}
                 <div style={{
                     position: 'absolute',
-                    top: `${HUB_SIZE}px`,
+                    top: `${HUB_SIZE + 28}px`,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: '2px',
                 }}>
+                    {/* Matches .schematic-title: this is infrastructure, like a
+                        connector, not a named participant. */}
                     <div style={{
                         fontSize: '0.9rem',
-                        fontWeight: 700,
+                        fontWeight: 600,
                         color: 'var(--text-primary)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
                         whiteSpace: 'nowrap',
                     }}>
                         Vocabulary Hub
