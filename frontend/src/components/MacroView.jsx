@@ -7,8 +7,11 @@ import DataPlaneBeam from './DataPlaneBeam';
 import ControlPlaneBeam from './ControlPlaneBeam';
 import ZoomOutButton from './ZoomOutButton';
 import ZoomControls from './ZoomControls';
+import VocabularyHubNode from './VocabularyHubNode';
+import VocabularyHubDialog from './VocabularyHubDialog';
 import { useViewState } from './hooks/useViewState';
 import { useDragNodes } from './hooks/useDragNodes';
+import { useVocabularyHub } from './hooks/useVocabularyHub';
 import './Components.css';
 
 const DATASPACE_RADIUS = 550;
@@ -179,6 +182,9 @@ const MacroView = forwardRef(({
         handleDrag,
         handleDragEnd
     } = useDragNodes(initialNodesForDataspace, isFocused, dataspaceId, minimalView ? 330 : 550);
+
+    const vocabHub = useVocabularyHub(dataspaceId, ringRadius);
+    const [hubDialogOpen, setHubDialogOpen] = useState(false);
 
     useEffect(() => {
         return () => {
@@ -503,6 +509,38 @@ const MacroView = forwardRef(({
                     );
                 })()}
 
+                {/* Vocabulary Hub tether - drawn to the ring edge, not the centre */}
+                {vocabHub.isConnected && (() => {
+                    const { x, y } = vocabHub.position;
+                    const dist = Math.sqrt(x * x + y * y) || 1;
+                    const edgeRadius = minimalView ? 330 : 550;
+                    return (
+                        <svg
+                            style={{ position: 'absolute', left: 0, top: 0, width: 0, height: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 4 }}
+                        >
+                            <line
+                                x1={(x / dist) * edgeRadius}
+                                y1={(y / dist) * edgeRadius}
+                                x2={x}
+                                y2={y}
+                                stroke="#22c55e"
+                                strokeWidth={3}
+                                strokeDasharray="8 6"
+                                opacity={0.7}
+                            />
+                        </svg>
+                    );
+                })()}
+
+                <VocabularyHubNode
+                    position={vocabHub.position}
+                    isConnected={vocabHub.isConnected}
+                    onDragStart={vocabHub.onDragStart}
+                    onDrag={vocabHub.onDrag}
+                    onDragEnd={vocabHub.onDragEnd}
+                    onClick={() => setHubDialogOpen(true)}
+                />
+
                 {/* Connectors */}
                 {Object.keys(nodes).map(id => {
                     const node = nodes[id];
@@ -633,6 +671,13 @@ const MacroView = forwardRef(({
                 onZoomIn={zoomIn}
                 onZoomOut={zoomOut}
             />
+
+            {hubDialogOpen && (
+                <VocabularyHubDialog
+                    isConnected={vocabHub.isConnected}
+                    onClose={() => setHubDialogOpen(false)}
+                />
+            )}
         </div>
     );
 });
