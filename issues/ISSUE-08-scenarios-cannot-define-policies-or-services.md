@@ -4,9 +4,13 @@
 
 ### Problem / goal
 
-A scenario owns its participants and its assets, but not its policies. Every asset in
-`backend/scenarios/*.json` has to reference one of the four policies seeded globally in
-the database, and all four were written for the construction demo:
+A scenario owns its participants and its assets, but not its policies, and not the
+services its dataspace runs.
+
+#### Policies
+
+Every asset in `backend/scenarios/*.json` has to reference one of the four policies
+seeded globally in the database, and all four were written for the construction demo:
 
 | policy_id | constraint |
 | --- | --- |
@@ -25,20 +29,38 @@ and the other two moved into the scenario file. Leaving policies behind in a glo
 means the credentials a scenario gives its participants and the constraints its policies
 test are written in two different places, and nothing checks that they agree.
 
+#### Services
+
+The same gap, one level up. A dataspace can now run a vocabulary service or not, and the
+switch is in `localStorage` under `vocabhub-enabled:<dataspaceId>`. A scenario cannot set
+it. So loading the fuse4ccam scenario gives you the participants, the assets and the hub
+contents, and then leaves the service switched off, which is the one state in which none
+of the hub contents can be reached. Whoever is presenting has to know to flip it by hand.
+
+Storing it in the browser is the wrong shape for a second reason: it is configuration of
+the dataspace, not a view preference, so it should survive opening the simulator
+somewhere else. The hub's canvas position is a genuine view preference and can stay where
+it is.
+
 ### What is the expected outcome?
 
-A scenario can define its own policies, and its assets can reference them. Loading a
-scenario into a dataspace brings the policies with it.
+A scenario can define its own policies and declare which services its dataspace runs.
+Loading a scenario brings both with it, so a preset arrives ready to demonstrate.
 
 ### Which (groups of) users will actually use this feature?
 
 Anyone writing a scenario. Also anyone using the simulator to teach what a policy
 actually does, which is most of the point of the tool.
 
+For services, anyone presenting from a preset. Right now the fuse4ccam demo has a manual
+step before it shows anything.
+
 ### How will these users actually use this feature?
 
 Unchanged in the UI. The policy dropdown in the publish dialog would list the policies
-belonging to the active dataspace rather than the four global ones.
+belonging to the active dataspace rather than the four global ones. The Dataspace
+services panel would show the scenario's services already switched on, and stay a live
+toggle so it can still be switched off to make the teaching point.
 
 ### Solution design
 
@@ -63,8 +85,23 @@ dataspace has never heard of.
 Policies would then need scoping by dataspace on read, which `db.getPolicy` does not do
 today.
 
+For services, add a `services` key alongside it:
+
+```json
+"services": { "vocabulary": true }
+```
+
+That wants a home on the dataspace record rather than in `localStorage`, so
+`useVocabularyHub` would read `isEnabled` from the dataspace instead of the browser and
+write back through an endpoint. Worth keeping the shape open: discovery is currently
+hardcoded as always-on in `DataspaceServicesPanel`, and the DSSC service set is longer
+than two.
+
 ### Relevant documentation
 
 `backend/policy.js` for how claims are evaluated. Participant claims come from the flat
 keys in `node.metadata` (`industry`, `orgRole`, `bpn`), which scenarios already set via
 `participant.credentials`.
+
+`frontend/src/components/hooks/useVocabularyHub.js` for the current storage keys, and
+`DataspaceServicesPanel.jsx` for the panel that would reflect the scenario's services.
