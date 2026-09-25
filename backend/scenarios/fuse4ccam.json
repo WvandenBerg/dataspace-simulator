@@ -1,0 +1,582 @@
+{
+    "id": "fuse4ccam",
+    "name": "FUSE4CCAM",
+    "description": "Nine CCAM data providers from the FUSE4CCAM pilot sites, describing their datasets in mobilityDCAT-AP 1.1.0. Each distribution declares the data standard its payload follows, and points at the Vocabulary Hub for the schema. Partners, sites and use cases are real; controlled-vocabulary term slugs and one deliberately broken record are illustrative.",
+    "catalogExport": "catalog-exports/fuse4ccam.ttl",
+    "participants": [
+        {
+            "id": "tno",
+            "name": "TNO",
+            "bpn": "did:web:tno.nl",
+            "location": "Helmond, Netherlands",
+            "domain": "Research",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "automotive", "orgRole": "supplier" },
+            "ontologies": ["mobilityDCAT-AP", "ASAM OpenSCENARIO"],
+            "dataCategories": ["Scenarios", "Simulation"],
+            "formats": ["OSC", "JSON"],
+            "tags": ["WP1 lead", "WP2 lead", "Re-simulation"]
+        },
+        {
+            "id": "cefriel",
+            "name": "CEFRIEL",
+            "bpn": "did:web:cefriel.com",
+            "location": "Milan, Italy",
+            "domain": "Research",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "automotive", "orgRole": "supplier" },
+            "ontologies": ["mobilityDCAT-AP", "DCAT-AP"],
+            "dataCategories": ["Perception", "Annotations"],
+            "formats": ["JSON", "PCD"],
+            "tags": ["Profile authoring", "T1.2", "T2.2"]
+        },
+        {
+            "id": "idiada",
+            "name": "Applus IDIADA",
+            "bpn": "did:web:idiada.com",
+            "location": "Tarragona, Spain",
+            "domain": "Testing",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "automotive", "orgRole": "manufacturer" },
+            "ontologies": ["ASAM OpenSCENARIO", "ASAM OpenDRIVE"],
+            "dataCategories": ["Scenarios", "Proving ground"],
+            "formats": ["XOSC", "XODR"],
+            "tags": ["Proving ground", "Homologation"]
+        },
+        {
+            "id": "vicomtech",
+            "name": "Vicomtech",
+            "bpn": "did:web:vicomtech.org",
+            "location": "Donostia-San Sebastián, Spain",
+            "domain": "Research",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "automotive", "orgRole": "supplier" },
+            "ontologies": ["ASAM OpenLABEL"],
+            "dataCategories": ["Perception", "Annotations"],
+            "formats": ["JSON"],
+            "tags": ["BasqueCCAM corridor", "FAME TDS", "Technical coordinator"]
+        },
+        {
+            "id": "chalmers",
+            "name": "Chalmers University of Technology",
+            "bpn": "did:web:chalmers.se",
+            "location": "Gothenburg, Sweden",
+            "domain": "Research",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "automotive", "orgRole": "supplier" },
+            "ontologies": ["KITTI"],
+            "dataCategories": ["Perception", "Annotations"],
+            "formats": ["BIN", "TXT"],
+            "tags": ["Safety analysis", "Academic"]
+        },
+        {
+            "id": "avl",
+            "name": "AVL List",
+            "bpn": "did:web:avl.com",
+            "location": "Graz, Austria",
+            "domain": "Testing",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "automotive", "orgRole": "manufacturer" },
+            "ontologies": ["ISO 34503", "BSI PAS 1883"],
+            "dataCategories": ["ODD", "Safety"],
+            "formats": ["JSON", "XML"],
+            "tags": ["ODD description", "In-service monitoring"]
+        },
+        {
+            "id": "hamburg",
+            "name": "Freie und Hansestadt Hamburg",
+            "bpn": "did:web:hamburg.de",
+            "location": "Hamburg, Germany",
+            "domain": "Public authority",
+            "roles": { "provider": true, "consumer": false },
+            "credentials": { "industry": "automotive", "orgRole": "customer" },
+            "ontologies": ["ASAM OpenDRIVE", "mobilityDCAT-AP"],
+            "dataCategories": ["HD maps", "Infrastructure"],
+            "formats": ["XODR"],
+            "tags": ["Urban Data Platform", "TAVF", "UC3"]
+        },
+        {
+            "id": "helmond",
+            "name": "Gemeente Helmond",
+            "bpn": "did:web:helmond.nl",
+            "location": "Helmond, Netherlands",
+            "domain": "Public authority",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "automotive", "orgRole": "customer" },
+            "ontologies": ["DATEX II", "mobilityDCAT-AP"],
+            "dataCategories": ["C-ITS", "Traffic"],
+            "formats": ["XML", "JSON"],
+            "tags": ["DITM data space", "C-ITS corridor", "UC3"]
+        },
+        {
+            "id": "eonax",
+            "name": "EONA-X",
+            "bpn": "did:web:eona-x.eu",
+            "location": "Paris Charles-de-Gaulle, France",
+            "domain": "Data space",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "automotive", "orgRole": "supplier" },
+            "ontologies": ["SENSORIS", "mobilityDCAT-AP"],
+            "dataCategories": ["FOT", "Telemetry"],
+            "formats": ["JSON", "PROTOBUF"],
+            "tags": ["Paris CDG", "Autonomous shuttles", "UC1"]
+        }
+    ],
+    "assets": [
+        {
+            "assetId": "tno-resim-scenarios",
+            "ownerId": "tno",
+            "name": "Re-simulation scenario set, Helmond corridor",
+            "description": "Logical scenarios derived from field operational test recordings on the Helmond C-ITS corridor, for re-simulation of automated driving functions.",
+            "fileName": "helmond-resim-scenarios.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "Re-simulation scenario set, Helmond corridor",
+                "description": "Logical scenarios derived from field operational test recordings on the Helmond C-ITS corridor, for re-simulation of automated driving functions.",
+                "keywords": ["scenario", "re-simulation", "FOT", "cut-in"],
+                "themes": ["Automated driving", "Scenario-based assessment"],
+                "spatial": ["Helmond, Netherlands"],
+                "temporalCoverage": "2027-01/2027-12",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "mobilitydcatap:networkCoverage", "value": "Urban and motorway corridor" },
+                    { "key": "dct:accrualPeriodicity", "value": "Quarterly" },
+                    { "key": "dct:license", "value": "CC-BY-4.0" }
+                ],
+                "distributions": [
+                    {
+                        "title": "Scenario set, OpenSCENARIO DSL",
+                        "accessUrl": "https://data.sim.local/tno/helmond-resim-scenarios.osc",
+                        "mediaType": "application/x-openscenario-dsl",
+                        "format": "OSC",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-openscenario-dsl",
+                            "label": "ASAM OpenSCENARIO DSL",
+                            "version": "2.0",
+                            "schema": ["urn:vocabhub:profile:asam-openscenario-dsl-2.0"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "scenarioSet": "helmond-resim-2027",
+                "scenarioLevel": "logical",
+                "count": 148,
+                "derivedFrom": "DITM field operational test, 2026",
+                "odd": { "roadType": ["urban arterial", "motorway"], "weather": ["clear", "rain"] }
+            }
+        },
+        {
+            "assetId": "tno-waymo-motion-subset",
+            "ownerId": "tno",
+            "name": "Waymo Open Motion subset, interaction cases",
+            "description": "Interaction-heavy trajectory subset held in Waymo Open Motion format, used as a comparison baseline for re-simulation studies.",
+            "fileName": "waymo-motion-subset.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "Waymo Open Motion subset, interaction cases",
+                "description": "Interaction-heavy trajectory subset held in Waymo Open Motion format, used as a comparison baseline for re-simulation studies.",
+                "keywords": ["trajectories", "motion prediction", "interaction"],
+                "themes": ["Automated driving"],
+                "spatial": ["United States"],
+                "temporalCoverage": "2026-01/2026-12",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "dct:accrualPeriodicity", "value": "Irregular" }
+                ],
+                "distributions": [
+                    {
+                        "title": "Trajectory subset, Waymo Open Motion",
+                        "accessUrl": "https://data.sim.local/tno/waymo-motion-subset.tfrecord",
+                        "mediaType": "application/octet-stream",
+                        "format": "TFRECORD",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/waymo-open-motion",
+                            "label": "Waymo Open Motion",
+                            "version": "1.2",
+                            "schema": ["urn:vocabhub:profile:waymo-open-motion-1.2"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "segments": 2100,
+                "samplingHz": 10,
+                "agentTypes": ["vehicle", "pedestrian", "cyclist"]
+            }
+        },
+        {
+            "assetId": "cefriel-nuscenes-milan",
+            "ownerId": "cefriel",
+            "name": "Annotated urban object dataset, Milan",
+            "description": "Multi-sensor urban recordings with 3D object annotations, published in the nuScenes data model.",
+            "fileName": "milan-nuscenes.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "Annotated urban object dataset, Milan",
+                "description": "Multi-sensor urban recordings with 3D object annotations, published in the nuScenes data model.",
+                "keywords": ["perception", "annotation", "lidar", "urban"],
+                "themes": ["Automated driving", "Perception"],
+                "spatial": ["Milan, Italy"],
+                "temporalCoverage": "2027-03/2027-09",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "mobilitydcatap:georeferencingMethod", "value": "WGS84 coordinates" },
+                    { "key": "dct:accrualPeriodicity", "value": "Monthly" },
+                    { "key": "dct:license", "value": "CC-BY-NC-4.0" }
+                ],
+                "distributions": [
+                    {
+                        "title": "Annotated scenes, nuScenes",
+                        "accessUrl": "https://data.sim.local/cefriel/milan-nuscenes.json",
+                        "mediaType": "application/json",
+                        "format": "JSON",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/nuscenes",
+                            "label": "nuScenes",
+                            "version": "1.0",
+                            "schema": ["urn:vocabhub:profile:nuscenes-1.0"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "scenes": 340,
+                "sensors": ["lidar", "camera x6", "radar x5"],
+                "annotationClasses": ["car", "truck", "pedestrian", "bicycle", "traffic_cone"]
+            }
+        },
+        {
+            "assetId": "idiada-scenario-catalogue",
+            "ownerId": "idiada",
+            "name": "Proving-ground driving scenario catalogue",
+            "description": "Concrete driving scenarios executed on the IDIADA proving ground, catalogued for reuse in homologation and simulation.",
+            "fileName": "idiada-scenarios.xosc",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "Proving-ground driving scenario catalogue",
+                "description": "Concrete driving scenarios executed on the IDIADA proving ground, catalogued for reuse in homologation and simulation.",
+                "keywords": ["scenario", "proving ground", "homologation"],
+                "themes": ["Automated driving", "Scenario-based assessment"],
+                "spatial": ["Tarragona, Spain"],
+                "temporalCoverage": "2027-01/2029-09",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "dct:accrualPeriodicity", "value": "Monthly" },
+                    { "key": "dct:license", "value": "Proprietary" }
+                ],
+                "distributions": [
+                    {
+                        "title": "Scenario catalogue, OpenSCENARIO XML",
+                        "accessUrl": "https://data.sim.local/idiada/scenarios.xosc",
+                        "mediaType": "application/xml",
+                        "format": "XOSC",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-openscenario-xml",
+                            "label": "ASAM OpenSCENARIO XML",
+                            "version": "1.2",
+                            "schema": ["urn:vocabhub:profile:asam-openscenario-xml-1.2"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "scenarioLevel": "concrete",
+                "count": 612,
+                "manoeuvres": ["cut-in", "cut-out", "lead vehicle braking", "pedestrian crossing"]
+            }
+        },
+        {
+            "assetId": "vicomtech-openlabel-basque",
+            "ownerId": "vicomtech",
+            "name": "BasqueCCAM perception annotation set",
+            "description": "Annotated perception recordings from the Gipuzkoa cross-border corridor, published in ASAM OpenLABEL.",
+            "fileName": "basque-openlabel.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "BasqueCCAM perception annotation set",
+                "description": "Annotated perception recordings from the Gipuzkoa cross-border corridor, published in ASAM OpenLABEL.",
+                "keywords": ["perception", "annotation", "cross-border", "corridor"],
+                "themes": ["Automated driving", "Perception"],
+                "spatial": ["Gipuzkoa, Spain"],
+                "temporalCoverage": "2027-06/2029-06",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "mobilitydcatap:networkCoverage", "value": "Cross-border motorway corridor" },
+                    { "key": "dct:accrualPeriodicity", "value": "Monthly" },
+                    { "key": "dct:license", "value": "CC-BY-4.0" }
+                ],
+                "distributions": [
+                    {
+                        "title": "Annotations, ASAM OpenLABEL",
+                        "accessUrl": "https://data.sim.local/vicomtech/basque-openlabel.json",
+                        "mediaType": "application/json",
+                        "format": "JSON",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-openlabel",
+                            "label": "ASAM OpenLABEL",
+                            "version": "1.0",
+                            "schema": ["urn:vocabhub:profile:asam-openlabel-1.0"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "openlabel": { "schema_version": "1.0.0" },
+                "sequences": 96,
+                "objectTypes": ["Car", "Truck", "Pedestrian", "RoadSign"]
+            }
+        },
+        {
+            "assetId": "chalmers-kitti-safety",
+            "ownerId": "chalmers",
+            "name": "Near-miss annotation set, KITTI format",
+            "description": "Annotated near-miss and conflict situations extracted from naturalistic driving recordings, published in the KITTI object format.",
+            "fileName": "chalmers-kitti.zip",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "Near-miss annotation set, KITTI format",
+                "description": "Annotated near-miss and conflict situations extracted from naturalistic driving recordings, published in the KITTI object format.",
+                "keywords": ["perception", "annotation", "near-miss", "safety"],
+                "themes": ["Perception", "Traffic safety"],
+                "spatial": ["Gothenburg, Sweden"],
+                "temporalCoverage": "2026-09/2028-09",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "dct:accrualPeriodicity", "value": "Irregular" },
+                    { "key": "dct:license", "value": "CC-BY-NC-4.0" }
+                ],
+                "distributions": [
+                    {
+                        "title": "Labels, KITTI object format",
+                        "accessUrl": "https://data.sim.local/chalmers/kitti-labels.zip",
+                        "mediaType": "application/zip",
+                        "format": "TXT",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/kitti",
+                            "label": "KITTI object format",
+                            "version": "1.0",
+                            "schema": ["urn:vocabhub:profile:kitti-1.0"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "frames": 18400,
+                "conflictTypes": ["rear-end", "lane-change", "vulnerable road user"],
+                "labelFormat": "type truncated occluded alpha bbox dimensions location rotation_y"
+            }
+        },
+        {
+            "assetId": "avl-odd-motorway",
+            "ownerId": "avl",
+            "name": "ODD description, motorway pilot",
+            "description": "Operational Design Domain description for a motorway automated driving pilot, structured along ISO 34503.",
+            "fileName": "avl-odd-motorway.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "ODD description, motorway pilot",
+                "description": "Operational Design Domain description for a motorway automated driving pilot, structured along ISO 34503.",
+                "keywords": ["ODD", "operational design domain", "motorway", "ISO 34503"],
+                "themes": ["Automated driving", "In-service monitoring"],
+                "spatial": ["Graz, Austria"],
+                "temporalCoverage": "2027-01/2029-09",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Road conditions" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "mobilitydcatap:intendedInformationService", "value": "Safety assessment" },
+                    { "key": "dct:accrualPeriodicity", "value": "Annual" }
+                ],
+                "distributions": [
+                    {
+                        "title": "ODD description, ISO 34503",
+                        "accessUrl": "https://data.sim.local/avl/odd-motorway.json",
+                        "mediaType": "application/json",
+                        "format": "JSON",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/iso-34503",
+                            "label": "ISO 34503 ODD taxonomy",
+                            "version": "2023",
+                            "schema": ["urn:vocabhub:profile:iso-34503-2023"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "automationLevel": "SAE L3",
+                "scenery": { "roadType": "motorway", "laneCount": [2, 4], "junctions": false },
+                "environmental": { "weather": ["clear", "light rain"], "illumination": ["daylight", "night"] },
+                "dynamicElements": { "trafficDensity": "free flow to dense", "vulnerableRoadUsers": false }
+            }
+        },
+        {
+            "assetId": "hamburg-hdmap-tavf",
+            "ownerId": "hamburg",
+            "name": "HD map extract, TAVF test track",
+            "description": "High-definition road network extract for the Hamburg test track for automated and connected driving, served from the Urban Data Platform.",
+            "fileName": "hamburg-tavf.xodr",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "HD map extract, TAVF test track",
+                "description": "High-definition road network extract for the Hamburg test track for automated and connected driving, served from the Urban Data Platform.",
+                "keywords": ["HD map", "road network", "test track", "TAVF"],
+                "themes": ["Infrastructure", "Automated driving"],
+                "spatial": ["Hamburg, Germany"],
+                "temporalCoverage": "2027-01/2029-09",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Infrastructure and logistics" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "mobilitydcatap:georeferencingMethod", "value": "ETRS89 / UTM zone 32N" },
+                    { "key": "mobilitydcatap:networkCoverage", "value": "Urban test track" },
+                    { "key": "dct:accrualPeriodicity", "value": "Quarterly" },
+                    { "key": "dct:license", "value": "DL-DE-BY-2.0" }
+                ],
+                "distributions": [
+                    {
+                        "title": "Road network, ASAM OpenDRIVE",
+                        "accessUrl": "https://data.sim.local/hamburg/tavf.xodr",
+                        "mediaType": "application/x-opendrive",
+                        "format": "XODR",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-opendrive",
+                            "label": "ASAM OpenDRIVE",
+                            "version": "1.7",
+                            "schema": ["urn:vocabhub:profile:asam-opendrive-1.7"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "roads": 214,
+                "junctions": 37,
+                "lengthKm": 9.2,
+                "geoReference": "+proj=utm +zone=32 +ellps=GRS80"
+            }
+        },
+        {
+            "assetId": "helmond-spatmap-ditm",
+            "ownerId": "helmond",
+            "name": "C-ITS signal phase and timing feed",
+            "description": "Live signal phase and timing plus intersection topology for the Helmond C-ITS corridor, published through the DITM data space.",
+            "fileName": "helmond-spatmap.xml",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "C-ITS signal phase and timing feed",
+                "description": "Live signal phase and timing plus intersection topology for the Helmond C-ITS corridor, published through the DITM data space.",
+                "keywords": ["C-ITS", "SPAT", "MAP", "traffic light", "real-time"],
+                "themes": ["Traffic management", "Infrastructure"],
+                "spatial": ["Helmond, Netherlands"],
+                "temporalCoverage": "2027-01/2029-09",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "mobilitydcatap:intendedInformationService", "value": "Real-time traffic information" },
+                    { "key": "mobilitydcatap:networkCoverage", "value": "Urban road network" },
+                    { "key": "dct:accrualPeriodicity", "value": "Continuous" },
+                    { "key": "dct:license", "value": "CC-BY-4.0" }
+                ],
+                "distributions": [
+                    {
+                        "title": "SPAT/MAP feed, DATEX II",
+                        "accessUrl": "https://data.sim.local/helmond/spatmap",
+                        "mediaType": "application/xml",
+                        "format": "XML",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/datex-ii",
+                            "label": "DATEX II",
+                            "version": "3.3",
+                            "schema": ["urn:vocabhub:profile:datex-ii-3.3"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "intersections": 24,
+                "updateIntervalMs": 100,
+                "messageTypes": ["SPATEM", "MAPEM"]
+            }
+        },
+        {
+            "assetId": "eonax-cdg-shuttle-fot",
+            "ownerId": "eonax",
+            "name": "Paris CDG autonomous shuttle FOT dataset",
+            "description": "Field operational test telemetry from autonomous shuttles serving Paris Charles-de-Gaulle Airport, shared through the EONA-X ecosystem.",
+            "fileName": "cdg-shuttle-fot.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "Paris CDG autonomous shuttle FOT dataset",
+                "description": "Field operational test telemetry from autonomous shuttles serving Paris Charles-de-Gaulle Airport, shared through the EONA-X ecosystem.",
+                "keywords": ["FOT", "shuttle", "telemetry", "airport"],
+                "themes": ["Automated driving", "Multimodal transport"],
+                "spatial": ["Paris Charles-de-Gaulle, France"],
+                "temporalCoverage": "2027-04/2029-03",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "mobilitydcatap:networkCoverage", "value": "Airport access roads" },
+                    { "key": "dct:accrualPeriodicity", "value": "Daily" },
+                    { "key": "dct:license", "value": "Proprietary" }
+                ],
+                "distributions": [
+                    {
+                        "title": "Vehicle telemetry, SENSORIS",
+                        "accessUrl": "https://data.sim.local/eonax/cdg-shuttle-fot.pb",
+                        "mediaType": "application/x-protobuf",
+                        "format": "PROTOBUF",
+                        "dataStandard": {
+                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/sensoris",
+                            "label": "SENSORIS",
+                            "version": "1.2",
+                            "schema": ["urn:vocabhub:profile:sensoris-1.2"]
+                        }
+                    }
+                ]
+            },
+            "content": {
+                "operator": "Beti",
+                "vehicles": 6,
+                "tripCount": 41200,
+                "signals": ["position", "speed", "heading", "disengagement"]
+            }
+        },
+        {
+            "assetId": "helmond-fcd-mixed-traffic",
+            "ownerId": "helmond",
+            "name": "Floating car data, mixed traffic",
+            "description": "Aggregated floating car data for mixed automated and conventional traffic. Deliberately incomplete: its distribution declares no mobility data standard, which fails mobilityDCAT-AP validation and leaves the Vocabulary Hub nothing to resolve.",
+            "fileName": "helmond-fcd.csv",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "title": "Floating car data, mixed traffic",
+                "description": "Aggregated floating car data for mixed automated and conventional traffic. Deliberately incomplete: its distribution declares no mobility data standard, which fails mobilityDCAT-AP validation and leaves the Vocabulary Hub nothing to resolve.",
+                "keywords": ["floating car data", "mixed traffic", "probe vehicles"],
+                "themes": ["Traffic management"],
+                "spatial": ["Helmond, Netherlands"],
+                "temporalCoverage": "2027-01/2029-09",
+                "additionalDcat": [
+                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
+                    { "key": "dct:license", "value": "CC-BY-4.0" }
+                ],
+                "distributions": [
+                    {
+                        "title": "Aggregated probe data",
+                        "accessUrl": "https://data.sim.local/helmond/fcd.csv",
+                        "mediaType": "text/csv",
+                        "format": "CSV"
+                    }
+                ]
+            },
+            "content": {
+                "segments": 512,
+                "aggregationMinutes": 5,
+                "measures": ["meanSpeed", "flow", "penetrationRate"]
+            }
+        }
+    ]
+}

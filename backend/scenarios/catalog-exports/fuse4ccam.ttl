@@ -1,0 +1,523 @@
+# Vocabulary Hub contents for the fuse4ccam scenario.
+#
+# Written in the shape that Semantic Treehouse's catalogue export v2 emits
+# (GET /api/environment/export?type=v2), so the simulator consumes what STH
+# actually produces rather than a model invented here. Profiles carry
+# prof:hasResource descriptors; alignments are pmap:ProfileAlignment with a
+# directed source and target.
+#
+# Two deliberate departures, both arguments the demo is making:
+#
+#   1. Coverage on an alignment. STH's export has no dqv: terms at all, so the
+#      metric below lives in this file's own namespace and is labelled as a
+#      proposal wherever it reaches the screen. See epic 50.
+#   2. Every data standard here is external (ASAM, ISO, CEN, Waymo). STH turns
+#      only a published MessageModelVersion into a prof:Profile, so none of
+#      them could be represented in a real export today.
+#
+# Alignment coverage figures are illustrative. Nobody has measured these.
+
+@prefix adms:    <http://www.w3.org/ns/adms#> .
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix dqv:     <http://www.w3.org/ns/dqv#> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix pmap:    <https://w3id.org/pmap#> .
+@prefix prof:    <http://www.w3.org/ns/dx/prof/> .
+@prefix role:    <http://www.w3.org/ns/dx/prof/role/> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix vhx:     <urn:vocabhub:ext:> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+
+#################################################################
+#  Catalogue
+#################################################################
+
+<urn:vocabhub:catalog:fuse4ccam>
+    a dcat:Catalog, adms:AssetRepository ;
+    dcterms:title "FUSE4CCAM Vocabulary Hub"@en ;
+    dcterms:description "Schema registry for the FUSE4CCAM test data space. Holds the profile that governs catalogue records and the data standards their distributions are written in."@en ;
+    dcterms:publisher <urn:vocabhub:agent:fuse4ccam> ;
+    dcat:landingPage <https://www.semantic-treehouse.nl/> ;
+    dcat:resource
+        <urn:vocabhub:profile:mobilitydcat-ap-1.1.0> ,
+        <urn:vocabhub:profile:asam-opendrive-1.7> ,
+        <urn:vocabhub:profile:asam-openlabel-1.0> ,
+        <urn:vocabhub:profile:asam-openscenario-xml-1.2> ,
+        <urn:vocabhub:profile:asam-openscenario-dsl-2.0> ,
+        <urn:vocabhub:profile:nuscenes-1.0> ,
+        <urn:vocabhub:profile:kitti-1.0> ,
+        <urn:vocabhub:profile:waymo-open-motion-1.2> ,
+        <urn:vocabhub:profile:iso-34503-2023> ,
+        <urn:vocabhub:profile:datex-ii-3.3> ,
+        <urn:vocabhub:profile:sensoris-1.2> ,
+        <urn:vocabhub:profile:lanelet2-1.0> ,
+        <urn:vocabhub:profile:nds-live-2.5> ,
+        <urn:vocabhub:alignment:lanelet2-to-opendrive> ,
+        <urn:vocabhub:alignment:nds-live-to-opendrive> ,
+        <urn:vocabhub:alignment:nuscenes-to-openlabel> ,
+        <urn:vocabhub:alignment:kitti-to-openlabel> ,
+        <urn:vocabhub:alignment:openscenario-dsl-to-xml> ,
+        <urn:vocabhub:alignment:waymo-to-nuscenes> .
+
+
+#################################################################
+#  Coverage metric — proposed extension, see the header
+#################################################################
+
+vhx:profileCoverage
+    a dqv:Metric ;
+    skos:prefLabel "Profile coverage"@en ;
+    skos:definition "Share of the target profile's properties an alignment can populate from the source profile."@en ;
+    dqv:inDimension vhx:completeness ;
+    dqv:expectedDataType xsd:decimal .
+
+vhx:completeness
+    a dqv:Dimension ;
+    skos:prefLabel "Completeness"@en .
+
+
+#################################################################
+#  Publishers
+#################################################################
+
+<urn:vocabhub:agent:fuse4ccam>    a foaf:Agent ; foaf:name "FUSE4CCAM consortium" .
+<urn:vocabhub:agent:mdcatap>      a foaf:Agent ; foaf:name "mobilityDCAT-AP working group" .
+<urn:vocabhub:agent:asam>         a foaf:Agent ; foaf:name "ASAM e.V." .
+<urn:vocabhub:agent:iso>          a foaf:Agent ; foaf:name "International Organization for Standardization" .
+<urn:vocabhub:agent:motional>     a foaf:Agent ; foaf:name "Motional" .
+<urn:vocabhub:agent:kit>          a foaf:Agent ; foaf:name "Karlsruhe Institute of Technology" .
+<urn:vocabhub:agent:waymo>        a foaf:Agent ; foaf:name "Waymo LLC" .
+<urn:vocabhub:agent:datex>        a foaf:Agent ; foaf:name "DATEX II / CEN TC 278" .
+<urn:vocabhub:agent:ertico>       a foaf:Agent ; foaf:name "ERTICO - ITS Europe" .
+<urn:vocabhub:agent:nds>          a foaf:Agent ; foaf:name "NDS Association" .
+
+
+#################################################################
+#  Axis A — the profile that governs the catalogue records
+#
+#  In no alignment. It is the language every record is written in,
+#  not one of the formats a payload might be in.
+#################################################################
+
+<urn:vocabhub:profile:mobilitydcat-ap-1.1.0>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "mobilityDCAT-AP 1.1.0"@en ;
+    dcterms:description "Application profile for mobility data portals. Stands in for CCAM-DCAT-AP, which task T1.2 has not yet produced."@en ;
+    dcterms:publisher <urn:vocabhub:agent:mdcatap> ;
+    owl:versionInfo "1.1.0" ;
+    prof:isProfileOf <https://semiceu.github.io/DCAT-AP/releases/2.0.1/> ;
+    prof:hasResource _:r-mdcatap-spec, _:r-mdcatap-vocab, _:r-mdcatap-shapes ;
+    dcat:distribution _:r-mdcatap-spec, _:r-mdcatap-vocab, _:r-mdcatap-shapes .
+
+_:r-mdcatap-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://w3id.org/mobilitydcat-ap/releases/1.1.0/> ;
+    dcat:accessURL <https://w3id.org/mobilitydcat-ap/releases/1.1.0/> ;
+    dcterms:format "text/html" .
+
+_:r-mdcatap-vocab
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:vocabulary ;
+    prof:hasArtifact <https://w3id.org/mobilitydcat-ap/releases/1.1.0/mobilitydcat-ap_v1.1.0.ttl> ;
+    dcat:accessURL <https://w3id.org/mobilitydcat-ap/releases/1.1.0/mobilitydcat-ap_v1.1.0.ttl> ;
+    dcterms:format "text/turtle" .
+
+# The one role:validation artifact in this catalogue, and the join between the
+# two workflows: validation resolves the shapes through exactly this path.
+_:r-mdcatap-shapes
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:validation ;
+    prof:hasArtifact <https://w3id.org/mobilitydcat-ap/releases/1.1.0/shaclShapes/mobilitydcat-ap-shacl.ttl> ;
+    dcat:accessURL <https://w3id.org/mobilitydcat-ap/releases/1.1.0/shaclShapes/mobilitydcat-ap-shacl.ttl> ;
+    dcterms:conformsTo <https://semiceu.github.io/DCAT-AP/releases/2.0.1/shacl/dcat-ap-SHACL.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+#################################################################
+#  Axis B — the data standards the payloads are written in
+#
+#  These are what mobilitydcatap:schema points at from a distribution,
+#  and what the alignments below run between.
+#################################################################
+
+<urn:vocabhub:profile:asam-opendrive-1.7>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ASAM OpenDRIVE 1.7"@en ;
+    dcterms:description "Logical road network description: geometry, lanes, junctions, signals."@en ;
+    dcterms:publisher <urn:vocabhub:agent:asam> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-opendrive> ;
+    owl:versionInfo "1.7" ;
+    prof:hasResource _:r-opendrive-spec ;
+    dcat:distribution _:r-opendrive-spec .
+
+_:r-opendrive-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.asam.net/standards/detail/opendrive/> ;
+    dcat:accessURL <https://www.asam.net/standards/detail/opendrive/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:asam-openlabel-1.0>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ASAM OpenLABEL 1.0"@en ;
+    dcterms:description "Annotation format for objects, scenarios and sensor streams."@en ;
+    dcterms:publisher <urn:vocabhub:agent:asam> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-openlabel> ;
+    owl:versionInfo "1.0" ;
+    prof:hasResource _:r-openlabel-spec ;
+    dcat:distribution _:r-openlabel-spec .
+
+_:r-openlabel-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.asam.net/standards/detail/openlabel/> ;
+    dcat:accessURL <https://www.asam.net/standards/detail/openlabel/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:asam-openscenario-xml-1.2>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ASAM OpenSCENARIO XML 1.2"@en ;
+    dcterms:description "Storyboard description of dynamic traffic scenarios."@en ;
+    dcterms:publisher <urn:vocabhub:agent:asam> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-openscenario-xml> ;
+    owl:versionInfo "1.2" ;
+    prof:hasResource _:r-osc-xml-spec ;
+    dcat:distribution _:r-osc-xml-spec .
+
+_:r-osc-xml-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.asam.net/standards/detail/openscenario-xml/> ;
+    dcat:accessURL <https://www.asam.net/standards/detail/openscenario-xml/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:asam-openscenario-dsl-2.0>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ASAM OpenSCENARIO DSL 2.0"@en ;
+    dcterms:description "Domain-specific language for abstract and logical scenarios."@en ;
+    dcterms:publisher <urn:vocabhub:agent:asam> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-openscenario-dsl> ;
+    owl:versionInfo "2.0" ;
+    prof:hasResource _:r-osc-dsl-spec ;
+    dcat:distribution _:r-osc-dsl-spec .
+
+_:r-osc-dsl-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.asam.net/standards/detail/openscenario-dsl/> ;
+    dcat:accessURL <https://www.asam.net/standards/detail/openscenario-dsl/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:nuscenes-1.0>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "nuScenes 1.0"@en ;
+    dcterms:description "Multimodal autonomous driving dataset schema: scenes, samples, annotated instances."@en ;
+    dcterms:publisher <urn:vocabhub:agent:motional> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/nuscenes> ;
+    owl:versionInfo "1.0" ;
+    prof:hasResource _:r-nuscenes-spec ;
+    dcat:distribution _:r-nuscenes-spec .
+
+_:r-nuscenes-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.nuscenes.org/nuscenes> ;
+    dcat:accessURL <https://www.nuscenes.org/nuscenes> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:kitti-1.0>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "KITTI object format 1.0"@en ;
+    dcterms:description "Plain-text object label format from the KITTI vision benchmark suite."@en ;
+    dcterms:publisher <urn:vocabhub:agent:kit> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/kitti> ;
+    owl:versionInfo "1.0" ;
+    prof:hasResource _:r-kitti-spec ;
+    dcat:distribution _:r-kitti-spec .
+
+_:r-kitti-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.cvlibs.net/datasets/kitti/> ;
+    dcat:accessURL <https://www.cvlibs.net/datasets/kitti/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:waymo-open-motion-1.2>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "Waymo Open Motion 1.2"@en ;
+    dcterms:description "Trajectory and map schema of the Waymo Open Motion Dataset."@en ;
+    dcterms:publisher <urn:vocabhub:agent:waymo> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/waymo-open-motion> ;
+    owl:versionInfo "1.2" ;
+    prof:hasResource _:r-waymo-spec ;
+    dcat:distribution _:r-waymo-spec .
+
+_:r-waymo-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://waymo.com/open/data/motion/> ;
+    dcat:accessURL <https://waymo.com/open/data/motion/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:iso-34503-2023>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ISO 34503:2023 ODD taxonomy"@en ;
+    dcterms:description "Hierarchical taxonomy for specifying the operational design domain of an automated driving system."@en ;
+    dcterms:publisher <urn:vocabhub:agent:iso> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/iso-34503> ;
+    owl:versionInfo "2023" ;
+    prof:hasResource _:r-iso34503-spec ;
+    dcat:distribution _:r-iso34503-spec .
+
+_:r-iso34503-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.iso.org/standard/78952.html> ;
+    dcat:accessURL <https://www.iso.org/standard/78952.html> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:datex-ii-3.3>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "DATEX II 3.3"@en ;
+    dcterms:description "European exchange standard for traffic and travel information, including signal phase and timing."@en ;
+    dcterms:publisher <urn:vocabhub:agent:datex> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/datex-ii> ;
+    owl:versionInfo "3.3" ;
+    prof:hasResource _:r-datex-spec ;
+    dcat:distribution _:r-datex-spec .
+
+_:r-datex-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.datex2.eu/> ;
+    dcat:accessURL <https://www.datex2.eu/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:sensoris-1.2>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "SENSORIS 1.2"@en ;
+    dcterms:description "Vehicle sensor data interface for exchanging in-vehicle observations with cloud services."@en ;
+    dcterms:publisher <urn:vocabhub:agent:ertico> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/sensoris> ;
+    owl:versionInfo "1.2" ;
+    prof:hasResource _:r-sensoris-spec ;
+    dcat:distribution _:r-sensoris-spec .
+
+_:r-sensoris-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://sensor-is.org/> ;
+    dcat:accessURL <https://sensor-is.org/> ;
+    dcterms:format "text/html" .
+
+
+# Lanelet2 and NDS.Live are in the hub but nobody in this data space publishes
+# in them. Searching for road network data with alignments on still returns one
+# dataset, which is the honest answer: the registry knows a route exists, the
+# data space has nothing at the other end of it.
+
+<urn:vocabhub:profile:lanelet2-1.0>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "Lanelet2 1.0"@en ;
+    dcterms:description "OpenStreetMap-derived HD map format built on lanelets and regulatory elements."@en ;
+    dcterms:publisher <urn:vocabhub:agent:kit> ;
+    owl:versionInfo "1.0" ;
+    prof:hasResource _:r-lanelet2-spec ;
+    dcat:distribution _:r-lanelet2-spec .
+
+_:r-lanelet2-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://github.com/fzi-forschungszentrum-informatik/Lanelet2> ;
+    dcat:accessURL <https://github.com/fzi-forschungszentrum-informatik/Lanelet2> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:nds-live-2.5>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "NDS.Live 2.5"@en ;
+    dcterms:description "Service-oriented navigation data standard for automotive map delivery."@en ;
+    dcterms:publisher <urn:vocabhub:agent:nds> ;
+    owl:versionInfo "2.5" ;
+    prof:hasResource _:r-ndslive-spec ;
+    dcat:distribution _:r-ndslive-spec .
+
+_:r-ndslive-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://nds-association.org/> ;
+    dcat:accessURL <https://nds-association.org/> ;
+    dcterms:format "text/html" .
+
+
+#################################################################
+#  Alignments — directed, single hop, coverage attached
+#################################################################
+
+<urn:vocabhub:alignment:lanelet2-to-opendrive>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "Lanelet2 1.0 to ASAM OpenDRIVE 1.7"@en ;
+    dcterms:description "Lanelets and regulatory elements to lanes, junctions and signals. Elevation and lane-marking detail are lost."@en ;
+    dcterms:publisher <urn:vocabhub:agent:fuse4ccam> ;
+    pmap:sourceProfile <urn:vocabhub:profile:lanelet2-1.0> ;
+    pmap:targetProfile <urn:vocabhub:profile:asam-opendrive-1.7> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.72"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-lanelet2 ;
+    dcat:distribution _:r-align-lanelet2 .
+
+_:r-align-lanelet2
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:lanelet2-to-opendrive.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+<urn:vocabhub:alignment:nds-live-to-opendrive>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "NDS.Live 2.5 to ASAM OpenDRIVE 1.7"@en ;
+    dcterms:description "Navigation road geometry to a logical road network. Routing attributes and service layers have no target."@en ;
+    dcterms:publisher <urn:vocabhub:agent:fuse4ccam> ;
+    pmap:sourceProfile <urn:vocabhub:profile:nds-live-2.5> ;
+    pmap:targetProfile <urn:vocabhub:profile:asam-opendrive-1.7> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.61"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-ndslive ;
+    dcat:distribution _:r-align-ndslive .
+
+_:r-align-ndslive
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:nds-live-to-opendrive.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+<urn:vocabhub:alignment:nuscenes-to-openlabel>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "nuScenes 1.0 to ASAM OpenLABEL 1.0"@en ;
+    dcterms:description "Scenes, samples and annotated instances to OpenLABEL frames and objects. Close fit: both describe annotated sensor streams."@en ;
+    dcterms:publisher <urn:vocabhub:agent:fuse4ccam> ;
+    pmap:sourceProfile <urn:vocabhub:profile:nuscenes-1.0> ;
+    pmap:targetProfile <urn:vocabhub:profile:asam-openlabel-1.0> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.81"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-nuscenes ;
+    dcat:distribution _:r-align-nuscenes .
+
+_:r-align-nuscenes
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:nuscenes-to-openlabel.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+<urn:vocabhub:alignment:kitti-to-openlabel>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "KITTI object format 1.0 to ASAM OpenLABEL 1.0"@en ;
+    dcterms:description "Per-frame text labels to OpenLABEL objects. KITTI carries no scenario, sensor calibration or tracking identity, so much of the target is unreachable."@en ;
+    dcterms:publisher <urn:vocabhub:agent:fuse4ccam> ;
+    pmap:sourceProfile <urn:vocabhub:profile:kitti-1.0> ;
+    pmap:targetProfile <urn:vocabhub:profile:asam-openlabel-1.0> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.64"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-kitti ;
+    dcat:distribution _:r-align-kitti .
+
+_:r-align-kitti
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:kitti-to-openlabel.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+<urn:vocabhub:alignment:openscenario-dsl-to-xml>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "ASAM OpenSCENARIO DSL 2.0 to ASAM OpenSCENARIO XML 1.2"@en ;
+    dcterms:description "Concretising a logical scenario into a storyboard. Abstract constraints have to be sampled, so the mapping is one-way."@en ;
+    dcterms:publisher <urn:vocabhub:agent:fuse4ccam> ;
+    pmap:sourceProfile <urn:vocabhub:profile:asam-openscenario-dsl-2.0> ;
+    pmap:targetProfile <urn:vocabhub:profile:asam-openscenario-xml-1.2> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.77"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-osc ;
+    dcat:distribution _:r-align-osc .
+
+_:r-align-osc
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:openscenario-dsl-to-xml.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+# The no-chaining control. nuScenes aligns to OpenLABEL, so a naive
+# implementation would offer the Waymo dataset to someone searching for
+# OpenLABEL. US-6 is single hop: it must not appear, and coverage does not
+# compose anyway.
+
+<urn:vocabhub:alignment:waymo-to-nuscenes>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "Waymo Open Motion 1.2 to nuScenes 1.0"@en ;
+    dcterms:description "Trajectories and map features to scenes and instances. Sensor payloads differ enough that only the motion layer transfers."@en ;
+    dcterms:publisher <urn:vocabhub:agent:fuse4ccam> ;
+    pmap:sourceProfile <urn:vocabhub:profile:waymo-open-motion-1.2> ;
+    pmap:targetProfile <urn:vocabhub:profile:nuscenes-1.0> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.55"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-waymo ;
+    dcat:distribution _:r-align-waymo .
+
+_:r-align-waymo
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:waymo-to-nuscenes.rml.ttl> ;
+    dcterms:format "text/turtle" .
