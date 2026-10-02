@@ -37,34 +37,6 @@ function withAuth(config = {}) {
 }
 
 // ---------------------------------------------------------------------------
-// DCAT field → RDF predicate mapping
-// Portable: same mapping used in real participant backend
-// ---------------------------------------------------------------------------
-
-const DCAT_FIELD_TO_PREDICATE = {
-    'dct:title': 'http://purl.org/dc/terms/title',
-    'dct:description': 'http://purl.org/dc/terms/description',
-    'dcat:keyword': 'http://www.w3.org/ns/dcat#keyword',
-    'dcat:theme': 'http://www.w3.org/ns/dcat#theme',
-    'dct:spatial': 'http://purl.org/dc/terms/spatial',
-    'dct:temporal': 'http://purl.org/dc/terms/temporal',
-    'dct:language': 'http://purl.org/dc/terms/language',
-    'dct:license': 'http://purl.org/dc/terms/license',
-    'dct:format': 'http://purl.org/dc/terms/format',
-    'dct:creator': 'http://purl.org/dc/terms/creator',
-    'dct:conformsTo': 'http://purl.org/dc/terms/conformsTo',
-    'dct:accrualPeriodicity': 'http://purl.org/dc/terms/accrualPeriodicity',
-    'dct:relation': 'http://purl.org/dc/terms/relation',
-    'dcat:landingPage': 'http://www.w3.org/ns/dcat#landingPage',
-    'dcat:contactPoint': 'http://www.w3.org/ns/dcat#contactPoint',
-    'mobilitydcatap:mobilityTheme': 'https://w3id.org/mobilitydcat-ap#mobilityTheme',
-    'mobilitydcatap:transportMode': 'https://w3id.org/mobilitydcat-ap#transportMode',
-    'mobilitydcatap:networkCoverage': 'https://w3id.org/mobilitydcat-ap#networkCoverage',
-    'mobilitydcatap:georeferencingMethod': 'https://w3id.org/mobilitydcat-ap#georeferencingMethod',
-    'mobilitydcatap:intendedInformationService': 'https://w3id.org/mobilitydcat-ap#intendedInformationService',
-};
-
-// ---------------------------------------------------------------------------
 // Low-level SPARQL helpers
 // ---------------------------------------------------------------------------
 
@@ -321,14 +293,20 @@ WHERE {
 // ---------------------------------------------------------------------------
 // Search
 //
-// The query only decides which datasets match; what they hold is read back as
-// records afterwards.
+// Which fields exist comes from the catalog's profile: callers pass paths, each
+// a list of property IRIs from the dataset down. The query only decides which
+// datasets match; what they hold is read back as records afterwards.
 // ---------------------------------------------------------------------------
+
+const ABSOLUTE_IRI = /^[a-z][a-z0-9+.-]*:\S+$/i;
 
 const pathExpr = (path) => path.map((p) => `<${escapeIri(p)}>`).join('/');
 
+// A code-list value is an IRI and matches whole; anything else matches as text.
 function valueFilter(variable, value) {
-    return `CONTAINS(LCASE(STR(${variable})), LCASE("${escapeLiteral(value)}"))`;
+    return ABSOLUTE_IRI.test(value)
+        ? `STR(${variable}) = "${escapeLiteral(value)}"`
+        : `CONTAINS(LCASE(STR(${variable})), LCASE("${escapeLiteral(value)}"))`;
 }
 
 const strings = (values = []) => values.filter((v) => !v.fields).map((v) => v.value ?? v.iri);
@@ -380,30 +358,23 @@ async function semanticSearch({
     searchText = '',
     sessionCode,
     datasetIds = null,
-    dcatFilters = {},
-    dcatFieldFilters = [],
+    textPaths = [],
+    fieldFilters = [],
     schemaProfiles = null,
     limit = 25
 }) {
     const patterns = [];
-    const textPaths = [P.title, P.description, P.keyword, P.theme];
-    const fieldFilters = [
-        ...[['keyword', P.keyword], ['theme', P.theme], ['spatial', P.spatial]]
-            .filter(([key]) => dcatFilters[key])
-            .map(([key, path]) => ({ path: [path], value: String(dcatFilters[key]) })),
-        ...(Array.isArray(dcatFieldFilters) ? dcatFieldFilters : [])
-            .filter((entry) => DCAT_FIELD_TO_PREDICATE[entry?.key] && String(entry?.value || '').trim())
-            .map((entry) => ({ path: [DCAT_FIELD_TO_PREDICATE[entry.key]], value: String(entry.value).trim() })),
-    ];
 
     if (datasetIds && datasetIds.length > 0) {
         patterns.push(`FILTER(STR(?datasetId) IN (${datasetIds.map((id) => `"${escapeLiteral(id)}"`).join(', ')}))`);
     }
+    // Free text looks at literals only, so a theme stored as a label still matches where the profile expects an IRI.
     if (searchText) {
+        const onPaths = textPaths.length > 0 ? `VALUES ?textPath { ${textPaths.map((p) => `<${escapeIri(p)}>`).join(' ')} }` : '';
         patterns.push(`FILTER EXISTS {
-            VALUES ?textPath { ${textPaths.map((p) => `<${p}>`).join(' ')} }
+            ${onPaths}
             ?dataset ?textPath ?text .
-            FILTER(CONTAINS(LCASE(STR(?text)), LCASE("${escapeLiteral(searchText)}")))
+            FILTER(isLiteral(?text) && CONTAINS(LCASE(STR(?text)), LCASE("${escapeLiteral(searchText)}")))
         }`);
     }
     fieldFilters.forEach(({ path, value }, i) => {
@@ -454,5 +425,4 @@ module.exports = {
     dropGraph,
     escapeIri,
     escapeLiteral,
-    DCAT_FIELD_TO_PREDICATE,
 };

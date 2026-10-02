@@ -640,8 +640,21 @@ async function widenByAlignments(dataspaceId, requested, minCoverage) {
     return reach;
 }
 
+// Only a path the catalog's profile defines can be filtered on, so a request cannot steer the query elsewhere.
+function modelFieldFilters(model, requested) {
+    const known = new Set();
+    const walk = (fields, prefix) => fields.forEach((f) => {
+        known.add([...prefix, f.path].join(' '));
+        walk(f.fields, [...prefix, f.path]);
+    });
+    walk(model.fields, []);
+    return (Array.isArray(requested) ? requested : [])
+        .filter((f) => Array.isArray(f?.path) && known.has(f.path.join(' ')) && String(f.value ?? '').trim())
+        .map((f) => ({ path: f.path, value: String(f.value).trim() }));
+}
+
 app.post('/api/semantic/search', async (req, res) => {
-    const { searchText = '', consumerNodeId, providerNodeIds = null, dcatFilters = {}, dcatFieldFilters = [], schemaProfiles = null, useAlignments = false, minCoverage = null, limit = 25 } = req.body || {};
+    const { searchText = '', consumerNodeId, providerNodeIds = null, fieldFilters = [], schemaProfiles = null, useAlignments = false, minCoverage = null, limit = 25 } = req.body || {};
     const dataspaceId = resolveDataspaceId(req.body?.dataspaceId);
 
     // Catalog-first visibility: determine exactly which assets are visible
@@ -684,12 +697,13 @@ app.post('/api/semantic/search', async (req, res) => {
     }
 
     try {
+        const model = await catalogProfiles.catalogModel(dataspaceId, hubEnabled(dataspaceId));
         const rawResults = await semanticSearch({
             searchText,
             sessionCode: dataspaceId,
             datasetIds: visibleDatasetIds,
-            dcatFilters,
-            dcatFieldFilters,
+            textPaths: model.fields.map((f) => f.path),
+            fieldFilters: modelFieldFilters(model, fieldFilters),
             schemaProfiles: requestedProfiles.length > 0 ? [...reach.keys()] : null,
             limit: Math.min(Number(limit) || 25, 100),
         });
