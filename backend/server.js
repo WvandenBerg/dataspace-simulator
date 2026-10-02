@@ -601,6 +601,8 @@ app.post('/api/vocabhub/profiles', hubRoute((req, ds) => catalogProfiles.addProf
     files: req.body?.files,
 })));
 
+app.patch('/api/vocabhub/profiles/:id', hubRoute((req, ds) => catalogProfiles.setDataStandard(ds, req.params.id, req.body?.dataStandardPath ?? null)));
+
 app.delete('/api/vocabhub/profiles/:id', hubRoute(async (req, ds) => {
     if (db.getHubProfile(ds, req.params.id)?.source !== 'upload') return null;
     await catalogProfiles.removeProfile(ds, req.params.id);

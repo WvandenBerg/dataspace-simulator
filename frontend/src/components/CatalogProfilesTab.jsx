@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ChevronDown, ChevronRight, Download, FileText, Trash2, Upload } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronRight, Download, FileText, Info, Trash2, Upload } from 'lucide-react';
 
 const API_BASE = '/api';
 const ACCEPT = '.ttl,.n3,.nt,.jsonld,.json,.rdf,.owl,.xml';
+const DATA_STANDARD_HELP = 'The field in which a catalog entry following this profile names the data standard '
+    + 'its data follows. When the catalog uses this profile, the data-standard filter in the semantic search '
+    + 'looks here, and so does widening a search along the Vocabulary Hub\'s alignments. Automatic uses '
+    + 'dct:conformsTo, which every DCAT-AP profile inherits; choose another if the profile names the standard elsewhere.';
 
 const labelStyle = { fontSize: '0.64rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
 const uriStyle = { fontSize: '0.66rem', color: 'var(--color-primary)', fontFamily: 'monospace', wordBreak: 'break-all' };
@@ -85,6 +89,68 @@ const FieldTree = ({ dataspaceId, profileId }) => {
     );
 };
 
+// A data standard is identified by IRI, so only fields that hold one can name it.
+const standardFields = (fields, prefix = [], labels = []) => fields.flatMap((f) => {
+    const path = [...prefix, f.path];
+    const label = [...labels, f.label];
+    const own = f.kind === 'iri' ? [{ key: path.join(' '), path, label: label.join(' \u203a ') }] : [];
+    return [...own, ...standardFields(f.fields, path, label)];
+});
+
+const DataStandardField = ({ dataspaceId, profileId }) => {
+    const [model, setModel] = useState(null);
+    const [error, setError] = useState(null);
+    const url = `${API_BASE}/vocabhub/profiles/${encodeURIComponent(profileId)}`;
+    const query = `?dataspaceId=${encodeURIComponent(dataspaceId)}`;
+
+    useEffect(() => {
+        fetch(`${url}/fields${query}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then(setModel)
+            .catch(() => setModel(null));
+    }, [url, query]);
+
+    if (!model) return null;
+    const options = standardFields(model.fields);
+
+    const choose = async (key) => {
+        setError(null);
+        const res = await fetch(`${url}${query}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dataStandardPath: options.find((o) => o.key === key)?.path || null }),
+        });
+        const data = await res.json();
+        if (!res.ok) return setError(data.error || 'Could not save');
+        setModel((m) => ({ ...m, dataStandard: data.dataStandard }));
+    };
+
+    return (
+        <div style={{ margin: '4px 0 8px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: 'var(--text-primary)' }}>
+                Data standard field
+                <span title={DATA_STANDARD_HELP} style={{ display: 'inline-flex', cursor: 'help' }}>
+                    <Info size={13} color="var(--text-muted)" />
+                </span>
+                <select
+                    value={model.dataStandard?.chosen ? model.dataStandard.path.join(' ') : ''}
+                    onChange={(e) => choose(e.target.value)}
+                    style={{ ...inputStyle, flex: '0 1 auto', maxWidth: '420px' }}
+                >
+                    <option value="">Automatic (dct:conformsTo)</option>
+                    {options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+                </select>
+            </label>
+            {!model.dataStandard && (
+                <div style={{ ...warnStyle, marginTop: '4px' }}>
+                    <AlertTriangle size={11} style={{ flexShrink: 0, marginTop: '1px' }} /> This profile has no dct:conformsTo, so searching by data standard finds nothing until you choose a field.
+                </div>
+            )}
+            {error && <div style={{ ...warnStyle, color: '#dc2626', marginTop: '4px' }}>{error}</div>}
+        </div>
+    );
+};
+
 const ProfileEntry = ({ dataspaceId, profile, inUse, onUse, onDelete }) => {
     const [open, setOpen] = useState(false);
     const Chevron = open ? ChevronDown : ChevronRight;
@@ -134,6 +200,7 @@ const ProfileEntry = ({ dataspaceId, profile, inUse, onUse, onDelete }) => {
                             </a>
                         ))}
                     </div>
+                    <DataStandardField dataspaceId={dataspaceId} profileId={profile.id} />
                     <FieldTree dataspaceId={dataspaceId} profileId={profile.id} />
                 </div>
             )}
@@ -141,11 +208,12 @@ const ProfileEntry = ({ dataspaceId, profile, inUse, onUse, onDelete }) => {
     );
 };
 
-const UploadReport = ({ report }) => (
+const UploadReport = ({ dataspaceId, report }) => (
     <div style={{ marginTop: '8px', padding: '8px', borderRadius: '6px', background: 'rgba(22, 163, 74, 0.08)', border: '1px solid rgba(22, 163, 74, 0.35)' }}>
         <div style={{ fontSize: '0.76rem', color: '#15803d', fontWeight: 600 }}>
             Loaded: {report.fields} catalog entry field(s)
         </div>
+        <DataStandardField dataspaceId={dataspaceId} profileId={report.profileId} />
         {report.files.map((f) => (
             <div key={f.artifactId} style={{ marginTop: '4px' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
@@ -248,7 +316,7 @@ const UploadForm = ({ dataspaceId, onUploaded }) => {
             )}
 
             {error && <div style={{ ...warnStyle, color: '#dc2626', marginTop: '8px' }}><AlertTriangle size={11} style={{ flexShrink: 0, marginTop: '1px' }} /> {error}</div>}
-            {report && <UploadReport report={report} />}
+            {report && <UploadReport dataspaceId={dataspaceId} report={report} />}
         </div>
     );
 };

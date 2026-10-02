@@ -207,10 +207,12 @@ async function removeProfile(dataspaceId, profileId) {
     await writeUploadsGraph(dataspaceId);
 }
 
-// Deterministic artifact ids keep a reloaded scenario from piling up copies.
+// Deterministic artifact ids keep a reloaded scenario from piling up copies. A
+// data-standard field chosen in the hub survives the reload; the scenario's only seeds it.
 async function installScenarioProfile(dataspaceId, scenario) {
     const spec = scenario.catalogProfile;
     if (!spec) return null;
+    const existing = db.getHubProfile(dataspaceId, spec.profileId);
     await removeProfile(dataspaceId, spec.profileId);
     return addProfile(dataspaceId, {
         profileId: spec.profileId,
@@ -220,7 +222,7 @@ async function installScenarioProfile(dataspaceId, scenario) {
         source: 'scenario',
         files: spec.files.map((rel) => ({ name: path.basename(rel), content: fs.readFileSync(scenarios.scenarioFile(rel), 'utf8') })),
         artifactIds: spec.files.map((_, i) => `${scenario.id}-${i}`),
-        dataStandardPath: spec.dataStandardPath ?? null,
+        dataStandardPath: existing?.data_standard_path != null ? JSON.parse(existing.data_standard_path) : (spec.dataStandardPath ?? null),
     });
 }
 
@@ -490,6 +492,17 @@ function dataStandardField(fields, chosenPath) {
     return labels ? { path: [P.conformsTo], label: labels.join(' \u203a '), chosen: false } : null;
 }
 
+async function setDataStandard(dataspaceId, profileId, dataStandardPath) {
+    if (!db.getHubProfile(dataspaceId, profileId)) return null;
+    const model = await fieldModel(dataspaceId, profileId);
+    if (!model) return null;
+    if (dataStandardPath !== null && !(Array.isArray(dataStandardPath) && fieldAt(model.fields, dataStandardPath))) {
+        throw new ProfileError('dataStandardPath must be null or the path of a field this profile defines');
+    }
+    db.setHubProfileDataStandard(dataspaceId, profileId, dataStandardPath);
+    return { dataStandard: dataStandardField(model.fields, dataStandardPath) };
+}
+
 // Counts per field how many entries fill it, so a field the catalog has not
 // caught up with shows as such.
 function withCoverage(fields, records) {
@@ -513,6 +526,7 @@ module.exports = {
     listFileProfiles,
     fieldModel,
     catalogModel,
+    setDataStandard,
     withCoverage,
     artifact: (dataspaceId, artifactId) => db.getHubArtifact(dataspaceId, artifactId),
 };

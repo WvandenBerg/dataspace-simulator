@@ -129,7 +129,7 @@ function ensureColumn(tableName, columnName, definitionSql) {
 ensureColumn('assets', 'asset_content', "TEXT NOT NULL DEFAULT ''");
 ensureColumn('received_data', 'asset_content', "TEXT NOT NULL DEFAULT ''");
 ensureColumn('assets', 'dataspace_id', "TEXT NOT NULL DEFAULT 'demo'");
-// JSON array of property IRIs leading to where entries name their data standard; without one, dct:conformsTo.
+// JSON array of property IRIs, or JSON null once someone chose dct:conformsTo; SQL NULL means never set.
 ensureColumn('hub_profiles', 'data_standard_path', 'TEXT');
 
 // ---------------------------------------------------------------------------
@@ -266,6 +266,9 @@ const _upsertHubProfile = db.prepare(`
   INSERT OR REPLACE INTO hub_profiles (dataspace_id, profile_id, title, version, description, source, created_at, data_standard_path)
   VALUES (@dataspace_id, @profile_id, @title, @version, @description, @source, @created_at, @data_standard_path)
 `);
+const _setHubProfileDataStandard = db.prepare(`
+  UPDATE hub_profiles SET data_standard_path = ? WHERE dataspace_id = ? AND profile_id = ?
+`);
 const _getHubProfiles = db.prepare(`SELECT * FROM hub_profiles WHERE dataspace_id = ? ORDER BY created_at`);
 const _getHubProfile = db.prepare(`SELECT * FROM hub_profiles WHERE dataspace_id = ? AND profile_id = ?`);
 const _deleteHubProfile = db.prepare(`DELETE FROM hub_profiles WHERE dataspace_id = ? AND profile_id = ?`);
@@ -323,6 +326,7 @@ module.exports = {
   removeHubProfile,
   getHubProfiles: (dataspaceId) => _getHubProfiles.all(dataspaceId),
   getHubProfile: (dataspaceId, profileId) => _getHubProfile.get(dataspaceId, profileId) || null,
+  setHubProfileDataStandard: (dataspaceId, profileId, path) => _setHubProfileDataStandard.run(JSON.stringify(path ?? null), dataspaceId, profileId),
   getHubArtifacts: (dataspaceId) => _getHubArtifacts.all(dataspaceId),
   getHubArtifact: (dataspaceId, artifactId) => _getHubArtifact.get(dataspaceId, artifactId) || null,
 
