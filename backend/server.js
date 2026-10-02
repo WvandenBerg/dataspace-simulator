@@ -18,6 +18,7 @@ const db = require('./db');
 const scenarios = require('./scenarios');
 const vocabhub = require('./vocabhub');
 const catalogProfiles = require('./catalogprofiles');
+const { assetToRecord } = require('./record');
 const { evaluatePolicyAgainstClaims, filterAssetsByClaims } = require('./policy');
 const {
     upsertSemanticDataset,
@@ -140,14 +141,7 @@ async function indexAsset(asset) {
 
     await upsertSemanticDataset({
         datasetId: asset.asset_id,
-        title: asset.name,
-        description: asset.description,
-        keywords: normalizeList(asset?.dcat_fields?.keywords),
-        themes: normalizeList(asset?.dcat_fields?.themes),
-        spatial: normalizeList(asset?.dcat_fields?.spatial),
-        temporalCoverage: asset?.dcat_fields?.temporalCoverage || '',
-        additionalDcat: asset?.dcat_fields?.additionalDcat || [],
-        distributions: asset?.dcat_fields?.distributions || [],
+        record: assetToRecord({ title: asset.name, description: asset.description, dcatFields: asset.dcat_fields || {} }),
         policyName: policyLabel(asset.policy_id),
         publisherBpn: asset.owner_node_id,
         publisherName: ownerName,
@@ -806,12 +800,6 @@ app.post('/api/reset', async (req, res) => {
 // ============================================================
 // Helpers
 // ============================================================
-
-function normalizeList(value) {
-    if (!value) return [];
-    if (Array.isArray(value)) return value.map(String).map(s => s.trim()).filter(Boolean);
-    return String(value).split(',').map(s => s.trim()).filter(Boolean);
-}
 
 function resolveDataspaceId(raw) {
     const id = String(raw || '').trim();
