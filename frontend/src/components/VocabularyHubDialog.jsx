@@ -56,6 +56,13 @@ const AlignmentRow = ({ alignment }) => (
     </div>
 );
 
+const DisconnectedNotice = ({ children }) => (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', margin: '8px 0 4px', padding: '7px 10px', borderRadius: '7px', fontSize: '0.74rem', background: 'rgba(217, 119, 6, 0.12)', color: '#b45309' }}>
+        <Unlink size={13} style={{ flexShrink: 0, marginTop: '1px' }} />
+        <span>{children}</span>
+    </div>
+);
+
 const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, onClose }) => {
     const [tab, setTab] = useState('profiles');
     const [profiles, setProfiles] = useState(null);
@@ -98,19 +105,11 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
                         <img src="/assets/sth-logo.svg" alt="" style={{ width: '20px', height: '20px' }} />
                     </div>
                     <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>Vocabulary Hub</div>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', fontWeight: 600, color: isConnected ? '#15803d' : 'var(--text-muted)' }}>
+                        {isConnected ? <Link2 size={12} /> : <Unlink size={12} />}
+                        {isConnected ? 'Connected' : 'Not connected'}
+                    </span>
                     <X size={18} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={onClose} />
-                </div>
-
-                <div style={{
-                    display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px', padding: '7px 10px', borderRadius: '7px',
-                    fontSize: '0.74rem',
-                    background: isConnected ? 'rgba(22, 163, 74, 0.12)' : 'rgba(217, 119, 6, 0.12)',
-                    color: isConnected ? '#15803d' : '#b45309',
-                }}>
-                    {isConnected ? <Link2 size={13} /> : <Unlink size={13} />}
-                    {isConnected
-                        ? 'Connected to this dataspace. Searches here can widen along alignments.'
-                        : 'Not connected to this dataspace. Drag the hub onto the ring to widen searches along alignments.'}
                 </div>
 
                 <div style={{ display: 'flex', gap: '4px', marginTop: '12px', borderBottom: '1px solid var(--border-color)' }}>
@@ -136,6 +135,18 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
 
                     {error && <div style={{ fontSize: '0.78rem', color: '#b45309', padding: '10px 0' }}>{error}</div>}
                     {tab !== 'catalog' && !error && !profiles && <div style={{ ...labelStyle, padding: '10px 0' }}>Loading...</div>}
+
+                    {!isConnected && tab === 'profiles' && (
+                        <DisconnectedNotice>
+                            Participants cannot look these standards up from search results or offer them as a
+                            data-standard filter. Drag the hub onto the ring to make them available.
+                        </DisconnectedNotice>
+                    )}
+                    {!isConnected && tab === 'alignments' && (
+                        <DisconnectedNotice>
+                            Searches do not widen along these alignments. Drag the hub onto the ring to use them.
+                        </DisconnectedNotice>
+                    )}
 
                     {tab === 'profiles' && (profiles || []).map((profile) => (
                         <ProfileRow key={profile.id} profile={profile} focused={profile.id === focusProfileId} />
