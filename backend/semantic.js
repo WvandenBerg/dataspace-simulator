@@ -360,6 +360,7 @@ async function semanticSearch({
     datasetIds = null,
     textPaths = [],
     fieldFilters = [],
+    schemaPath = null,
     schemaProfiles = null,
     limit = 25
 }) {
@@ -382,15 +383,14 @@ async function semanticSearch({
     });
 
     // Set membership rather than substring: a profile IRI either is or is not
-    // the one asked for, and VALUES lets the store do that join.
+    // the one asked for. Compared as strings, because a legacy entry may hold it as a literal.
     const schemaSet = Array.isArray(schemaProfiles)
         ? [...new Set(schemaProfiles.map((p) => escapeIri(p)).filter(Boolean))]
         : [];
     if (schemaSet.length > 0) {
-        patterns.push(
-            `?dataset ${pathExpr([P.distribution, P.mobilityDataStandard, P.schema])} ?schemaMatch .`,
-            `VALUES ?schemaMatch { ${schemaSet.map((p) => `<${p}>`).join(' ')} }`,
-        );
+        patterns.push(schemaPath
+            ? `?dataset ${pathExpr(schemaPath)} ?schemaMatch . FILTER(STR(?schemaMatch) IN (${schemaSet.map((p) => `"${escapeLiteral(p)}"`).join(', ')}))`
+            : 'FILTER(false)');
     }
 
     const query = `

@@ -149,4 +149,13 @@ function cleanValue(v, depth) {
     return null;
 }
 
-module.exports = { PREFIXES, RDF_TYPE, P, curie, expand, assetToRecord };
+// The plain values found by following a path of properties down through nested nodes.
+function valuesAt(record, path) {
+    let nodes = [record];
+    for (const p of path.slice(0, -1)) {
+        nodes = nodes.flatMap((n) => (n[p] || []).filter((v) => v.fields).map((v) => v.fields));
+    }
+    return nodes.flatMap((n) => n[path[path.length - 1]] || []).map((v) => v.iri ?? v.value).filter(Boolean);
+}
+
+module.exports = { PREFIXES, RDF_TYPE, P, curie, expand, assetToRecord, valuesAt };

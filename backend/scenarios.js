@@ -51,6 +51,10 @@ function validationProblems(scenario) {
                 if (!file || !fs.existsSync(file)) problems.push(`catalogProfile file "${rel}" does not resolve to a file inside ${SCENARIO_DIR}`);
             }
         }
+        const standard = scenario.catalogProfile?.dataStandardPath;
+        if (standard !== undefined && !(Array.isArray(standard) && standard.length > 0 && standard.every((p) => typeof p === 'string'))) {
+            problems.push('"catalogProfile.dataStandardPath" must be a non-empty list of property IRIs');
+        }
     }
     return problems;
 }

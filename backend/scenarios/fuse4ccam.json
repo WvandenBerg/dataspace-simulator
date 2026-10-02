@@ -10,6 +10,11 @@
             "catalog-profiles/mobilitydcat-ap-1.1.0/mobilitydcat-ap_1.1.0_shacl_range.ttl",
             "catalog-profiles/mobilitydcat-ap-1.1.0/mobilitydcat-ap_1.1.0_shacl_mdr-vocabularies.shape.ttl",
             "catalog-profiles/mobilitydcat-ap-1.1.0/dcat-ap_2.0.1_shacl_shapes.ttl"
+        ],
+        "dataStandardPath": [
+            "http://www.w3.org/ns/dcat#distribution",
+            "https://w3id.org/mobilitydcat-ap#mobilityDataStandard",
+            "https://w3id.org/mobilitydcat-ap#schema"
         ]
     },
     "participants": [

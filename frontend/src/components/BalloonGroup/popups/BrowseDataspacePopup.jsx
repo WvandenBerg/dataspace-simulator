@@ -619,9 +619,13 @@ const BrowseDataspacePopup = ({
                                     }
                                     if (e.key === 'Escape') setProfileListOpen(false);
                                 }}
-                                placeholder={hubProfiles.length > 0
-                                    ? 'Data standard from the Vocabulary Hub...'
-                                    : 'Data standard IRI, Enter to add...'}
+                                placeholder={catalogModel && !catalogModel.dataStandard
+                                    ? 'This catalog has no data-standard field'
+                                    : hubProfiles.length > 0
+                                        ? 'Data standard from the Vocabulary Hub...'
+                                        : 'Data standard IRI, Enter to add...'}
+                                disabled={Boolean(catalogModel && !catalogModel.dataStandard)}
+                                title={catalogModel?.dataStandard ? `Matches ${catalogModel.dataStandard.label}` : ''}
                                 style={{ width: '100%', boxSizing: 'border-box', padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
                             />
 

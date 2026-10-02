@@ -7,7 +7,12 @@
         "title": "Simulator default",
         "version": "1",
         "description": "The catalog entry fields the simulator offered before profiles could be loaded. Claims no standard.",
-        "files": ["catalog-profiles/simulator-default/simulator-default_shacl.ttl"]
+        "files": ["catalog-profiles/simulator-default/simulator-default_shacl.ttl"],
+        "dataStandardPath": [
+            "http://www.w3.org/ns/dcat#distribution",
+            "https://w3id.org/mobilitydcat-ap#mobilityDataStandard",
+            "https://w3id.org/mobilitydcat-ap#schema"
+        ]
     },
     "participants": [
         {

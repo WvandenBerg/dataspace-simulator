@@ -18,7 +18,7 @@ const db = require('./db');
 const scenarios = require('./scenarios');
 const vocabhub = require('./vocabhub');
 const catalogProfiles = require('./catalogprofiles');
-const { assetToRecord } = require('./record');
+const { assetToRecord, valuesAt } = require('./record');
 const { evaluatePolicyAgainstClaims, filterAssetsByClaims } = require('./policy');
 const {
     upsertSemanticDataset,
@@ -706,6 +706,7 @@ app.post('/api/semantic/search', async (req, res) => {
             datasetIds: visibleDatasetIds,
             textPaths: model.fields.map((f) => f.path),
             fieldFilters: modelFieldFilters(model, fieldFilters),
+            schemaPath: model.dataStandard?.path || null,
             schemaProfiles: requestedProfiles.length > 0 ? [...reach.keys()] : null,
             limit: Math.min(Number(limit) || 25, 100),
         });
@@ -719,7 +720,7 @@ app.post('/api/semantic/search', async (req, res) => {
         // A result that declares a picked profile needs no explanation, even if
         // it also declares a reached one. Only the rest get labelled.
         const reachedVia = (result) => {
-            const declared = (result.distributions || []).flatMap((d) => d.dataStandard?.schema || []);
+            const declared = model.dataStandard ? valuesAt(result.record, model.dataStandard.path) : [];
             if (declared.some((s) => reach.has(s) && reach.get(s) === null)) return null;
             return declared.map((s) => reach.get(s)).find(Boolean) || null;
         };
