@@ -86,6 +86,7 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
     return (
         <div
             onClick={onClose}
+            onWheel={(e) => e.stopPropagation()}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2100 }}
         >
             <div
