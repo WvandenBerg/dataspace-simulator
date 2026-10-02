@@ -29,6 +29,7 @@ follows as a note on the observation, not as the headline.
 | T-05 | `dct:conformsTo` returned on a search result | **Fail** |
 | T-06 | Cold start indexes every seeded asset | **Fail** |
 | T-07 | Access labels are consistent and human-readable | Cosmetic |
+| T-08 | Editing an asset keeps metadata the form does not show | **Fail** |
 
 Headline result: **the policy engine is correct, but one discovery path bypasses it.**
 Access control is enforced in semantic search and at contract negotiation, and is not
@@ -217,6 +218,32 @@ policy, and the tag renders the stored identifier directly with no display mappi
 unset policy falls back to the word `open`; a seeded asset shows its raw id. No behavioural
 difference — an unset policy is treated as open — but it reads as two access levels to
 anyone being shown the tool.
+
+### T-08 — Editing an asset deletes its distributions
+
+**Result: Fail** (2026-10-02, fixed on `fix/edit-keeps-distributions`)
+
+Setup: an asset published with one distribution declaring an OpenLABEL data standard, as
+every fuse4ccam scenario asset does.
+
+Steps: `Edit` the asset, change a keyword, `Save Changes`.
+
+Expected: the keyword changes, nothing else does.
+
+Observed: the distribution is gone, from SQLite and from the semantic index alike. The
+asset no longer matches a schema filter on OpenLABEL. `temporalCoverage` is lost the
+same way.
+
+```text
+PUT /api/assets/:id   body = what PublishAssetDialog sends in edit mode
+
+  before: { keywords: [a], temporalCoverage: 2026, distributions: [ D1 ] }
+  after:  { title, description, keywords: [c], themes, spatial, additionalDcat }
+```
+
+Cause: the edit form has no inputs for distributions or temporal coverage, so its payload
+omits them, and the route replaced `dcat_fields` wholesale with that payload. The route
+now merges the payload over the stored fields.
 
 ## 5) Notes on method
 
