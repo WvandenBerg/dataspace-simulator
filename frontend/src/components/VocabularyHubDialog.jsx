@@ -97,10 +97,7 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
                     <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#14532d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <img src="/assets/sth-logo.svg" alt="" style={{ width: '20px', height: '20px' }} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>Vocabulary Hub</div>
-                        <div style={labelStyle}>Vocabulary service of this dataspace</div>
-                    </div>
+                    <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>Vocabulary Hub</div>
                     <X size={18} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={onClose} />
                 </div>
 
