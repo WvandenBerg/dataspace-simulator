@@ -675,7 +675,7 @@ const BrowseDataspacePopup = ({
                         )}
                     </div>
 
-                    {semanticFieldFilters.length > 0 && (
+                    {(semanticFieldFilters.length > 0 || schemaProfiles.length > 0) && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', minWidth: 0 }}>
                             {semanticFieldFilters.map((f, i) => {
                                 const label = SEMANTIC_DCAT_OPTIONS.find(o => o.key === f.key)?.label || f.key;
@@ -691,7 +691,7 @@ const BrowseDataspacePopup = ({
                                 );
                             })}
                             <button
-                                onClick={() => setSemanticFieldFilters([])}
+                                onClick={() => { setSemanticFieldFilters([]); setSchemaProfiles([]); }}
                                 style={{ padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: 'transparent', color: '#94a3b8', fontSize: '0.7rem', cursor: 'pointer' }}
                             >
                                 Clear
