@@ -262,6 +262,7 @@ SELECT ?shape ?target ?prop ?path
        (MAX(?mn) AS ?min) (MIN(?mx) AS ?max) (SAMPLE(?dt) AS ?datatype) (SAMPLE(?cl) AS ?class)
        (SAMPLE(?ocl) AS ?orClass) (SAMPLE(?nk) AS ?nodeKind) (SAMPLE(?nd) AS ?node)
        (SAMPLE(?sv) AS ?severity) (MAX(?cx) AS ?complex)
+       (GROUP_CONCAT(DISTINCT STR(?iv); separator="\u001F") AS ?inList)
 ${fromClause(graphs)}
 WHERE {
   ?shape sh:property ?prop .
@@ -279,6 +280,7 @@ WHERE {
   OPTIONAL { ?prop sh:nodeKind ?nk }
   OPTIONAL { ?prop sh:node ?nd }
   OPTIONAL { ?prop sh:severity ?sv }
+  OPTIONAL { ?prop sh:in/rdf:rest*/rdf:first ?iv }
   BIND(IF(EXISTS { ?prop sh:or|sh:and|sh:xone|sh:not ?x }, 1, 0) AS ?cx)
 }
 GROUP BY ?shape ?target ?prop ?path`);
@@ -295,15 +297,10 @@ WHERE { ?node sh:property ?p . ?p sh:path skos:inScheme ; sh:hasValue ?scheme }`
     return new Map(rows.map((r) => [val(r, 'node'), val(r, 'scheme')]));
 }
 
-async function inValues(graphs) {
-    const rows = await executeSelect(`
-PREFIX sh: <${SH}>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-SELECT ?prop ?v ${fromClause(graphs)}
-WHERE { ?prop sh:in/rdf:rest*/rdf:first ?v }`);
-    const byProp = new Map();
-    for (const r of rows) byProp.set(val(r, 'prop'), [...(byProp.get(val(r, 'prop')) || []), val(r, 'v')]);
-    return byProp;
+// GROUP_CONCAT loses the list's order, so the values come back sorted.
+function inList(row) {
+    const values = (val(row, 'inList') || '').split('\u001F').filter(Boolean);
+    return values.length > 0 ? values.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })) : null;
 }
 
 async function labels(graphs, iris) {
@@ -329,7 +326,7 @@ SELECT (COUNT(*) AS ?n) ${fromClause(graphs)} WHERE { ?prop sh:path ?p FILTER(!i
 
 // Several shapes may constrain the same property of a class, as when a profile
 // tightens its base. They merge into one field; the strictest bound wins.
-function mergeInto(map, row, inByProp, schemes) {
+function mergeInto(map, row, schemes) {
     const pathIri = val(row, 'path');
     const min = Number(val(row, 'min') || 0);
     const max = val(row, 'max') === undefined ? null : Number(val(row, 'max'));
@@ -349,7 +346,7 @@ function mergeInto(map, row, inByProp, schemes) {
     field.orClass = field.orClass || val(row, 'orClass') || null;
     field.nodeKind = field.nodeKind || val(row, 'nodeKind') || null;
     field.node = field.node || val(row, 'node') || null;
-    field.in = field.in || inByProp.get(val(row, 'prop')) || null;
+    field.in = field.in || inList(row);
     field.complex = field.complex || val(row, 'complex') === '1';
     // A warning that only steers which code-list term to use says nothing about whether to fill the field.
     const valueOnly = min === 0 && schemes.has(val(row, 'node'));
@@ -370,19 +367,19 @@ async function fieldModel(dataspaceId, profileId) {
 }
 
 async function modelFromGraphs(profileId, graphs, dataStandardPath = null) {
-    const [rows, inByProp, nonIriPaths, schemes] = await Promise.all([
-        propertyRows(graphs), inValues(graphs), countNonIriPaths(graphs), codeLists(graphs),
+    const [rows, nonIriPaths, schemes] = await Promise.all([
+        propertyRows(graphs), countNonIriPaths(graphs), codeLists(graphs),
     ]);
     const byClass = new Map();
     const byShape = new Map();
     for (const row of rows) {
         const shape = val(row, 'shape');
         if (!byShape.has(shape)) byShape.set(shape, new Map());
-        mergeInto(byShape.get(shape), row, inByProp, schemes);
+        mergeInto(byShape.get(shape), row, schemes);
         const target = val(row, 'target');
         if (target) {
             if (!byClass.has(target)) byClass.set(target, new Map());
-            mergeInto(byClass.get(target), row, inByProp, schemes);
+            mergeInto(byClass.get(target), row, schemes);
         }
     }
 
