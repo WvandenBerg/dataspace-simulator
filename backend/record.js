@@ -90,7 +90,8 @@ function distributionNode(dist) {
     return { type: P.distributionClass, fields };
 }
 
-// What the publish form stored before profiles drove it.
+// What the publish form stored before profiles drove it. A field the form
+// filled per profile, under dcatFields.record, replaces the legacy one.
 function assetToRecord({ title, description, dcatFields = {} }) {
     const record = {};
     put(record, P.title, literals(title));
@@ -104,7 +105,42 @@ function assetToRecord({ title, description, dcatFields = {} }) {
         if (path !== entry?.key) put(record, path, literals(entry?.value));
     }
     put(record, P.distribution, (dcatFields.distributions || []).map(distributionNode));
+    return { ...record, ...cleanRecord(dcatFields.record) };
+}
+
+const IRI = /^[a-z][a-z0-9+.-]*:[^\s<>"{}|\\^`]+$/i;
+const MAX_DEPTH = 4;
+
+// A record arrives from the browser, so anything that is not one is dropped
+// rather than written to the store.
+function cleanRecord(raw, depth = 0) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || depth > MAX_DEPTH) return {};
+    const record = {};
+    for (const [path, values] of Object.entries(raw)) {
+        if (!IRI.test(path) || !Array.isArray(values)) continue;
+        put(record, path, values.map((v) => cleanValue(v, depth)).filter(Boolean));
+    }
     return record;
+}
+
+function cleanValue(v, depth) {
+    if (!v || typeof v !== 'object') return null;
+    if (typeof v.iri === 'string') return IRI.test(v.iri.trim()) ? { iri: v.iri.trim() } : null;
+    if (typeof v.value === 'string' || typeof v.value === 'number') {
+        const value = String(v.value).trim();
+        if (!value) return null;
+        return {
+            value,
+            ...(typeof v.lang === 'string' && /^[a-z]{2,3}(-[a-z0-9]+)*$/i.test(v.lang) ? { lang: v.lang } : {}),
+            ...(typeof v.datatype === 'string' && IRI.test(v.datatype) ? { datatype: v.datatype } : {}),
+        };
+    }
+    if (v.fields) {
+        const fields = cleanRecord(v.fields, depth + 1);
+        if (Object.keys(fields).length === 0) return null;
+        return { ...(typeof v.type === 'string' && IRI.test(v.type) ? { type: v.type } : {}), fields };
+    }
+    return null;
 }
 
 module.exports = { PREFIXES, RDF_TYPE, P, curie, expand, assetToRecord };
