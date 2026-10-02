@@ -466,6 +466,20 @@ async function catalogModel(dataspaceId, hubOn) {
     return { ...fallback, title: DEFAULT_PROFILE.title, source: 'default' };
 }
 
+// Counts per field how many entries fill it, so a field the catalog has not
+// caught up with shows as such.
+function withCoverage(fields, records) {
+    const annotate = (level, perEntry) => level.map((f) => {
+        const values = perEntry.map((maps) => maps.flatMap((m) => m[f.path] || []));
+        return {
+            ...f,
+            filled: values.filter((v) => v.length > 0).length,
+            fields: annotate(f.fields, values.map((v) => v.filter((x) => x.fields).map((x) => x.fields))),
+        };
+    });
+    return annotate(fields, records.map((r) => [r]));
+}
+
 module.exports = {
     ProfileError,
     uploadsGraph,
@@ -475,5 +489,6 @@ module.exports = {
     listFileProfiles,
     fieldModel,
     catalogModel,
+    withCoverage,
     artifact: (dataspaceId, artifactId) => db.getHubArtifact(dataspaceId, artifactId),
 };

@@ -13,7 +13,7 @@ const filterableFields = (fields, prefix = [], labels = [], weakest = 0) => fiel
     const path = [...prefix, f.path];
     const label = [...labels, f.label];
     const rank = Math.max(weakest, STATUSES.indexOf(f.status));
-    const own = f.kind === 'node' ? [] : [{ key: path.join(' '), path, label: label.join(' \u203a '), status: STATUSES[rank] }];
+    const own = f.kind === 'node' ? [] : [{ key: path.join(' '), path, label: label.join(' \u203a '), filled: f.filled, status: STATUSES[rank] }];
     return [...own, ...filterableFields(f.fields, path, label, rank)];
 });
 
@@ -570,7 +570,7 @@ const BrowseDataspacePopup = ({
                                 return group.length > 0 && (
                                     <optgroup key={status} label={status.charAt(0).toUpperCase() + status.slice(1)}>
                                         {group.map((o) => (
-                                            <option key={o.key} value={o.key}>{o.label}</option>
+                                            <option key={o.key} value={o.key}>{o.label} ({o.filled}/{catalogModel.total})</option>
                                         ))}
                                     </optgroup>
                                 );

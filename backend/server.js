@@ -24,6 +24,7 @@ const {
     upsertSemanticDataset,
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
+    readRecords,
     semanticSearch
 } = require('./semantic');
 const { initiateNegotiation, advanceNegotiation, initiateTransfer } = require('./state-machine');
@@ -532,7 +533,7 @@ app.patch('/api/dataspaces/:id/settings', (req, res) => {
     res.json(db.patchDataspaceSettings(dataspaceId, patch));
 });
 
-// The fields a catalog entry has in this dataspace.
+// The fields a catalog entry has in this dataspace, and how many entries fill each.
 app.get('/api/dataspaces/:id/catalog-model', async (req, res) => {
     const dataspaceId = resolveDataspaceId(req.params.id);
     try {
@@ -541,7 +542,8 @@ app.get('/api/dataspaces/:id/catalog-model', async (req, res) => {
         const title = model.source === 'hub'
             ? (await vocabhub.listCatalogProfiles(dataspaceId)).find((p) => p.id === model.profileId)?.title
             : model.title;
-        res.json({ ...model, title: title || model.profileId });
+        const records = [...(await readRecords(dataspaceId)).values()];
+        res.json({ ...model, title: title || model.profileId, total: records.length, fields: catalogProfiles.withCoverage(model.fields, records) });
     } catch (err) {
         res.status(502).json({ error: `Catalog model unavailable: ${err.message}` });
     }
