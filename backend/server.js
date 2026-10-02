@@ -595,6 +595,8 @@ app.get('/api/vocabhub/alignments', hubRoute((req, ds) => vocabhub.listAlignment
 
 app.get('/api/vocabhub/catalog-profiles', hubRoute((_req, ds) => vocabhub.listCatalogProfiles(ds)));
 
+app.get('/api/vocabhub/profiles/:id/fields', hubRoute((req, ds) => catalogProfiles.fieldModel(ds, req.params.id)));
+
 // Uploads always create a new profile, so they cannot overwrite one a scenario ships.
 app.post('/api/vocabhub/profiles', hubRoute((req, ds) => catalogProfiles.addProfile(ds, {
     title: req.body?.title,

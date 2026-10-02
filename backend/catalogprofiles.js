@@ -28,6 +28,9 @@ const MEDIA_TYPES = {
 };
 const ROLES = new Set(['validation', 'vocabulary']);
 const MAX_FILES = 20;
+const MAX_DEPTH = 3;
+const DATASET = 'http://www.w3.org/ns/dcat#Dataset';
+const CONCEPT = 'http://www.w3.org/2004/02/skos/core#Concept';
 const SH = 'http://www.w3.org/ns/shacl#';
 
 const PREFIXES = {
@@ -64,6 +67,12 @@ function curie(iri) {
         if (iri.startsWith(ns)) return `${prefix}:${iri.slice(ns.length)}`;
     }
     return iri;
+}
+
+function humanize(iri) {
+    const local = iri.split(/[#/:]/).filter(Boolean).pop() || iri;
+    const words = local.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
+    return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 function fromClause(graphs) {
@@ -210,7 +219,8 @@ async function addProfile(dataspaceId, { profileId, title, version, description,
     );
     await writeUploadsGraph(dataspaceId);
 
-    return { profileId: id, files: report };
+    const model = await fieldModel(dataspaceId, id);
+    return { profileId: id, files: report, fields: countFields(model.fields), unsupported: model.unsupported };
 }
 
 async function removeProfile(dataspaceId, profileId) {
@@ -218,6 +228,10 @@ async function removeProfile(dataspaceId, profileId) {
     await Promise.all(artifacts.map((a) => dropGraph(artifactGraph(dataspaceId, a.artifact_id))));
     db.removeHubProfile(dataspaceId, profileId);
     await writeUploadsGraph(dataspaceId);
+}
+
+function artifactsOf(dataspaceId, profileId) {
+    return db.getHubArtifacts(dataspaceId).filter((a) => a.profile_id === profileId);
 }
 
 function listFileProfiles(dataspaceId) {
@@ -231,11 +245,205 @@ function listFileProfiles(dataspaceId) {
     }));
 }
 
+// ---------------------------------------------------------------------------
+// Field model: the catalog entry fields a profile's shapes define
+// ---------------------------------------------------------------------------
+
+const STATUS_RANK = { optional: 0, recommended: 1, mandatory: 2 };
+
+function statusOf(min, severity) {
+    if (severity === `${SH}Info`) return 'optional';
+    if (severity === `${SH}Warning`) return 'recommended';
+    return min >= 1 ? 'mandatory' : 'optional';
+}
+
+async function propertyRows(graphs) {
+    return executeSelect(`
+PREFIX sh: <${SH}>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?shape ?target ?prop ?path
+       (SAMPLE(?n) AS ?name) (SAMPLE(?d) AS ?description) (MIN(?o) AS ?order)
+       (MAX(?mn) AS ?min) (MIN(?mx) AS ?max) (SAMPLE(?dt) AS ?datatype) (SAMPLE(?cl) AS ?class)
+       (SAMPLE(?ocl) AS ?orClass) (SAMPLE(?nk) AS ?nodeKind) (SAMPLE(?nd) AS ?node)
+       (SAMPLE(?sv) AS ?severity) (MAX(?cx) AS ?complex)
+${fromClause(graphs)}
+WHERE {
+  ?shape sh:property ?prop .
+  ?prop sh:path ?path .
+  FILTER(isIRI(?path))
+  OPTIONAL { ?shape sh:targetClass ?target }
+  OPTIONAL { ?prop sh:name ?n FILTER(lang(?n) = '' || langMatches(lang(?n), 'en')) }
+  OPTIONAL { ?prop sh:description ?d FILTER(lang(?d) = '' || langMatches(lang(?d), 'en')) }
+  OPTIONAL { ?prop sh:order ?o }
+  OPTIONAL { ?prop sh:minCount ?mn }
+  OPTIONAL { ?prop sh:maxCount ?mx }
+  OPTIONAL { ?prop sh:datatype ?dt }
+  OPTIONAL { ?prop sh:class ?cl }
+  OPTIONAL { ?prop sh:or/rdf:rest*/rdf:first/sh:class ?ocl }
+  OPTIONAL { ?prop sh:nodeKind ?nk }
+  OPTIONAL { ?prop sh:node ?nd }
+  OPTIONAL { ?prop sh:severity ?sv }
+  BIND(IF(EXISTS { ?prop sh:or|sh:and|sh:xone|sh:not ?x }, 1, 0) AS ?cx)
+}
+GROUP BY ?shape ?target ?prop ?path`);
+}
+
+// A node shape that only pins skos:inScheme restricts which terms are allowed;
+// it describes a code list, not a structure to fill in.
+async function codeLists(graphs) {
+    const rows = await executeSelect(`
+PREFIX sh: <${SH}>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+SELECT ?node ?scheme ${fromClause(graphs)}
+WHERE { ?node sh:property ?p . ?p sh:path skos:inScheme ; sh:hasValue ?scheme }`);
+    return new Map(rows.map((r) => [val(r, 'node'), val(r, 'scheme')]));
+}
+
+async function inValues(graphs) {
+    const rows = await executeSelect(`
+PREFIX sh: <${SH}>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?prop ?v ${fromClause(graphs)}
+WHERE { ?prop sh:in/rdf:rest*/rdf:first ?v }`);
+    const byProp = new Map();
+    for (const r of rows) byProp.set(val(r, 'prop'), [...(byProp.get(val(r, 'prop')) || []), val(r, 'v')]);
+    return byProp;
+}
+
+async function labels(graphs, iris) {
+    if (iris.length === 0) return new Map();
+    const rows = await executeSelect(`
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+SELECT ?p (SAMPLE(?l) AS ?label) ${fromClause(graphs)}
+WHERE {
+  VALUES ?p { ${iris.map((i) => `<${escapeIri(i)}>`).join(' ')} }
+  ?p rdfs:label|skos:prefLabel ?l FILTER(lang(?l) = '' || langMatches(lang(?l), 'en'))
+}
+GROUP BY ?p`);
+    return new Map(rows.map((r) => [val(r, 'p'), val(r, 'label')]));
+}
+
+async function countNonIriPaths(graphs) {
+    const rows = await executeSelect(`
+PREFIX sh: <${SH}>
+SELECT (COUNT(*) AS ?n) ${fromClause(graphs)} WHERE { ?prop sh:path ?p FILTER(!isIRI(?p)) }`);
+    return Number(val(rows[0] || {}, 'n') || 0);
+}
+
+// Several shapes may constrain the same property of a class, as when a profile
+// tightens its base. They merge into one field; the strictest bound wins.
+function mergeInto(map, row, inByProp) {
+    const pathIri = val(row, 'path');
+    const min = Number(val(row, 'min') || 0);
+    const max = val(row, 'max') === undefined ? null : Number(val(row, 'max'));
+    const field = map.get(pathIri) || {
+        path: pathIri, curie: curie(pathIri), name: null, description: null, order: null,
+        min: 0, max: null, datatype: null, class: null, orClass: null, nodeKind: null, node: null,
+        status: 'optional', in: null, complex: false,
+    };
+    field.name = field.name || val(row, 'name') || null;
+    field.description = field.description || val(row, 'description') || null;
+    const order = val(row, 'order') === undefined ? null : Number(val(row, 'order'));
+    if (order !== null && (field.order === null || order < field.order)) field.order = order;
+    field.min = Math.max(field.min, min);
+    if (max !== null) field.max = field.max === null ? max : Math.min(field.max, max);
+    field.datatype = field.datatype || val(row, 'datatype') || null;
+    field.class = field.class || val(row, 'class') || null;
+    field.orClass = field.orClass || val(row, 'orClass') || null;
+    field.nodeKind = field.nodeKind || val(row, 'nodeKind') || null;
+    field.node = field.node || val(row, 'node') || null;
+    field.in = field.in || inByProp.get(val(row, 'prop')) || null;
+    field.complex = field.complex || val(row, 'complex') === '1';
+    const status = statusOf(min, val(row, 'severity'));
+    if (STATUS_RANK[status] > STATUS_RANK[field.status]) field.status = status;
+    map.set(pathIri, field);
+}
+
+function countFields(fields) {
+    return fields.reduce((n, f) => n + 1 + countFields(f.fields || []), 0);
+}
+
+async function fieldModel(dataspaceId, profileId) {
+    const artifacts = artifactsOf(dataspaceId, profileId);
+    const graphs = artifacts.map((a) => artifactGraph(dataspaceId, a.artifact_id));
+    if (!artifacts.some((a) => a.role === 'validation')) return null;
+
+    const [rows, inByProp, nonIriPaths, schemes] = await Promise.all([
+        propertyRows(graphs), inValues(graphs), countNonIriPaths(graphs), codeLists(graphs),
+    ]);
+    const byClass = new Map();
+    const byShape = new Map();
+    for (const row of rows) {
+        const shape = val(row, 'shape');
+        if (!byShape.has(shape)) byShape.set(shape, new Map());
+        mergeInto(byShape.get(shape), row, inByProp);
+        const target = val(row, 'target');
+        if (target) {
+            if (!byClass.has(target)) byClass.set(target, new Map());
+            mergeInto(byClass.get(target), row, inByProp);
+        }
+    }
+
+    const nameOf = await labels(graphs, [...new Set(rows.map((r) => val(r, 'path')))]);
+    const order = (a, b) => (a.order ?? 999) - (b.order ?? 999)
+        || STATUS_RANK[b.status] - STATUS_RANK[a.status]
+        || a.label.localeCompare(b.label);
+
+    // A class mentioned only inside sh:or still says what structure a value may
+    // have. skos:Concept values are code-list terms, referenced rather than filled in.
+    const childrenOf = (f) => {
+        const cls = f.class || f.orClass;
+        if (cls && cls !== CONCEPT && byClass.has(cls)) return { key: `class:${cls}`, map: byClass.get(cls) };
+        if (f.node && byShape.has(f.node) && !schemes.has(f.node)) return { key: `shape:${f.node}`, map: byShape.get(f.node) };
+        return null;
+    };
+
+    const build = (fieldMap, depth, seen) => [...fieldMap.values()].map((f) => {
+        const child = childrenOf(f);
+        const fields = child && depth < MAX_DEPTH && !seen.has(child.key)
+            ? build(child.map, depth + 1, new Set([...seen, child.key]))
+            : [];
+        const cls = f.class || f.orClass;
+        const codeList = schemes.get(f.node) || null;
+        const isIri = cls || codeList || [`${SH}IRI`, `${SH}BlankNodeOrIRI`].includes(f.nodeKind);
+        return {
+            path: f.path,
+            curie: f.curie,
+            label: f.name || nameOf.get(f.path) || humanize(f.path),
+            description: f.description,
+            order: f.order,
+            status: f.status,
+            min: f.min,
+            max: f.max,
+            kind: fields.length > 0 ? 'node' : (isIri ? 'iri' : 'literal'),
+            datatype: f.datatype ? curie(f.datatype) : null,
+            class: cls ? curie(cls) : null,
+            codeList,
+            in: f.in,
+            unsupported: f.complex ? 'Uses sh:or, sh:and, sh:xone or sh:not, which this simulator does not read' : null,
+            fields,
+        };
+    }).sort(order);
+
+    const root = byClass.get(DATASET);
+    return {
+        profileId,
+        root: curie(DATASET),
+        fields: root ? build(root, 1, new Set([`class:${DATASET}`])) : [],
+        unsupported: {
+            complexConstraints: rows.filter((r) => val(r, 'complex') === '1').length,
+            nonIriPaths,
+        },
+    };
+}
+
 module.exports = {
     ProfileError,
     uploadsGraph,
     addProfile,
     removeProfile,
     listFileProfiles,
+    fieldModel,
     artifact: (dataspaceId, artifactId) => db.getHubArtifact(dataspaceId, artifactId),
 };
