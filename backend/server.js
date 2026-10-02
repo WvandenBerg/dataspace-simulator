@@ -339,24 +339,8 @@ app.post('/api/assets', async (req, res) => {
 
     db.insertAsset(row);
 
-    // Index in Fuseki
     try {
-        await upsertSemanticDataset({
-            datasetId: assetId,
-            title: row.name,
-            description: row.description,
-            keywords: normalizeList(row.dcat_fields.keywords),
-            themes: normalizeList(row.dcat_fields.themes),
-            spatial: normalizeList(row.dcat_fields.spatial),
-            temporalCoverage: row.dcat_fields.temporalCoverage || '',
-            additionalDcat: row.dcat_fields.additionalDcat || [],
-            distributions: row.dcat_fields.distributions || [],
-            policyName: policyLabel(asset.policyId),
-            publisherBpn: nodeId,  // use nodeId as the "publisher" identifier in Fuseki
-            publisherName: node.name,
-            sessionCode: dataspaceId,
-            publishedAt: now,
-        });
+        await indexAsset(row);
     } catch (err) {
         console.error('[Semantic] Indexing failed:', err.message);
     }
@@ -400,29 +384,14 @@ app.put('/api/assets/:id', async (req, res) => {
     };
 
     db.updateAsset(updated);
+    const out = db.getAsset(existing.asset_id);
 
     try {
-        await upsertSemanticDataset({
-            datasetId: existing.asset_id,
-            title: updated.name,
-            description: updated.description,
-            keywords: normalizeList(updated.dcat_fields.keywords),
-            themes: normalizeList(updated.dcat_fields.themes),
-            spatial: normalizeList(updated.dcat_fields.spatial),
-            temporalCoverage: updated.dcat_fields.temporalCoverage || '',
-            additionalDcat: updated.dcat_fields.additionalDcat || [],
-            distributions: updated.dcat_fields.distributions || [],
-            policyName: policyLabel(updated.policy_id),
-            publisherBpn: ownerNodeId,
-            publisherName: ownerNode.name,
-            sessionCode: dataspaceId,
-            publishedAt: existing.published_at,
-        });
+        await indexAsset(out);
     } catch (err) {
         console.error('[Semantic] Update indexing failed:', err.message);
     }
 
-    const out = db.getAsset(existing.asset_id);
     res.json({ success: true, asset: assetToResponse(out) });
 });
 
