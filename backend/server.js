@@ -392,7 +392,8 @@ app.put('/api/assets/:id', async (req, res) => {
             : (payload.content != null ? JSON.stringify(payload.content) : String(existing.asset_content || '')),
         file_name: String(payload.fileName ?? existing.file_name ?? '').trim(),
         policy_id: payload.policyId === undefined ? (existing.policy_id || null) : (payload.policyId || null),
-        dcat_fields: payload.dcatFields || existing.dcat_fields || {},
+        // Merged, not replaced: the edit form has no inputs for distributions or temporalCoverage.
+        dcat_fields: { ...(existing.dcat_fields || {}), ...(payload.dcatFields || {}) },
     };
 
     db.updateAsset(updated);
