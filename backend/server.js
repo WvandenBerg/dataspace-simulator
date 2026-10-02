@@ -503,6 +503,13 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
         }
     }
 
+    let hubTriples = 0;
+    try {
+        hubTriples = (await vocabhub.loadScenarioIntoHub(dataspaceId, scenario)).tripleCount;
+    } catch (err) {
+        failed.push({ hub: true, error: err.message });
+    }
+
     res.json({
         success: failed.length === 0,
         scenarioId: scenario.id,
@@ -510,6 +517,7 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
         participants: scenario.participants.length,
         assetsAdded: added.length,
         assetsSkipped: scenario.assets.length - added.length,
+        hubTriples,
         indexingFailures: failed,
     });
 });
@@ -545,14 +553,13 @@ app.patch('/api/dataspaces/:id/settings', (req, res) => {
 // ============================================================
 // Vocabulary Hub
 //
-// One registry shared by every dataspace, so these routes take no
-// dataspaceId. Read-only: the contents come from the scenario files.
+// One hub per dataspace. Read-only: the contents come from scenario files.
 // ============================================================
 
 function hubRoute(handler) {
     return async (req, res) => {
         try {
-            const result = await handler(req);
+            const result = await handler(req, resolveDataspaceId(req.query?.dataspaceId));
             if (result === null) return res.status(404).json({ error: 'Not found in the Vocabulary Hub' });
             res.json(result);
         } catch (err) {
@@ -561,13 +568,13 @@ function hubRoute(handler) {
     };
 }
 
-app.get('/api/vocabhub/profiles', hubRoute(() => vocabhub.listProfiles()));
+app.get('/api/vocabhub/profiles', hubRoute((_req, ds) => vocabhub.listProfiles(ds)));
 
-app.get('/api/vocabhub/profiles/:id', hubRoute((req) => vocabhub.getProfile(req.params.id)));
+app.get('/api/vocabhub/profiles/:id', hubRoute((req, ds) => vocabhub.getProfile(ds, req.params.id)));
 
-app.get('/api/vocabhub/shapes/:id', hubRoute((req) => vocabhub.shapesFor(req.params.id)));
+app.get('/api/vocabhub/shapes/:id', hubRoute((req, ds) => vocabhub.shapesFor(ds, req.params.id)));
 
-app.get('/api/vocabhub/alignments', hubRoute((req) => vocabhub.listAlignments({
+app.get('/api/vocabhub/alignments', hubRoute((req, ds) => vocabhub.listAlignments(ds, {
     target: req.query.target,
     minCoverage: req.query.minCoverage,
 })));
@@ -580,10 +587,10 @@ app.get('/api/vocabhub/alignments', hubRoute((req) => vocabhub.listAlignments({
 // Maps every searchable profile to how it became searchable: null for the ones
 // the consumer picked, an alignment for the ones the hub reaches from them.
 // One hop only, so a reached profile is never itself expanded.
-async function widenByAlignments(requested, minCoverage) {
+async function widenByAlignments(dataspaceId, requested, minCoverage) {
     const reach = new Map(requested.map((id) => [id, null]));
     for (const target of requested) {
-        for (const alignment of await vocabhub.listAlignments({ target, minCoverage })) {
+        for (const alignment of await vocabhub.listAlignments(dataspaceId, { target, minCoverage })) {
             const source = alignment.source?.id;
             if (source && !reach.has(source)) {
                 reach.set(source, {
@@ -629,7 +636,7 @@ app.post('/api/semantic/search', async (req, res) => {
     let hubUnavailable = null;
     if (alignmentsUsed) {
         try {
-            reach = await widenByAlignments(requestedProfiles, minCoverage);
+            reach = await widenByAlignments(dataspaceId, requestedProfiles, minCoverage);
         } catch (err) {
             // Losing the hub narrows discovery back to the picked profiles; it
             // is not a reason to fail a search the store can still answer.
@@ -835,12 +842,14 @@ server.listen(PORT, () => {
     reindexAllAssetsToSemantic().catch((err) => {
         console.error(`[Seed] SEARCH WILL BE INCOMPLETE: ${err.message}`);
     });
-    vocabhub.rebuildHub()
-        .then(({ files, tripleCount }) => {
-            console.log(`[Hub] ${tripleCount} triple(s) from ${files} catalogue export(s).`);
+    vocabhub.refreshScenarioHubs()
+        .then((loaded) => {
+            for (const { dataspaceId, scenarioId, tripleCount } of loaded) {
+                console.log(`[Hub] ${dataspaceId}: ${tripleCount} triple(s) from scenario ${scenarioId}.`);
+            }
         })
         .catch((err) => {
-            console.error(`[Hub] VOCABULARY HUB IS EMPTY: ${err.message}`);
+            console.error(`[Hub] VOCABULARY HUBS NOT REFRESHED: ${err.message}`);
         });
     console.log('');
 

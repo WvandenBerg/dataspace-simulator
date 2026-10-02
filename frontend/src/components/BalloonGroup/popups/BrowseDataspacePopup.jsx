@@ -95,12 +95,12 @@ const BrowseDataspacePopup = ({
     // A scenario need not ship a catalogue export, so an empty hub is expected.
     useEffect(() => {
         let cancelled = false;
-        fetch(`${API_BASE}/vocabhub/profiles`)
+        fetch(`${API_BASE}/vocabhub/profiles?dataspaceId=${encodeURIComponent(dataspaceId)}`)
             .then((r) => (r.ok ? r.json() : []))
             .then((data) => { if (!cancelled) setHubProfiles(Array.isArray(data) ? data : []); })
             .catch(() => { if (!cancelled) setHubProfiles([]); });
         return () => { cancelled = true; };
-    }, []);
+    }, [dataspaceId]);
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -450,7 +450,7 @@ const BrowseDataspacePopup = ({
                                                 </div>
                                                 {isExpanded && (
                                                     <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', marginBottom: '8px' }}>
-                                                        <DatasetDetail dataset={asset} />
+                                                        <DatasetDetail dataset={asset} dataspaceId={dataspaceId} />
                                                     </div>
                                                 )}
                                                 <button
@@ -748,7 +748,7 @@ const BrowseDataspacePopup = ({
                                             </div>
                                             {isExpanded && (
                                                 <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '10px', background: 'rgba(37,99,235,0.08)' }}>
-                                                    <DatasetDetail dataset={result} />
+                                                    <DatasetDetail dataset={result} dataspaceId={dataspaceId} />
                                                     <button onClick={() => {
                                                         const providerId = result.publisherNodeId || result.publisherBpn;
                                                         if (!providerId) return;

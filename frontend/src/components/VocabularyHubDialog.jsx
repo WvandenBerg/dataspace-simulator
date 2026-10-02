@@ -49,20 +49,21 @@ const AlignmentRow = ({ alignment }) => (
     </div>
 );
 
-const VocabularyHubDialog = ({ isConnected, onClose }) => {
+const VocabularyHubDialog = ({ dataspaceId, isConnected, onClose }) => {
     const [tab, setTab] = useState('profiles');
     const [profiles, setProfiles] = useState(null);
     const [alignments, setAlignments] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        const query = `?dataspaceId=${encodeURIComponent(dataspaceId)}`;
         Promise.all([
-            fetch(`${API_BASE}/vocabhub/profiles`).then((r) => r.json()),
-            fetch(`${API_BASE}/vocabhub/alignments`).then((r) => r.json()),
+            fetch(`${API_BASE}/vocabhub/profiles${query}`).then((r) => r.json()),
+            fetch(`${API_BASE}/vocabhub/alignments${query}`).then((r) => r.json()),
         ])
             .then(([p, a]) => { setProfiles(p); setAlignments(a); })
             .catch(() => setError('Vocabulary Hub unavailable'));
-    }, []);
+    }, [dataspaceId]);
 
     const tabStyle = (name) => ({
         padding: '6px 14px',
@@ -88,7 +89,7 @@ const VocabularyHubDialog = ({ isConnected, onClose }) => {
                     </div>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>Vocabulary Hub</div>
-                        <div style={labelStyle}>Shared by every dataspace</div>
+                        <div style={labelStyle}>Vocabulary service of this dataspace</div>
                     </div>
                     <X size={18} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={onClose} />
                 </div>

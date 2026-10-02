@@ -611,6 +611,7 @@ const MacroView = forwardRef(({
 
             {hubDialogOpen && (
                 <VocabularyHubDialog
+                    dataspaceId={dataspaceId}
                     isConnected={vocabHub.isConnected}
                     onClose={() => setHubDialogOpen(false)}
                 />

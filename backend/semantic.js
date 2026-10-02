@@ -583,6 +583,7 @@ module.exports = {
     semanticSearch,
     distributionsForDatasets,
     executeSelect,
+    executeUpdate,
     replaceGraph,
     escapeIri,
     DCAT_FIELD_TO_PREDICATE,
