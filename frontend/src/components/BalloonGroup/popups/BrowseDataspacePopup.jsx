@@ -582,30 +582,6 @@ const BrowseDataspacePopup = ({
                         </button>
                     </div>
 
-                    {semanticFieldFilters.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', minWidth: 0 }}>
-                            {semanticFieldFilters.map((f, i) => {
-                                const label = SEMANTIC_DCAT_OPTIONS.find(o => o.key === f.key)?.label || f.key;
-                                return (
-                                    <button
-                                        key={`${f.key}-${i}`}
-                                        onClick={() => setSemanticFieldFilters(prev => prev.filter((_, idx) => idx !== i))}
-                                        style={{ maxWidth: '100%', padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: '#0f172a', color: '#cbd5e1', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                                        title="Remove filter"
-                                    >
-                                        {label}: {f.value} x
-                                    </button>
-                                );
-                            })}
-                            <button
-                                onClick={() => setSemanticFieldFilters([])}
-                                style={{ padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: 'transparent', color: '#94a3b8', fontSize: '0.7rem', cursor: 'pointer' }}
-                            >
-                                Clear
-                            </button>
-                        </div>
-                    )}
-
                     <div style={{ marginBottom: '10px' }}>
                         <div style={{ position: 'relative' }}>
                             <input
@@ -698,6 +674,30 @@ const BrowseDataspacePopup = ({
                             </div>
                         )}
                     </div>
+
+                    {semanticFieldFilters.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', minWidth: 0 }}>
+                            {semanticFieldFilters.map((f, i) => {
+                                const label = SEMANTIC_DCAT_OPTIONS.find(o => o.key === f.key)?.label || f.key;
+                                return (
+                                    <button
+                                        key={`${f.key}-${i}`}
+                                        onClick={() => setSemanticFieldFilters(prev => prev.filter((_, idx) => idx !== i))}
+                                        style={{ maxWidth: '100%', padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: '#0f172a', color: '#cbd5e1', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                        title="Remove filter"
+                                    >
+                                        {label}: {f.value} x
+                                    </button>
+                                );
+                            })}
+                            <button
+                                onClick={() => setSemanticFieldFilters([])}
+                                style={{ padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: 'transparent', color: '#94a3b8', fontSize: '0.7rem', cursor: 'pointer' }}
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    )}
 
                     {semanticLoading && (
                         <div style={{ marginBottom: '10px', padding: '8px', border: '1px solid #334155', borderRadius: '7px', background: '#0f172a', color: '#f8fafc', fontSize: '0.74rem', fontWeight: 600, minHeight: '18px' }}>
