@@ -1,75 +1,62 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { largestGapAngle } from './useDragNodes';
 
 /**
- * Whether this dataspace has a vocabulary service at all, where its node sits,
- * and whether that node currently reaches the ring.
+ * Whether this dataspace runs a vocabulary service, and where its connector sits.
  *
- * Presence and reachability are deliberately separate. Switching the service
- * off models a dataspace that never adopted one; dragging the node out of range
- * models one it has but cannot reach. Both disable alignment-widened discovery,
- * and they should not look alike. Neither is dataspace data, so both live in
- * localStorage rather than the nodes table.
+ * Presence and reachability stay separate. Switching the service off models a
+ * dataspace that never adopted one; dragging its connector off the ring models
+ * one it has but cannot reach. Both are configuration of the dataspace, so they
+ * live in the backend rather than in this browser.
  */
-// The connect margin is deliberately short: losing the service should take one
-// deliberate drag, not a journey across the canvas. Participant cards reach as
-// far as ~1180 from the centre, so within that margin there is no radius that
-// clears them at every angle. The default parks in the diagonal gap between two
-// cards, which leaves the space the caption needs under the disc.
-const OFFSET_FROM_RING = 325;
-const CONNECT_MARGIN = 470;
-const PARK_ANGLE = -50 * (Math.PI / 180);
+// Same snap and tolerance as a participant's connector, so both join the ring alike.
+const SNAP_THRESHOLD = 100;
+const CONNECT_TOLERANCE = 20;
 
-const storageKey = (dataspaceId) => `vocabhub-position:${dataspaceId}`;
-const enabledKey = (dataspaceId) => `vocabhub-enabled:${dataspaceId}`;
+const settingsUrl = (dataspaceId) => `/api/dataspaces/${encodeURIComponent(dataspaceId)}/settings`;
 
-const defaultPosition = (ringRadius) => {
-    const radius = ringRadius + OFFSET_FROM_RING;
-    return { x: Math.round(radius * Math.cos(PARK_ANGLE)), y: Math.round(radius * Math.sin(PARK_ANGLE)) };
-};
-
-function loadPosition(dataspaceId, ringRadius) {
-    try {
-        const stored = JSON.parse(localStorage.getItem(storageKey(dataspaceId)));
-        if (Number.isFinite(stored?.x) && Number.isFinite(stored?.y)) return stored;
-    } catch {
-        // Fall through to the default placement.
-    }
-    return defaultPosition(ringRadius);
+function persist(dataspaceId, vocabHub) {
+    fetch(settingsUrl(dataspaceId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vocabHub }),
+    }).catch(console.error);
 }
 
-// A dataspace has no vocabulary service until someone adds one.
-function loadEnabled(dataspaceId) {
-    return localStorage.getItem(enabledKey(dataspaceId)) === 'true';
-}
+const emptyState = (dataspaceId) => ({ dataspaceId, position: null, isEnabled: false });
 
-function loadState(dataspaceId, ringRadius) {
-    return {
-        dataspaceId,
-        position: loadPosition(dataspaceId, ringRadius),
-        isEnabled: loadEnabled(dataspaceId),
-    };
-}
+const isOnRing = (p, ringRadius) => p !== null && Math.abs(Math.hypot(p.x, p.y) - ringRadius) < CONNECT_TOLERANCE;
 
-export function useVocabularyHub(dataspaceId, ringRadius) {
-    const [state, setState] = useState(() => loadState(dataspaceId, ringRadius));
+export function useVocabularyHub(dataspaceId, ringRadius, participantPositions) {
+    const [state, setState] = useState(() => emptyState(dataspaceId));
     const dragStartRef = useRef(null);
 
     if (state.dataspaceId !== dataspaceId) {
-        setState(loadState(dataspaceId, ringRadius));
+        setState(emptyState(dataspaceId));
     }
 
+    useEffect(() => {
+        let cancelled = false;
+        fetch(settingsUrl(dataspaceId))
+            .then((r) => (r.ok ? r.json() : {}))
+            .then((settings) => {
+                if (cancelled) return;
+                const hub = settings?.vocabHub || {};
+                const position = Number.isFinite(hub.x) && Number.isFinite(hub.y) ? { x: hub.x, y: hub.y } : null;
+                setState({ dataspaceId, position, isEnabled: hub.enabled === true });
+            })
+            .catch(console.error);
+        return () => { cancelled = true; };
+    }, [dataspaceId]);
+
     const { position, isEnabled } = state;
-    const distance = Math.sqrt(position.x * position.x + position.y * position.y);
-    const isConnected = isEnabled && distance < ringRadius + CONNECT_MARGIN;
+    const isConnected = isEnabled && isOnRing(position, ringRadius);
 
     const move = (start, info) => ({ x: start.x + info.offset.x, y: start.y + info.offset.y });
 
     const onDragStart = useCallback(() => {
-        setState((prev) => {
-            dragStartRef.current = prev.position;
-            return prev;
-        });
-    }, []);
+        dragStartRef.current = position;
+    }, [position]);
 
     const onDrag = useCallback((event, info) => {
         const start = dragStartRef.current;
@@ -80,32 +67,26 @@ export function useVocabularyHub(dataspaceId, ringRadius) {
         const start = dragStartRef.current;
         dragStartRef.current = null;
         if (!start) return;
-        const next = move(start, info);
-        setState((prev) => ({ ...prev, position: next }));
-        try {
-            localStorage.setItem(storageKey(dataspaceId), JSON.stringify(next));
-        } catch {
-            // A hub that forgets where it was put is still a usable hub.
+        let next = move(start, info);
+        if (Math.abs(Math.hypot(next.x, next.y) - ringRadius) < SNAP_THRESHOLD) {
+            const angle = Math.atan2(next.y, next.x);
+            next = { x: Math.cos(angle) * ringRadius, y: Math.sin(angle) * ringRadius };
         }
-    }, [dataspaceId]);
-
-    const setEnabled = useCallback((next) => {
-        setState((prev) => {
-            // Keep where the user put it, unless that is out of range: a service
-            // arriving already disconnected reads as a fault rather than a choice.
-            const inRange = Math.hypot(prev.position.x, prev.position.y) < ringRadius + CONNECT_MARGIN;
-            const position = next && !inRange ? defaultPosition(ringRadius) : prev.position;
-            try {
-                localStorage.setItem(enabledKey(dataspaceId), String(next));
-                if (position !== prev.position) {
-                    localStorage.setItem(storageKey(dataspaceId), JSON.stringify(position));
-                }
-            } catch {
-                // The toggle still works for this session.
-            }
-            return { ...prev, isEnabled: next, position };
-        });
+        setState((prev) => ({ ...prev, position: next }));
+        persist(dataspaceId, next);
     }, [dataspaceId, ringRadius]);
+
+    // A service arriving already off the ring reads as a fault rather than a choice,
+    // so switching it on places it in the widest gap between participants.
+    const setEnabled = useCallback((next) => {
+        let nextPosition = position;
+        if (next && !isOnRing(position, ringRadius)) {
+            const angle = largestGapAngle(participantPositions);
+            nextPosition = { x: Math.cos(angle) * ringRadius, y: Math.sin(angle) * ringRadius };
+        }
+        setState((prev) => ({ ...prev, isEnabled: next, position: nextPosition }));
+        persist(dataspaceId, nextPosition ? { enabled: next, ...nextPosition } : { enabled: next });
+    }, [dataspaceId, ringRadius, position, participantPositions]);
 
     return { position, isEnabled, isConnected, setEnabled, onDragStart, onDrag, onDragEnd };
 }

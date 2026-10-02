@@ -103,7 +103,7 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, onClose }) => {
                     {isConnected ? <Link2 size={13} /> : <Unlink size={13} />}
                     {isConnected
                         ? 'Connected to this dataspace. Searches here can widen along alignments.'
-                        : 'Not connected to this dataspace. Drag the hub closer to widen searches along alignments.'}
+                        : 'Not connected to this dataspace. Drag the hub onto the ring to widen searches along alignments.'}
                 </div>
 
                 <div style={{ display: 'flex', gap: '4px', marginTop: '12px', borderBottom: '1px solid var(--border-color)' }}>

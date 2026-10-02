@@ -127,7 +127,7 @@ export const useDragNodes = (initialNodes, isZoomed, dataspaceId = 'demo', datas
     // Add node
     // -----------------------------------------------------------------------
 
-    const addNode = useCallback(async (participantData) => {
+    const addNode = useCallback(async (participantData, reservedPositions = []) => {
         const name = typeof participantData === 'string' ? participantData : participantData.name;
 
         // Build normalized node data — always preserve bpn and credentials
@@ -146,7 +146,7 @@ export const useDragNodes = (initialNodes, isZoomed, dataspaceId = 'demo', datas
         const id = dataspaceId === 'demo' ? baseId : `${dataspaceId}::${baseId}`;
 
         // Find best position on the ring
-        const bestAngle = largestGapAngle(Object.values(nodes));
+        const bestAngle = largestGapAngle([...Object.values(nodes), ...reservedPositions]);
         const SPAWN_RADIUS = targetRadius;
         const x = Math.cos(bestAngle) * SPAWN_RADIUS;
         const y = Math.sin(bestAngle) * SPAWN_RADIUS;
