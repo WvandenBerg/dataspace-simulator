@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useContext, useState } from 'react';
+import { AlertTriangle, ArrowUpRight, ChevronDown, ChevronRight } from 'lucide-react';
+import { OpenHubProfileContext } from '../../VocabularyHubContext';
 
 const API_BASE = '/api';
 
@@ -99,6 +100,7 @@ const noteStyle = { fontSize: '0.66rem', display: 'flex', alignItems: 'center', 
 // mobilitydcatap:schema is where the spec asks a portal to point at its schema
 // registry, so this is the one place the catalogue meets the Vocabulary Hub.
 const SchemaLink = ({ uri, dataspaceId }) => {
+    const openHubProfile = useContext(OpenHubProfileContext);
     const [open, setOpen] = useState(false);
     const [status, setStatus] = useState('idle');
     const [profile, setProfile] = useState(null);
@@ -159,6 +161,15 @@ const SchemaLink = ({ uri, dataspaceId }) => {
                             <div style={uriStyle}>{resource.artifact}</div>
                         </div>
                     ))}
+                    {openHubProfile && (
+                        <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); openHubProfile(uri); }}
+                            style={{ marginTop: '6px', padding: 0, background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.68rem', fontWeight: 600, color: '#15803d' }}
+                        >
+                            Open in Vocabulary Hub <ArrowUpRight size={11} />
+                        </button>
+                    )}
                 </div>
             )}
         </div>

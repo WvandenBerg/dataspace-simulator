@@ -10,6 +10,7 @@ import ZoomControls from './ZoomControls';
 import DataspaceServicesPanel from './DataspaceServicesPanel';
 import VocabularyHubNode from './VocabularyHubNode';
 import VocabularyHubDialog from './VocabularyHubDialog';
+import { OpenHubProfileContext } from './VocabularyHubContext';
 import { useViewState } from './hooks/useViewState';
 import { useDragNodes } from './hooks/useDragNodes';
 import { useVocabularyHub } from './hooks/useVocabularyHub';
@@ -186,6 +187,11 @@ const MacroView = forwardRef(({
     const vocabHub = useVocabularyHub(dataspaceId, ringRadius, participantPositions);
     const hubPositions = vocabHub.isEnabled && vocabHub.position ? [vocabHub.position] : [];
     const [hubDialogOpen, setHubDialogOpen] = useState(false);
+    const [hubFocusProfileId, setHubFocusProfileId] = useState(null);
+    const openHubDialog = (profileId = null) => {
+        setHubFocusProfileId(profileId);
+        setHubDialogOpen(true);
+    };
 
     useEffect(() => {
         return () => {
@@ -387,6 +393,7 @@ const MacroView = forwardRef(({
     const glowOpacity = draggedId ? Math.max(0, Math.min(1, 1 - (distDiff / maxGlowDist))) : 0;
 
     return (
+        <OpenHubProfileContext.Provider value={vocabHub.isEnabled ? openHubDialog : null}>
         <div
             className="macro-view-container"
             ref={containerRef}
@@ -437,7 +444,7 @@ const MacroView = forwardRef(({
                         onDragStart={vocabHub.onDragStart}
                         onDrag={vocabHub.onDrag}
                         onDragEnd={vocabHub.onDragEnd}
-                        onClick={() => setHubDialogOpen(true)}
+                        onClick={() => openHubDialog()}
                     />
                 )}
 
@@ -584,10 +591,12 @@ const MacroView = forwardRef(({
                 <VocabularyHubDialog
                     dataspaceId={dataspaceId}
                     isConnected={vocabHub.isConnected}
+                    focusProfileId={hubFocusProfileId}
                     onClose={() => setHubDialogOpen(false)}
                 />
             )}
         </div>
+        </OpenHubProfileContext.Provider>
     );
 });
 
