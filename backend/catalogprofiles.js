@@ -351,7 +351,7 @@ SELECT (COUNT(*) AS ?n) ${fromClause(graphs)} WHERE { ?prop sh:path ?p FILTER(!i
 
 // Several shapes may constrain the same property of a class, as when a profile
 // tightens its base. They merge into one field; the strictest bound wins.
-function mergeInto(map, row, inByProp) {
+function mergeInto(map, row, inByProp, schemes) {
     const pathIri = val(row, 'path');
     const min = Number(val(row, 'min') || 0);
     const max = val(row, 'max') === undefined ? null : Number(val(row, 'max'));
@@ -373,7 +373,9 @@ function mergeInto(map, row, inByProp) {
     field.node = field.node || val(row, 'node') || null;
     field.in = field.in || inByProp.get(val(row, 'prop')) || null;
     field.complex = field.complex || val(row, 'complex') === '1';
-    const status = statusOf(min, val(row, 'severity'));
+    // A warning that only steers which code-list term to use says nothing about whether to fill the field.
+    const valueOnly = min === 0 && schemes.has(val(row, 'node'));
+    const status = valueOnly ? 'optional' : statusOf(min, val(row, 'severity'));
     if (STATUS_RANK[status] > STATUS_RANK[field.status]) field.status = status;
     map.set(pathIri, field);
 }
@@ -395,11 +397,11 @@ async function fieldModel(dataspaceId, profileId) {
     for (const row of rows) {
         const shape = val(row, 'shape');
         if (!byShape.has(shape)) byShape.set(shape, new Map());
-        mergeInto(byShape.get(shape), row, inByProp);
+        mergeInto(byShape.get(shape), row, inByProp, schemes);
         const target = val(row, 'target');
         if (target) {
             if (!byClass.has(target)) byClass.set(target, new Map());
-            mergeInto(byClass.get(target), row, inByProp);
+            mergeInto(byClass.get(target), row, inByProp, schemes);
         }
     }
 
