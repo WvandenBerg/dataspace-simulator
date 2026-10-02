@@ -78,7 +78,7 @@ const FieldTree = ({ dataspaceId, profileId }) => {
                 <div style={{ ...warnStyle, marginTop: '6px' }}>
                     <AlertTriangle size={11} style={{ flexShrink: 0, marginTop: '1px' }} />
                     {complexConstraints > 0 && `${complexConstraints} constraint(s) use sh:or, sh:and, sh:xone or sh:not, which this simulator does not read. `}
-                    {nonIriPaths > 0 && `${nonIriPaths} property path(s) are not a single predicate and are left out.`}
+                    {nonIriPaths > 0 && `${nonIriPaths} constraint(s) use a path the simulator can't show as a field (e.g. an inverse path) and are not listed.`}
                 </div>
             )}
         </div>
