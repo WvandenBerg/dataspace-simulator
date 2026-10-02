@@ -7,11 +7,14 @@ import DatasetDetail from './DatasetDetail';
 const API_BASE = '/api';
 
 // Every field of the catalog's profile, nested ones under their parent's label.
-const filterableFields = (fields, prefix = [], labels = []) => fields.flatMap((f) => {
+// A nested field is only as required as the weakest field above it.
+const STATUSES = ['mandatory', 'recommended', 'optional'];
+const filterableFields = (fields, prefix = [], labels = [], weakest = 0) => fields.flatMap((f) => {
     const path = [...prefix, f.path];
     const label = [...labels, f.label];
-    const own = f.kind === 'node' ? [] : [{ key: path.join(' '), path, label: label.join(' \u203a ') }];
-    return [...own, ...filterableFields(f.fields, path, label)];
+    const rank = Math.max(weakest, STATUSES.indexOf(f.status));
+    const own = f.kind === 'node' ? [] : [{ key: path.join(' '), path, label: label.join(' \u203a '), status: STATUSES[rank] }];
+    return [...own, ...filterableFields(f.fields, path, label, rank)];
 });
 
 const BrowseDataspacePopup = ({
@@ -562,9 +565,16 @@ const BrowseDataspacePopup = ({
                             title={catalogModel ? `Fields of ${catalogModel.title}` : ''}
                             style={{ minWidth: 0, padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
                         >
-                            {fieldOptions.map((o) => (
-                                <option key={o.key} value={o.key}>{o.label}</option>
-                            ))}
+                            {STATUSES.map((status) => {
+                                const group = fieldOptions.filter((o) => o.status === status);
+                                return group.length > 0 && (
+                                    <optgroup key={status} label={status.charAt(0).toUpperCase() + status.slice(1)}>
+                                        {group.map((o) => (
+                                            <option key={o.key} value={o.key}>{o.label}</option>
+                                        ))}
+                                    </optgroup>
+                                );
+                            })}
                         </select>
                         <input
                             type="text"
