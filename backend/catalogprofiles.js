@@ -360,9 +360,11 @@ function countFields(fields) {
 
 async function fieldModel(dataspaceId, profileId) {
     const artifacts = artifactsOf(dataspaceId, profileId);
-    const graphs = artifacts.map((a) => artifactGraph(dataspaceId, a.artifact_id));
     if (!artifacts.some((a) => a.role === 'validation')) return null;
+    return modelFromGraphs(profileId, artifacts.map((a) => artifactGraph(dataspaceId, a.artifact_id)));
+}
 
+async function modelFromGraphs(profileId, graphs) {
     const [rows, inByProp, nonIriPaths, schemes] = await Promise.all([
         propertyRows(graphs), inValues(graphs), countNonIriPaths(graphs), codeLists(graphs),
     ]);
@@ -432,6 +434,38 @@ async function fieldModel(dataspaceId, profileId) {
     };
 }
 
+// ---------------------------------------------------------------------------
+// The catalog model a dataspace uses
+// ---------------------------------------------------------------------------
+
+// Without a hub, or before one is chosen, a dataspace falls back to the profile
+// the default scenario ships, loaded once into graphs of its own.
+const DEFAULT_PROFILE = scenarios.getScenario(scenarios.DEFAULT_SCENARIO_ID).catalogProfile;
+const defaultGraph = (i) => `urn:graph:catalog-profile:default:${i}`;
+let defaultLoaded = null;
+
+function loadDefaultProfile() {
+    defaultLoaded ||= Promise.all(DEFAULT_PROFILE.files.map((rel, i) => replaceGraph(
+        defaultGraph(i),
+        fs.readFileSync(scenarios.scenarioFile(rel), 'utf8'),
+        MEDIA_TYPES[path.extname(rel).toLowerCase()],
+    ))).catch((err) => {
+        defaultLoaded = null;
+        throw err;
+    });
+    return defaultLoaded;
+}
+
+async function catalogModel(dataspaceId, hubOn) {
+    const chosen = hubOn ? db.getDataspaceSettings(dataspaceId).catalog?.profileId : null;
+    const model = chosen ? await fieldModel(dataspaceId, chosen) : null;
+    if (model) return { ...model, source: 'hub' };
+
+    await loadDefaultProfile();
+    const fallback = await modelFromGraphs(DEFAULT_PROFILE.profileId, DEFAULT_PROFILE.files.map((_, i) => defaultGraph(i)));
+    return { ...fallback, title: DEFAULT_PROFILE.title, source: 'default' };
+}
+
 module.exports = {
     ProfileError,
     uploadsGraph,
@@ -440,5 +474,6 @@ module.exports = {
     installScenarioProfile,
     listFileProfiles,
     fieldModel,
+    catalogModel,
     artifact: (dataspaceId, artifactId) => db.getHubArtifact(dataspaceId, artifactId),
 };

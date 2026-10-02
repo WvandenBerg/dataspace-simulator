@@ -255,7 +255,7 @@ const UploadForm = ({ dataspaceId, onUploaded }) => {
 
 const CatalogProfilesTab = ({ dataspaceId, onCountChange, onChange }) => {
     const [profiles, setProfiles] = useState(null);
-    const [inUse, setInUse] = useState(null);
+    const [model, setModel] = useState(null);
     const [error, setError] = useState(null);
     const [reloadKey, setReloadKey] = useState(0);
     const query = `?dataspaceId=${encodeURIComponent(dataspaceId)}`;
@@ -265,10 +265,11 @@ const CatalogProfilesTab = ({ dataspaceId, onCountChange, onChange }) => {
             .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
             .then((data) => { setProfiles(data); onCountChange?.(data.length); })
             .catch(() => setError('Vocabulary Hub unavailable'));
-        fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId)}/settings`)
-            .then((r) => (r.ok ? r.json() : {}))
-            .then((settings) => setInUse(settings.catalog?.profileId ?? null))
-            .catch(() => setInUse(null));
+        // The model, not the setting, says what is in use: a chosen profile that was deleted no longer is.
+        fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId)}/catalog-model`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then(setModel)
+            .catch(() => setModel(null));
     }, [dataspaceId, query, reloadKey, onCountChange]);
 
     const changed = () => {
@@ -296,6 +297,12 @@ const CatalogProfilesTab = ({ dataspaceId, onCountChange, onChange }) => {
                 A catalog profile is the data model for this dataspace's catalog entries. Its SHACL shapes
                 say which fields an entry has and which of them are required.
             </div>
+            {model && (
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-primary)', padding: '6px 0 0' }}>
+                    Catalog uses <strong>{model.title}</strong>
+                    {model.source === 'default' && <span style={{ color: 'var(--text-muted)' }}>, the simulator's built-in default</span>}
+                </div>
+            )}
             <UploadForm dataspaceId={dataspaceId} onUploaded={changed} />
             {error && <div style={{ ...warnStyle, padding: '10px 0' }}>{error}</div>}
             {!error && !profiles && <div style={{ ...labelStyle, padding: '10px 0' }}>Loading...</div>}
@@ -303,7 +310,7 @@ const CatalogProfilesTab = ({ dataspaceId, onCountChange, onChange }) => {
                 <div style={{ ...labelStyle, textTransform: 'none', padding: '12px 0' }}>This hub holds no catalog profile yet.</div>
             )}
             {(profiles || []).map((p) => (
-                <ProfileEntry key={p.id} dataspaceId={dataspaceId} profile={p} inUse={p.id === inUse} onUse={use} onDelete={remove} />
+                <ProfileEntry key={p.id} dataspaceId={dataspaceId} profile={p} inUse={model?.source === 'hub' && p.id === model.profileId} onUse={use} onDelete={remove} />
             ))}
         </div>
     );

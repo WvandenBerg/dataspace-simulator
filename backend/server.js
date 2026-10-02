@@ -532,6 +532,21 @@ app.patch('/api/dataspaces/:id/settings', (req, res) => {
     res.json(db.patchDataspaceSettings(dataspaceId, patch));
 });
 
+// The fields a catalog entry has in this dataspace.
+app.get('/api/dataspaces/:id/catalog-model', async (req, res) => {
+    const dataspaceId = resolveDataspaceId(req.params.id);
+    try {
+        const model = await catalogProfiles.catalogModel(dataspaceId, hubEnabled(dataspaceId));
+        // A scenario's profile takes its title from the catalogue export, which only the hub reads.
+        const title = model.source === 'hub'
+            ? (await vocabhub.listCatalogProfiles(dataspaceId)).find((p) => p.id === model.profileId)?.title
+            : model.title;
+        res.json({ ...model, title: title || model.profileId });
+    } catch (err) {
+        res.status(502).json({ error: `Catalog model unavailable: ${err.message}` });
+    }
+});
+
 // ============================================================
 // Vocabulary Hub
 //
