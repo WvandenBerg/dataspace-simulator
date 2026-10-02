@@ -507,8 +507,9 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
     }
 
     let hubTriples = 0;
+    let profileFields = 0;
     try {
-        hubTriples = (await vocabhub.loadScenarioIntoHub(dataspaceId, scenario)).tripleCount;
+        ({ tripleCount: hubTriples, profileFields } = await vocabhub.loadScenarioIntoHub(dataspaceId, scenario));
     } catch (err) {
         failed.push({ hub: true, error: err.message });
     }
@@ -521,6 +522,7 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
         assetsAdded: added.length,
         assetsSkipped: scenario.assets.length - added.length,
         hubTriples,
+        profileFields,
         indexingFailures: failed,
     });
 });
@@ -888,8 +890,8 @@ server.listen(PORT, () => {
     });
     vocabhub.refreshScenarioHubs()
         .then((loaded) => {
-            for (const { dataspaceId, scenarioId, tripleCount } of loaded) {
-                console.log(`[Hub] ${dataspaceId}: ${tripleCount} triple(s) from scenario ${scenarioId}.`);
+            for (const { dataspaceId, scenarioId, tripleCount, profileFields } of loaded) {
+                console.log(`[Hub] ${dataspaceId}: ${tripleCount} triple(s), ${profileFields} catalog field(s) from scenario ${scenarioId}.`);
             }
         })
         .catch((err) => {

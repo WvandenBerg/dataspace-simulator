@@ -40,6 +40,18 @@ function validationProblems(scenario) {
             problems.push(`"catalogExport" does not resolve to a file inside ${SCENARIO_DIR}`);
         }
     }
+
+    if (scenario.catalogProfile !== undefined) {
+        const files = scenario.catalogProfile?.files;
+        if (typeof scenario.catalogProfile?.profileId !== 'string' || !Array.isArray(files) || files.length === 0) {
+            problems.push('"catalogProfile" needs a "profileId" and a non-empty "files" list');
+        } else {
+            for (const rel of files) {
+                const file = scenarioFile(rel);
+                if (!file || !fs.existsSync(file)) problems.push(`catalogProfile file "${rel}" does not resolve to a file inside ${SCENARIO_DIR}`);
+            }
+        }
+    }
     return problems;
 }
 
@@ -80,11 +92,16 @@ function participantName(scenario, participantId) {
     return scenario.participants.find((p) => p.id === participantId)?.name || participantId;
 }
 
+// A path that would leave the scenario directory resolves to nothing.
+function scenarioFile(rel) {
+    if (typeof rel !== 'string' || !rel) return null;
+    const resolved = path.resolve(SCENARIO_DIR, rel);
+    return resolved.startsWith(SCENARIO_DIR + path.sep) ? resolved : null;
+}
+
 // Each dataspace that loads the scenario gets the export in its own hub.
 function catalogExportFile(scenario) {
-    if (!scenario.catalogExport) return null;
-    const resolved = path.resolve(SCENARIO_DIR, scenario.catalogExport);
-    return resolved.startsWith(SCENARIO_DIR + path.sep) ? resolved : null;
+    return scenarioFile(scenario.catalogExport);
 }
 
 // Two-space output matches how the demo content was written when it lived in
@@ -134,6 +151,7 @@ module.exports = {
     getScenario,
     participantName,
     catalogExportFile,
+    scenarioFile,
     scopedId,
     toAssetRow,
     toNodeRow,

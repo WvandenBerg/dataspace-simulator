@@ -64,9 +64,11 @@ async function withRetry(task, { maxAttempts = 20, retryDelayMs = 1500 } = {}) {
 
 async function loadScenarioIntoHub(dataspaceId, scenario) {
     const file = scenarios.catalogExportFile(scenario);
-    if (!file) return { tripleCount: 0 };
-    const tripleCount = await replaceGraph(scenarioGraph(dataspaceId), fs.readFileSync(file, 'utf8'));
-    return { tripleCount };
+    const tripleCount = file
+        ? await replaceGraph(scenarioGraph(dataspaceId), fs.readFileSync(file, 'utf8'))
+        : 0;
+    const profile = await catalogProfiles.installScenarioProfile(dataspaceId, scenario);
+    return { tripleCount, profileFields: profile?.fields ?? 0 };
 }
 
 // Startup refresh, so an edited fixture takes effect on restart. A dataspace
@@ -81,9 +83,9 @@ async function refreshScenarioHubs() {
         for (const summary of scenarios.listScenarios()) {
             const scenario = scenarios.getScenario(summary.id);
             const holds = scenario.assets.some((a) => assetIds.has(scenarios.scopedId(dataspaceId, a.assetId)));
-            if (!holds || !scenarios.catalogExportFile(scenario)) continue;
-            const { tripleCount } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));
-            loaded.push({ dataspaceId, scenarioId: scenario.id, tripleCount });
+            if (!holds || (!scenarios.catalogExportFile(scenario) && !scenario.catalogProfile)) continue;
+            const { tripleCount, profileFields } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));
+            loaded.push({ dataspaceId, scenarioId: scenario.id, tripleCount, profileFields });
         }
     }
     return loaded;

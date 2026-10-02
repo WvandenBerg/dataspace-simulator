@@ -12,8 +12,10 @@
  */
 
 const crypto = require('crypto');
+const fs = require('fs');
 const path = require('path');
 const db = require('./db');
+const scenarios = require('./scenarios');
 const { executeSelect, replaceGraph, dropGraph, escapeIri, escapeLiteral } = require('./semantic');
 
 const MEDIA_TYPES = {
@@ -230,6 +232,22 @@ async function removeProfile(dataspaceId, profileId) {
     await writeUploadsGraph(dataspaceId);
 }
 
+// Deterministic artifact ids keep a reloaded scenario from piling up copies.
+async function installScenarioProfile(dataspaceId, scenario) {
+    const spec = scenario.catalogProfile;
+    if (!spec) return null;
+    await removeProfile(dataspaceId, spec.profileId);
+    return addProfile(dataspaceId, {
+        profileId: spec.profileId,
+        title: spec.title,
+        version: spec.version,
+        description: spec.description,
+        source: 'scenario',
+        files: spec.files.map((rel) => ({ name: path.basename(rel), content: fs.readFileSync(scenarios.scenarioFile(rel), 'utf8') })),
+        artifactIds: spec.files.map((_, i) => `${scenario.id}-${i}`),
+    });
+}
+
 function artifactsOf(dataspaceId, profileId) {
     return db.getHubArtifacts(dataspaceId).filter((a) => a.profile_id === profileId);
 }
@@ -443,6 +461,7 @@ module.exports = {
     uploadsGraph,
     addProfile,
     removeProfile,
+    installScenarioProfile,
     listFileProfiles,
     fieldModel,
     artifact: (dataspaceId, artifactId) => db.getHubArtifact(dataspaceId, artifactId),
