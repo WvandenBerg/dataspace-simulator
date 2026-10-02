@@ -556,10 +556,19 @@ app.patch('/api/dataspaces/:id/settings', (req, res) => {
 // One hub per dataspace. Read-only: the contents come from scenario files.
 // ============================================================
 
+const NO_HUB = 'This dataspace runs no vocabulary service';
+
+// Only the switch is checked: whether the hub sits on the ring is canvas geometry the backend never sees.
+function hubEnabled(dataspaceId) {
+    return db.getDataspaceSettings(dataspaceId).vocabHub?.enabled === true;
+}
+
 function hubRoute(handler) {
     return async (req, res) => {
+        const dataspaceId = resolveDataspaceId(req.query?.dataspaceId);
+        if (!hubEnabled(dataspaceId)) return res.status(409).json({ error: NO_HUB });
         try {
-            const result = await handler(req, resolveDataspaceId(req.query?.dataspaceId));
+            const result = await handler(req, dataspaceId);
             if (result === null) return res.status(404).json({ error: 'Not found in the Vocabulary Hub' });
             res.json(result);
         } catch (err) {
@@ -634,6 +643,10 @@ app.post('/api/semantic/search', async (req, res) => {
     let reach = new Map(requestedProfiles.map((id) => [id, null]));
     let alignmentsUsed = useAlignments && requestedProfiles.length > 0;
     let hubUnavailable = null;
+    if (alignmentsUsed && !hubEnabled(dataspaceId)) {
+        alignmentsUsed = false;
+        hubUnavailable = NO_HUB;
+    }
     if (alignmentsUsed) {
         try {
             reach = await widenByAlignments(dataspaceId, requestedProfiles, minCoverage);

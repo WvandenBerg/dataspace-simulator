@@ -16,7 +16,7 @@ const CONNECT_TOLERANCE = 20;
 const settingsUrl = (dataspaceId) => `/api/dataspaces/${encodeURIComponent(dataspaceId)}/settings`;
 
 function persist(dataspaceId, vocabHub) {
-    fetch(settingsUrl(dataspaceId), {
+    return fetch(settingsUrl(dataspaceId), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vocabHub }),
@@ -84,8 +84,9 @@ export function useVocabularyHub(dataspaceId, ringRadius, participantPositions) 
             const angle = largestGapAngle(participantPositions);
             nextPosition = { x: Math.cos(angle) * ringRadius, y: Math.sin(angle) * ringRadius };
         }
-        setState((prev) => ({ ...prev, isEnabled: next, position: nextPosition }));
-        persist(dataspaceId, nextPosition ? { enabled: next, ...nextPosition } : { enabled: next });
+        // The backend refuses hub requests while the service is off, so it must know before anything asks.
+        persist(dataspaceId, nextPosition ? { enabled: next, ...nextPosition } : { enabled: next })
+            .then(() => setState((prev) => ({ ...prev, isEnabled: next, position: nextPosition })));
     }, [dataspaceId, ringRadius, position, participantPositions]);
 
     return { position, isEnabled, isConnected, setEnabled, onDragStart, onDrag, onDragEnd };
