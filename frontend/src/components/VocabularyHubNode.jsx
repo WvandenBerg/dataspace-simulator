@@ -1,14 +1,18 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect } from 'react';
+import { motion, useMotionValue } from 'framer-motion';
+import ConnectorStack from './ConnectorStack';
+import WireSVG from './WireSVG';
 import { useNodeDrag } from './hooks/useNodeDrag';
+import { useWirePaths } from './hooks/useWirePaths';
 
 /**
- * The Vocabulary Hub as a node you can connect to a dataspace, or not.
+ * The dataspace's vocabulary service, joining the ring through a connector of
+ * its own like any participant does.
  *
- * It sits outside the ring because it is not a participant: one hub serves
- * every dataspace. Connecting it is what grants this dataspace the ability to
- * widen a search along profile alignments. Drag it out of range and that
- * ability goes away, which is the whole argument for the hub made draggable.
+ * A service is not a party to contracts, so where a participant hangs a card
+ * off its connector, the hub hangs a disc: circles are services, cards are
+ * participants. Connecting it is what lets this dataspace widen a search along
+ * profile alignments; drag it off the ring and that ability goes away.
  */
 // Matches the height of a participant card, so the hub reads as a peer of the
 // nodes on the ring rather than an annotation next to them.
@@ -27,20 +31,23 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
         onDragEnd,
     });
 
+    const rotation = Math.atan2(position.y, position.x) * (180 / Math.PI);
+    const rotationValue = useMotionValue(rotation);
+    useEffect(() => { rotationValue.set(rotation); }, [rotation, rotationValue]);
+    const { balloonX, balloonY, wire1Path, wire2Path } = useWirePaths(rotationValue);
+
+    const normRotation = ((rotation % 360) + 360) % 360;
+    const contentRotation = normRotation > 90 && normRotation < 270 ? 180 : 0;
+
     return (
         <MotionDiv
             onPointerDown={handlePointerDown}
-            onClick={(e) => {
-                if (hasDragged.current) return;
-                e.stopPropagation();
-                onClick?.();
-            }}
             initial={false}
             animate={{
                 x: position.x,
                 y: position.y,
                 scale: isDragging ? 1.05 : 1,
-                opacity: isConnected ? 1 : 0.55,
+                opacity: isConnected ? 1 : 0.5,
             }}
             transition={{
                 x: isDragging ? { duration: 0 } : { type: 'spring', stiffness: 180, damping: 24 },
@@ -55,24 +62,39 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
                 width: 0,
                 height: 0,
                 overflow: 'visible',
-                zIndex: 12,
+                zIndex: 10,
                 filter: isConnected ? 'none' : 'grayscale(100%)',
                 cursor: isDragging ? 'grabbing' : 'grab',
             }}
         >
-            <div style={{
-                position: 'absolute',
-                transform: 'translate(-50%, -50%)',
-                width: `${HUB_SIZE}px`,
-                height: `${HUB_SIZE}px`,
-                borderRadius: '50%',
-                background: '#14532d',
-                border: `4px solid ${isConnected ? '#22c55e' : 'var(--border-subtle)'}`,
-                boxShadow: isConnected ? '0 0 40px rgba(34, 197, 94, 0.45)' : 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }}>
+            <WireSVG wire1Path={wire1Path} wire2Path={wire2Path} isConnected={isConnected} />
+
+            <ConnectorStack rotation={rotation} contentRotation={contentRotation} />
+
+            <MotionDiv
+                onClick={(e) => {
+                    if (hasDragged.current) return;
+                    e.stopPropagation();
+                    onClick?.();
+                }}
+                style={{
+                    position: 'absolute',
+                    x: balloonX,
+                    y: balloonY,
+                    translateX: '-50%',
+                    translateY: '-50%',
+                    width: `${HUB_SIZE}px`,
+                    height: `${HUB_SIZE}px`,
+                    borderRadius: '50%',
+                    background: '#14532d',
+                    border: `4px solid ${isConnected ? '#22c55e' : 'var(--border-subtle)'}`,
+                    boxShadow: isConnected ? '0 0 40px rgba(34, 197, 94, 0.45)' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 3,
+                }}
+            >
                 <img
                     src="/assets/sth-logo.svg"
                     alt="Semantic Treehouse"
@@ -80,8 +102,7 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
                     style={{ width: `${LOGO_SIZE}px`, height: `${LOGO_SIZE}px` }}
                 />
 
-                {/* Absolutely positioned so the disc, not the disc plus caption,
-                    is what sits on the hub's coordinates and takes the tether. */}
+                {/* Absolutely positioned so the disc alone sits on the wire's end. */}
                 <div style={{
                     position: 'absolute',
                     top: `${HUB_SIZE + 28}px`,
@@ -112,7 +133,7 @@ const VocabularyHubNode = ({ position, isConnected, scale, onDragStart, onDrag, 
                         {isConnected ? 'Connected' : 'Not connected'}
                     </div>
                 </div>
-            </div>
+            </MotionDiv>
         </MotionDiv>
     );
 };

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useContext, useState } from 'react';
+import { AlertTriangle, ArrowUpRight, ChevronDown, ChevronRight } from 'lucide-react';
+import { OpenHubProfileContext } from '../../VocabularyHubContext';
 
 const API_BASE = '/api';
 
@@ -98,10 +99,13 @@ const noteStyle = { fontSize: '0.66rem', display: 'flex', alignItems: 'center', 
 
 // mobilitydcatap:schema is where the spec asks a portal to point at its schema
 // registry, so this is the one place the catalogue meets the Vocabulary Hub.
-const SchemaLink = ({ uri }) => {
+const SchemaLink = ({ uri, dataspaceId }) => {
+    const openHubProfile = useContext(OpenHubProfileContext);
     const [open, setOpen] = useState(false);
     const [status, setStatus] = useState('idle');
     const [profile, setProfile] = useState(null);
+
+    if (!openHubProfile) return <div style={{ ...uriStyle, marginBottom: '3px' }}>{uri}</div>;
 
     const toggle = async () => {
         if (open) return setOpen(false);
@@ -110,7 +114,7 @@ const SchemaLink = ({ uri }) => {
 
         setStatus('loading');
         try {
-            const response = await fetch(`${API_BASE}/vocabhub/profiles/${encodeURIComponent(uri)}`);
+            const response = await fetch(`${API_BASE}/vocabhub/profiles/${encodeURIComponent(uri)}?dataspaceId=${encodeURIComponent(dataspaceId)}`);
             if (response.status === 404) return setStatus('missing');
             if (!response.ok) throw new Error(response.status);
             setProfile(await response.json());
@@ -132,7 +136,7 @@ const SchemaLink = ({ uri }) => {
                 <span>{uri}</span>
             </div>
 
-            {open && status === 'loading' && <div style={{ ...labelStyle, marginLeft: '14px' }}>Resolving...</div>}
+            {open && status === 'loading' && <div style={{ ...labelStyle, marginLeft: '14px' }}>Asking the Vocabulary Hub...</div>}
 
             {open && (status === 'missing' || status === 'unavailable') && (
                 <div style={{ ...noteStyle, color: '#d97706', marginLeft: '14px' }}>
@@ -142,7 +146,14 @@ const SchemaLink = ({ uri }) => {
             )}
 
             {open && status === 'found' && profile && (
-                <div style={{ marginLeft: '14px', marginTop: '4px', padding: '6px 8px', background: 'rgba(37, 99, 235, 0.06)', borderRadius: '4px' }}>
+                <div style={{ marginLeft: '14px', marginTop: '4px', padding: '6px 8px', background: 'rgba(22, 163, 74, 0.06)', border: '1px solid rgba(22, 163, 74, 0.35)', borderRadius: '4px' }}>
+                    {/* Styled after the hub itself, so it reads as the hub answering rather than more asset metadata. */}
+                    <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px', color: '#15803d' }}>
+                        <span style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#14532d', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <img src="/assets/sth-logo.svg" alt="" style={{ width: '9px', height: '9px' }} />
+                        </span>
+                        From the Vocabulary Hub
+                    </div>
                     <div style={{ ...valueStyle, fontWeight: 600 }}>{profile.title}</div>
                     {profile.publisher && <div style={labelStyle}>{profile.publisher}</div>}
                     {profile.description && <div style={{ ...valueStyle, marginTop: '4px' }}>{profile.description}</div>}
@@ -152,13 +163,22 @@ const SchemaLink = ({ uri }) => {
                             <div style={uriStyle}>{resource.artifact}</div>
                         </div>
                     ))}
+                    {openHubProfile && (
+                        <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); openHubProfile(uri); }}
+                            style={{ marginTop: '6px', padding: 0, background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.68rem', fontWeight: 600, color: '#15803d' }}
+                        >
+                            Open in Vocabulary Hub <ArrowUpRight size={11} />
+                        </button>
+                    )}
                 </div>
             )}
         </div>
     );
 };
 
-const DataStandard = ({ standard }) => (
+const DataStandard = ({ standard, dataspaceId }) => (
     <div style={{ marginTop: '6px', paddingLeft: '8px', borderLeft: '2px solid var(--color-primary)' }}>
         <div style={labelStyle}>Data standard</div>
         <div style={{ ...valueStyle, fontWeight: 600 }}>
@@ -169,14 +189,14 @@ const DataStandard = ({ standard }) => (
             <div style={{ marginTop: '4px' }}>
                 <div style={labelStyle}>Schema</div>
                 {asList(standard.schema).map((uri) => (
-                    <SchemaLink key={uri} uri={uri} />
+                    <SchemaLink key={uri} uri={uri} dataspaceId={dataspaceId} />
                 ))}
             </div>
         )}
     </div>
 );
 
-const Distribution = ({ distribution }) => {
+const Distribution = ({ distribution, dataspaceId }) => {
     const format = distribution.format || distribution.mediaType;
     return (
         <div style={{ padding: '8px', marginBottom: '6px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '6px' }}>
@@ -186,7 +206,7 @@ const Distribution = ({ distribution }) => {
             </div>
             {distribution.accessUrl && <div style={uriStyle}>{distribution.accessUrl}</div>}
             {distribution.dataStandard ? (
-                <DataStandard standard={distribution.dataStandard} />
+                <DataStandard standard={distribution.dataStandard} dataspaceId={dataspaceId} />
             ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '0.66rem', color: '#d97706' }}>
                     <AlertTriangle size={11} /> No data standard declared
@@ -196,7 +216,7 @@ const Distribution = ({ distribution }) => {
     );
 };
 
-const DatasetDetail = ({ dataset }) => {
+const DatasetDetail = ({ dataset, dataspaceId }) => {
     const data = normalizeDataset(dataset);
     if (!data) return null;
 
@@ -216,7 +236,7 @@ const DatasetDetail = ({ dataset }) => {
                 {data.distributions.length === 0
                     ? <div style={{ fontSize: '0.7rem', color: '#64748b' }}>None declared</div>
                     : data.distributions.map((distribution, i) => (
-                        <Distribution key={distribution.accessUrl || i} distribution={distribution} />
+                        <Distribution key={distribution.accessUrl || i} distribution={distribution} dataspaceId={dataspaceId} />
                     ))}
             </Section>
 

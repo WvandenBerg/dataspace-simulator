@@ -10,6 +10,7 @@ import ZoomControls from './ZoomControls';
 import DataspaceServicesPanel from './DataspaceServicesPanel';
 import VocabularyHubNode from './VocabularyHubNode';
 import VocabularyHubDialog from './VocabularyHubDialog';
+import { OpenHubProfileContext } from './VocabularyHubContext';
 import { useViewState } from './hooks/useViewState';
 import { useDragNodes } from './hooks/useDragNodes';
 import { useVocabularyHub } from './hooks/useVocabularyHub';
@@ -182,8 +183,15 @@ const MacroView = forwardRef(({
         handleDragEnd
     } = useDragNodes(initialNodesForDataspace, isFocused, dataspaceId, minimalView ? 330 : 550);
 
-    const vocabHub = useVocabularyHub(dataspaceId, ringRadius);
+    const participantPositions = React.useMemo(() => Object.values(nodes), [nodes]);
+    const vocabHub = useVocabularyHub(dataspaceId, ringRadius, participantPositions);
+    const hubPositions = vocabHub.isEnabled && vocabHub.position ? [vocabHub.position] : [];
     const [hubDialogOpen, setHubDialogOpen] = useState(false);
+    const [hubFocusProfileId, setHubFocusProfileId] = useState(null);
+    const openHubDialog = (profileId = null) => {
+        setHubFocusProfileId(profileId);
+        setHubDialogOpen(true);
+    };
 
     useEffect(() => {
         return () => {
@@ -319,7 +327,7 @@ const MacroView = forwardRef(({
 
     // Expose functions to parent
     useImperativeHandle(ref, () => ({
-        addNode,
+        addNode: (participantData) => addNode(participantData, hubPositions),
         getProviders,
         filterNodes,
         nodes,
@@ -385,6 +393,7 @@ const MacroView = forwardRef(({
     const glowOpacity = draggedId ? Math.max(0, Math.min(1, 1 - (distDiff / maxGlowDist))) : 0;
 
     return (
+        <OpenHubProfileContext.Provider value={vocabHub.isConnected ? openHubDialog : null}>
         <div
             className="macro-view-container"
             ref={containerRef}
@@ -427,38 +436,7 @@ const MacroView = forwardRef(({
                     minimalView={minimalView}
                 />
 
-                {/* Vocabulary Hub tether - only meaningful while the hub sits outside the ring */}
-                {vocabHub.isConnected && (() => {
-                    const { x, y } = vocabHub.position;
-                    const dist = Math.sqrt(x * x + y * y) || 1;
-                    const edgeRadius = minimalView ? 330 : 550;
-                    if (dist <= edgeRadius) return null;
-
-                    // A zero-sized <svg> is not rendered at all, whatever overflow says,
-                    // so give it real dimensions and put the canvas origin at its centre.
-                    const SIZE = 6000;
-                    const HALF = SIZE / 2;
-                    return (
-                        <svg
-                            width={SIZE}
-                            height={SIZE}
-                            style={{ position: 'absolute', left: -HALF, top: -HALF, pointerEvents: 'none', zIndex: 11 }}
-                        >
-                            <line
-                                x1={HALF + (x / dist) * edgeRadius}
-                                y1={HALF + (y / dist) * edgeRadius}
-                                x2={HALF + x}
-                                y2={HALF + y}
-                                stroke="#22c55e"
-                                strokeWidth={4 / finalScale}
-                                strokeDasharray={`${11 / finalScale} ${8 / finalScale}`}
-                                opacity={0.9}
-                            />
-                        </svg>
-                    );
-                })()}
-
-                {vocabHub.isEnabled && (
+                {vocabHub.isEnabled && vocabHub.position && (
                     <VocabularyHubNode
                         position={vocabHub.position}
                         isConnected={vocabHub.isConnected}
@@ -466,7 +444,7 @@ const MacroView = forwardRef(({
                         onDragStart={vocabHub.onDragStart}
                         onDrag={vocabHub.onDrag}
                         onDragEnd={vocabHub.onDragEnd}
-                        onClick={() => setHubDialogOpen(true)}
+                        onClick={() => openHubDialog()}
                     />
                 )}
 
@@ -611,11 +589,14 @@ const MacroView = forwardRef(({
 
             {hubDialogOpen && (
                 <VocabularyHubDialog
+                    dataspaceId={dataspaceId}
                     isConnected={vocabHub.isConnected}
+                    focusProfileId={hubFocusProfileId}
                     onClose={() => setHubDialogOpen(false)}
                 />
             )}
         </div>
+        </OpenHubProfileContext.Provider>
     );
 });
 

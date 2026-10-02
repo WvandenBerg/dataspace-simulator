@@ -3,22 +3,22 @@
  * directed alignments between them.
  *
  * Nothing here models what a profile is. The contents are Turtle files in the
- * shape Semantic Treehouse's catalogue export emits, loaded into one named
- * graph and read back with SPARQL, so the simulator consumes what STH produces
+ * shape Semantic Treehouse's catalogue export emits, loaded into named graphs
+ * and read back with SPARQL, so the simulator consumes what STH produces
  * rather than an RDF model invented for the demo.
  *
- * One graph, shared by every dataspace, rebuilt from the scenario files at
- * startup. That makes an edited fixture take effect on restart and leaves no
- * stale triples behind.
+ * Each dataspace runs its own hub. A scenario's catalogue export goes into a
+ * graph of its own, so later additions to the same hub survive a scenario
+ * being loaded again.
  */
 
 const fs = require('fs');
+const db = require('./db');
 const scenarios = require('./scenarios');
-const { executeSelect, replaceGraph, escapeIri } = require('./semantic');
+const { executeSelect, executeUpdate, replaceGraph, escapeIri } = require('./semantic');
 
-const HUB_GRAPH = 'urn:graph:vocabhub';
+const LEGACY_SHARED_GRAPH = 'urn:graph:vocabhub';
 const ROLE_NS = 'http://www.w3.org/ns/dx/prof/role/';
-const EMPTY_GRAPH = '# No scenario declares a catalogue export.\n';
 
 const PREFIXES = `
 PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -34,25 +34,58 @@ PREFIX vhx: <urn:vocabhub:ext:>
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const val = (row, key) => row[key]?.value;
 
-function hubQuery(body) {
-    return `${PREFIXES}\nSELECT ${body.select} WHERE {\n  GRAPH <${HUB_GRAPH}> {\n${body.where}\n  }\n}${body.tail || ''}`;
+function scenarioGraph(dataspaceId) {
+    return `urn:graph:vocabhub:${encodeURIComponent(dataspaceId)}:scenario`;
 }
 
-async function rebuildHub({ maxAttempts = 20, retryDelayMs = 1500 } = {}) {
-    const files = scenarios.catalogExportFiles();
-    const turtle = files.map((f) => fs.readFileSync(f, 'utf8')).join('\n\n') || EMPTY_GRAPH;
+function hubGraphs(dataspaceId) {
+    return [scenarioGraph(dataspaceId)];
+}
 
+// FROM merges the hub's graphs into one default graph, so a pattern may span them.
+function hubQuery(dataspaceId, body) {
+    const from = hubGraphs(dataspaceId).map((g) => `FROM <${g}>`).join('\n');
+    return `${PREFIXES}\nSELECT ${body.select}\n${from}\nWHERE {\n${body.where}\n}${body.tail || ''}`;
+}
+
+async function withRetry(task, { maxAttempts = 20, retryDelayMs = 1500 } = {}) {
     let lastError;
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         try {
-            const tripleCount = await replaceGraph(HUB_GRAPH, turtle);
-            return { files: files.length, tripleCount };
+            return await task();
         } catch (err) {
             lastError = err;
             await sleep(retryDelayMs);
         }
     }
-    throw new Error(`could not load the hub graph after ${maxAttempts} attempts: ${lastError?.message}`);
+    throw new Error(`gave up after ${maxAttempts} attempts: ${lastError?.message}`);
+}
+
+async function loadScenarioIntoHub(dataspaceId, scenario) {
+    const file = scenarios.catalogExportFile(scenario);
+    if (!file) return { tripleCount: 0 };
+    const tripleCount = await replaceGraph(scenarioGraph(dataspaceId), fs.readFileSync(file, 'utf8'));
+    return { tripleCount };
+}
+
+// Startup refresh, so an edited fixture takes effect on restart. A dataspace
+// counts as holding a scenario when it holds any of that scenario's assets.
+async function refreshScenarioHubs() {
+    const assetIds = new Set(db.getAllAssets().map((a) => a.asset_id));
+    const dataspaceIds = new Set(db.getAllAssets().map((a) => a.dataspace_id || 'demo'));
+    const loaded = [];
+
+    await withRetry(() => executeUpdate(`DROP SILENT GRAPH <${LEGACY_SHARED_GRAPH}>`));
+    for (const dataspaceId of dataspaceIds) {
+        for (const summary of scenarios.listScenarios()) {
+            const scenario = scenarios.getScenario(summary.id);
+            const holds = scenario.assets.some((a) => assetIds.has(scenarios.scopedId(dataspaceId, a.assetId)));
+            if (!holds || !scenarios.catalogExportFile(scenario)) continue;
+            const { tripleCount } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));
+            loaded.push({ dataspaceId, scenarioId: scenario.id, tripleCount });
+        }
+    }
+    return loaded;
 }
 
 // An alignment is also typed prof:Profile in the export, so every profile query
@@ -69,8 +102,8 @@ function toProfile(row) {
     };
 }
 
-async function listProfiles() {
-    const rows = await executeSelect(hubQuery({
+async function listProfiles(dataspaceId) {
+    const rows = await executeSelect(hubQuery(dataspaceId, {
         select: '?profile ?title ?description ?version ?publisher',
         where: `    ?profile a prof:Profile .
     ${NOT_AN_ALIGNMENT}
@@ -94,8 +127,8 @@ function toResource(row) {
     };
 }
 
-async function resourcesFor(profileId, roleFilter = '') {
-    const rows = await executeSelect(hubQuery({
+async function resourcesFor(dataspaceId, profileId, roleFilter = '') {
+    const rows = await executeSelect(hubQuery(dataspaceId, {
         select: '?role ?artifact ?format ?conformsTo',
         where: `    <${escapeIri(profileId)}> prof:hasResource ?resource .
     ?resource prof:hasRole ?role ; prof:hasArtifact ?artifact .
@@ -106,8 +139,8 @@ async function resourcesFor(profileId, roleFilter = '') {
     return rows.map(toResource);
 }
 
-async function getProfile(profileId) {
-    const rows = await executeSelect(hubQuery({
+async function getProfile(dataspaceId, profileId) {
+    const rows = await executeSelect(hubQuery(dataspaceId, {
         select: '?profile ?title ?description ?version ?publisher',
         where: `    VALUES ?profile { <${escapeIri(profileId)}> }
     ?profile a prof:Profile .
@@ -118,24 +151,24 @@ async function getProfile(profileId) {
     OPTIONAL { ?profile dcterms:publisher/foaf:name ?publisher }`,
     }));
     if (rows.length === 0) return null;
-    return { ...toProfile(rows[0]), resources: await resourcesFor(profileId) };
+    return { ...toProfile(rows[0]), resources: await resourcesFor(dataspaceId, profileId) };
 }
 
-async function shapesFor(profileId) {
-    return resourcesFor(profileId, '?resource prof:hasRole role:validation .');
+async function shapesFor(dataspaceId, profileId) {
+    return resourcesFor(dataspaceId, profileId, '?resource prof:hasRole role:validation .');
 }
 
 // Directed and single hop, per US-6. Asking what reaches OpenLABEL must not
 // walk on through whatever reaches the things that reach it; coverage does not
 // compose, so a two-hop answer would carry a number nobody could justify.
-async function listAlignments({ target, minCoverage } = {}) {
+async function listAlignments(dataspaceId, { target, minCoverage } = {}) {
     const filters = [];
     if (target) filters.push(`VALUES ?target { <${escapeIri(target)}> }`);
     if (minCoverage !== undefined && minCoverage !== '' && Number.isFinite(Number(minCoverage))) {
         filters.push(`FILTER(?coverage >= ${Number(minCoverage)})`);
     }
 
-    const rows = await executeSelect(hubQuery({
+    const rows = await executeSelect(hubQuery(dataspaceId, {
         select: '?alignment ?title ?description ?source ?sourceTitle ?target ?targetTitle ?coverage',
         where: `    ?alignment a pmap:ProfileAlignment ;
       pmap:sourceProfile ?source ;
@@ -162,8 +195,8 @@ async function listAlignments({ target, minCoverage } = {}) {
 }
 
 module.exports = {
-    HUB_GRAPH,
-    rebuildHub,
+    loadScenarioIntoHub,
+    refreshScenarioHubs,
     listProfiles,
     getProfile,
     shapesFor,

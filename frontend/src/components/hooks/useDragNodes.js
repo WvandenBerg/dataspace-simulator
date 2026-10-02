@@ -6,6 +6,22 @@ const SNAP_THRESHOLD = 100;
 
 const API_BASE = '/api';
 
+// Middle of the widest empty arc between the given positions on the ring.
+export function largestGapAngle(positions) {
+    const angles = positions.map(p => Math.atan2(p.y, p.x));
+    let bestAngle = -Math.PI / 2;
+    if (angles.length > 0) {
+        const sorted = [...angles].sort((a, b) => a - b);
+        let maxGap = 0;
+        for (let i = 0; i < sorted.length; i++) {
+            const next = i === sorted.length - 1 ? sorted[0] + 2 * Math.PI : sorted[i + 1];
+            const gap = next - sorted[i];
+            if (gap > maxGap) { maxGap = gap; bestAngle = sorted[i] + gap / 2; }
+        }
+    }
+    return bestAngle;
+}
+
 const DEFAULT_METADATA = {
     location: '',
     dspEndpoint: '',
@@ -111,7 +127,7 @@ export const useDragNodes = (initialNodes, isZoomed, dataspaceId = 'demo', datas
     // Add node
     // -----------------------------------------------------------------------
 
-    const addNode = useCallback(async (participantData) => {
+    const addNode = useCallback(async (participantData, reservedPositions = []) => {
         const name = typeof participantData === 'string' ? participantData : participantData.name;
 
         // Build normalized node data — always preserve bpn and credentials
@@ -130,18 +146,7 @@ export const useDragNodes = (initialNodes, isZoomed, dataspaceId = 'demo', datas
         const id = dataspaceId === 'demo' ? baseId : `${dataspaceId}::${baseId}`;
 
         // Find best position on the ring
-        const existingNodes = Object.values(nodes);
-        const angles = existingNodes.map(n => Math.atan2(n.y, n.x));
-        let bestAngle = -Math.PI / 2;
-        if (angles.length > 0) {
-            const sorted = [...angles].sort((a, b) => a - b);
-            let maxGap = 0;
-            for (let i = 0; i < sorted.length; i++) {
-                const next = i === sorted.length - 1 ? sorted[0] + 2 * Math.PI : sorted[i + 1];
-                const gap = next - sorted[i];
-                if (gap > maxGap) { maxGap = gap; bestAngle = sorted[i] + gap / 2; }
-            }
-        }
+        const bestAngle = largestGapAngle([...Object.values(nodes), ...reservedPositions]);
         const SPAWN_RADIUS = targetRadius;
         const x = Math.cos(bestAngle) * SPAWN_RADIUS;
         const y = Math.sin(bestAngle) * SPAWN_RADIUS;

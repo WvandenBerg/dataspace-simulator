@@ -80,16 +80,11 @@ function participantName(scenario, participantId) {
     return scenario.participants.find((p) => p.id === participantId)?.name || participantId;
 }
 
-// Declared per scenario, but every export ends up in one shared Vocabulary Hub
-// graph: a hub that served a single dataspace would not be a hub.
+// Each dataspace that loads the scenario gets the export in its own hub.
 function catalogExportFile(scenario) {
     if (!scenario.catalogExport) return null;
     const resolved = path.resolve(SCENARIO_DIR, scenario.catalogExport);
     return resolved.startsWith(SCENARIO_DIR + path.sep) ? resolved : null;
-}
-
-function catalogExportFiles() {
-    return [...scenarios.values()].map(catalogExportFile).filter(Boolean);
 }
 
 // Two-space output matches how the demo content was written when it lived in
@@ -138,7 +133,7 @@ module.exports = {
     listScenarios,
     getScenario,
     participantName,
-    catalogExportFiles,
+    catalogExportFile,
     scopedId,
     toAssetRow,
     toNodeRow,

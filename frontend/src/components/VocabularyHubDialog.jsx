@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Link2, Unlink, ArrowRight } from 'lucide-react';
 
 const API_BASE = '/api';
@@ -7,10 +7,16 @@ const labelStyle = { fontSize: '0.64rem', color: 'var(--text-muted)', textTransf
 const publisherStyle = { fontSize: '0.68rem', color: 'var(--text-muted)' };
 const uriStyle = { fontSize: '0.66rem', color: 'var(--color-primary)', fontFamily: 'monospace', wordBreak: 'break-all' };
 
-const ProfileRow = ({ profile }) => {
-    const [open, setOpen] = useState(false);
+const ProfileRow = ({ profile, focused = false }) => {
+    const [open, setOpen] = useState(focused);
+    const rowRef = useRef(null);
+
+    useEffect(() => {
+        if (focused) rowRef.current?.scrollIntoView({ block: 'nearest' });
+    }, [focused]);
+
     return (
-        <div style={{ borderBottom: '1px solid var(--border-color)', padding: '8px 0' }}>
+        <div ref={rowRef} style={{ borderBottom: '1px solid var(--border-color)', padding: '8px 6px', background: focused ? 'rgba(22, 163, 74, 0.08)' : 'transparent' }}>
             <div onClick={() => setOpen(!open)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
                 <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>{profile.title}</span>
                 <span style={{ ...publisherStyle, whiteSpace: 'nowrap' }}>{profile.publisher}</span>
@@ -49,20 +55,21 @@ const AlignmentRow = ({ alignment }) => (
     </div>
 );
 
-const VocabularyHubDialog = ({ isConnected, onClose }) => {
+const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, onClose }) => {
     const [tab, setTab] = useState('profiles');
     const [profiles, setProfiles] = useState(null);
     const [alignments, setAlignments] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        const query = `?dataspaceId=${encodeURIComponent(dataspaceId)}`;
         Promise.all([
-            fetch(`${API_BASE}/vocabhub/profiles`).then((r) => r.json()),
-            fetch(`${API_BASE}/vocabhub/alignments`).then((r) => r.json()),
+            fetch(`${API_BASE}/vocabhub/profiles${query}`).then((r) => r.json()),
+            fetch(`${API_BASE}/vocabhub/alignments${query}`).then((r) => r.json()),
         ])
             .then(([p, a]) => { setProfiles(p); setAlignments(a); })
             .catch(() => setError('Vocabulary Hub unavailable'));
-    }, []);
+    }, [dataspaceId]);
 
     const tabStyle = (name) => ({
         padding: '6px 14px',
@@ -88,7 +95,7 @@ const VocabularyHubDialog = ({ isConnected, onClose }) => {
                     </div>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>Vocabulary Hub</div>
-                        <div style={labelStyle}>Shared by every dataspace</div>
+                        <div style={labelStyle}>Vocabulary service of this dataspace</div>
                     </div>
                     <X size={18} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={onClose} />
                 </div>
@@ -102,7 +109,7 @@ const VocabularyHubDialog = ({ isConnected, onClose }) => {
                     {isConnected ? <Link2 size={13} /> : <Unlink size={13} />}
                     {isConnected
                         ? 'Connected to this dataspace. Searches here can widen along alignments.'
-                        : 'Not connected to this dataspace. Drag the hub closer to widen searches along alignments.'}
+                        : 'Not connected to this dataspace. Drag the hub onto the ring to widen searches along alignments.'}
                 </div>
 
                 <div style={{ display: 'flex', gap: '4px', marginTop: '12px', borderBottom: '1px solid var(--border-color)' }}>
@@ -119,7 +126,7 @@ const VocabularyHubDialog = ({ isConnected, onClose }) => {
                     {!error && !profiles && <div style={{ ...labelStyle, padding: '10px 0' }}>Loading...</div>}
 
                     {tab === 'profiles' && (profiles || []).map((profile) => (
-                        <ProfileRow key={profile.id} profile={profile} />
+                        <ProfileRow key={profile.id} profile={profile} focused={profile.id === focusProfileId} />
                     ))}
 
                     {tab === 'alignments' && (alignments || []).map((alignment) => (

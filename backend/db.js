@@ -88,6 +88,11 @@ db.exec(`
     transfer_id      TEXT NOT NULL,
     received_at      TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS dataspace_settings (
+    dataspace_id TEXT PRIMARY KEY,
+    settings     TEXT NOT NULL DEFAULT '{}'
+  );
 `);
 
 function ensureColumn(tableName, columnName, definitionSql) {
@@ -202,6 +207,31 @@ const _getReceivedByNode = db.prepare(`
 `);
 
 // ---------------------------------------------------------------------------
+// Dataspace settings
+// ---------------------------------------------------------------------------
+
+const _getSettings = db.prepare(`SELECT settings FROM dataspace_settings WHERE dataspace_id = ?`);
+const _putSettings = db.prepare(`
+  INSERT OR REPLACE INTO dataspace_settings (dataspace_id, settings) VALUES (?, ?)
+`);
+
+function getDataspaceSettings(dataspaceId) {
+  const row = _getSettings.get(dataspaceId);
+  return row ? parseJson(row.settings) : {};
+}
+
+// Each top-level section is merged, so patching one field of vocabHub keeps the others.
+function patchDataspaceSettings(dataspaceId, patch) {
+  const current = getDataspaceSettings(dataspaceId);
+  const next = { ...current };
+  for (const [section, values] of Object.entries(patch)) {
+    next[section] = { ...(current[section] || {}), ...values };
+  }
+  _putSettings.run(dataspaceId, JSON.stringify(next));
+  return next;
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -223,6 +253,10 @@ function enrichPolicy(row) {
 }
 
 module.exports = {
+  // Dataspace settings
+  getDataspaceSettings,
+  patchDataspaceSettings,
+
   // Nodes
   upsertNode: (n) => _upsertNode.run({ ...n, metadata: JSON.stringify(n.metadata || {}) }),
   getNode: (id) => enrichNode(_getNode.get(id)),
