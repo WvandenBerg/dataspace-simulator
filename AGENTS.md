@@ -66,10 +66,17 @@ imports before editing a component.
 sits live in the `dataspace_settings` table, not the browser. Hub endpoints answer 409 while
 it is off, and the UI shows no hub data while it is off the ring.
 
-**Catalog profiles don't drive anything yet.** The hub stores their files (`hub_artifacts`,
-plus one Fuseki graph per file) and derives entry fields from the shapes. Publish, search
-and dataset detail still use four hardcoded field lists. Field status comes from
-`sh:severity`; `owl:imports` is never fetched.
+**Catalog profiles drive search, not yet publishing.** Each dataspace chooses its catalog
+profile in the hub (`dataspace_settings` → `catalog.profileId`). With the hub off or nothing
+chosen it falls back to the default scenario's profile file, never to a list in code. Search
+filters, free text and the per-field counts follow that profile. Publish, edit and dataset
+detail still use their own hardcoded field lists. Field status comes from `sh:severity`;
+`owl:imports` is never fetched.
+
+**The data-standard field belongs to the profile.** It is stored per hub profile
+(`hub_profiles.data_standard_path`) and seeded by the scenario that ships the profile. Code
+only knows `dct:conformsTo` as the fallback, so a profile that names its standard elsewhere
+finds nothing in the data-standard filter until that field is chosen in the hub.
 
 ## 5) Conventions
 
