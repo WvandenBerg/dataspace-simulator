@@ -58,7 +58,8 @@ docker compose up -d --build
 | `sim-fuseki` | RDF store and SPARQL endpoint for semantic metadata | 3030 |
 
 Persistence:
-- SQLite database inside backend container (`/data/simulator.db`)
+- SQLite database inside backend container (`/data/simulator.db`), including dataspace
+  settings and catalog profile files
 - Fuseki dataset in Docker volume (`fuseki-data`)
 
 ## Functional model
@@ -119,6 +120,18 @@ In this simulator, transfer means:
 
 This models functional transfer semantics, not low-level data-plane transport.
 
+### 7) Vocabulary Hub
+
+Each dataspace can run a Vocabulary Hub: a dataspace service that joins the ring through its
+own connector. It is drawn as a circle where participants are cards. Switch it on in the
+Dataspace services panel; it only answers while it sits on the ring.
+
+It holds:
+- **profiles and alignments** from a scenario's catalogue export, used to widen semantic
+  search along alignments;
+- **catalog profiles:** SHACL shapes that define catalog entries (e.g. mobilityDCAT-AP,
+  DCAT-AP), shipped with a scenario or uploaded in the hub dialog.
+
 ## Semantic implementation details
 
 ### Data model
@@ -172,6 +185,10 @@ simulator/
     semantic.js          RDF mapping, Fuseki IO, SPARQL search
     policy.js            Policy evaluation
     state-machine.js     Negotiation and transfer lifecycle
+    vocabhub.js          Vocabulary Hub: profiles and alignments per dataspace
+    catalogprofiles.js   Catalog profile files and the fields their shapes define
+    scenarios.js         Scenario loading
+    scenarios/           Scenario presets, with catalog-exports/ and catalog-profiles/
   frontend/
     src/
       components/        visualization and interaction components
