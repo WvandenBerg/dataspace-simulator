@@ -69,7 +69,7 @@ const BrowseDataspacePopup = ({
     const [semanticFieldKey, setSemanticFieldKey] = useState('dcat:keyword');
     const [semanticFieldValue, setSemanticFieldValue] = useState('');
     const [semanticFieldFilters, setSemanticFieldFilters] = useState([]);
-    const [hubProfiles, setHubProfiles] = useState([]);
+    const [fetchedProfiles, setFetchedProfiles] = useState([]);
     const [schemaProfiles, setSchemaProfiles] = useState([]);
     const [profileQuery, setProfileQuery] = useState('');
     const [profileListOpen, setProfileListOpen] = useState(false);
@@ -94,13 +94,16 @@ const BrowseDataspacePopup = ({
 
     // A scenario need not ship a catalogue export, so an empty hub is expected.
     useEffect(() => {
+        if (!vocabularyConnected) return undefined;
         let cancelled = false;
         fetch(`${API_BASE}/vocabhub/profiles?dataspaceId=${encodeURIComponent(dataspaceId)}`)
             .then((r) => (r.ok ? r.json() : []))
-            .then((data) => { if (!cancelled) setHubProfiles(Array.isArray(data) ? data : []); })
-            .catch(() => { if (!cancelled) setHubProfiles([]); });
+            .then((data) => { if (!cancelled) setFetchedProfiles(Array.isArray(data) ? data : []); })
+            .catch(() => { if (!cancelled) setFetchedProfiles([]); });
         return () => { cancelled = true; };
-    }, [dataspaceId]);
+    }, [dataspaceId, vocabularyConnected]);
+
+    const hubProfiles = vocabularyConnected ? fetchedProfiles : [];
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

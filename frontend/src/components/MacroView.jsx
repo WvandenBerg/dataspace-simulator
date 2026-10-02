@@ -393,7 +393,7 @@ const MacroView = forwardRef(({
     const glowOpacity = draggedId ? Math.max(0, Math.min(1, 1 - (distDiff / maxGlowDist))) : 0;
 
     return (
-        <OpenHubProfileContext.Provider value={vocabHub.isEnabled ? openHubDialog : null}>
+        <OpenHubProfileContext.Provider value={vocabHub.isConnected ? openHubDialog : null}>
         <div
             className="macro-view-container"
             ref={containerRef}

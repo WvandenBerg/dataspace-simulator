@@ -105,6 +105,8 @@ const SchemaLink = ({ uri, dataspaceId }) => {
     const [status, setStatus] = useState('idle');
     const [profile, setProfile] = useState(null);
 
+    if (!openHubProfile) return <div style={{ ...uriStyle, marginBottom: '3px' }}>{uri}</div>;
+
     const toggle = async () => {
         if (open) return setOpen(false);
         setOpen(true);
