@@ -13,9 +13,11 @@ const filterableFields = (fields, prefix = [], labels = [], weakest = 0) => fiel
     const path = [...prefix, f.path];
     const label = [...labels, f.label];
     const rank = Math.max(weakest, STATUSES.indexOf(f.status));
-    const own = f.kind === 'node' ? [] : [{ key: path.join(' '), path, label: label.join(' \u203a '), filled: f.filled, status: STATUSES[rank] }];
+    const own = f.kind === 'node' ? [] : [{ key: path.join(' '), path, label: label.join(' \u203a '), filled: f.filled, in: f.in, status: STATUSES[rank] }];
     return [...own, ...filterableFields(f.fields, path, label, rank)];
 });
+
+const shortIri = (iri) => String(iri).split(/[#/]/).filter(Boolean).pop() || iri;
 
 const BrowseDataspacePopup = ({
     show,
@@ -579,19 +581,30 @@ const BrowseDataspacePopup = ({
                                 );
                             })}
                         </select>
-                        <input
-                            type="text"
-                            value={semanticFieldValue}
-                            onChange={(e) => setSemanticFieldValue(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    addSemanticFieldFilter();
-                                }
-                            }}
-                            placeholder="Filter value"
-                            style={{ minWidth: 0, padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
-                        />
+                        {selectedField?.in ? (
+                            <select
+                                value={semanticFieldValue}
+                                onChange={(e) => setSemanticFieldValue(e.target.value)}
+                                style={{ minWidth: 0, padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
+                            >
+                                <option value="">Any value...</option>
+                                {selectedField.in.map((v) => <option key={v} value={v}>{shortIri(v)}</option>)}
+                            </select>
+                        ) : (
+                            <input
+                                type="text"
+                                value={semanticFieldValue}
+                                onChange={(e) => setSemanticFieldValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        addSemanticFieldFilter();
+                                    }
+                                }}
+                                placeholder="Filter value"
+                                style={{ minWidth: 0, padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
+                            />
+                        )}
                         <button
                             onClick={addSemanticFieldFilter}
                             style={{ padding: '7px 9px', background: '#334155', border: '1px solid #475569', borderRadius: '6px', color: '#e2e8f0', cursor: 'pointer', fontSize: '0.74rem', fontWeight: 600 }}
@@ -708,7 +721,7 @@ const BrowseDataspacePopup = ({
                                         style={{ maxWidth: '100%', padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: '#0f172a', color: '#cbd5e1', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                                         title="Remove filter"
                                     >
-                                        {label}: {f.value} x
+                                        {label}: {shortIri(f.value)} x
                                     </button>
                                 );
                             })}
