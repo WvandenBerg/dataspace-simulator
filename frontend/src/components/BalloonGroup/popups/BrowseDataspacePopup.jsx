@@ -111,6 +111,9 @@ const BrowseDataspacePopup = ({
     const fieldOptions = catalogModel ? filterableFields(catalogModel.fields) : [];
     const selectedField = fieldOptions.find((o) => o.key === semanticFieldKey) || fieldOptions[0] || null;
     const filterLabel = (f) => fieldOptions.find((o) => o.key === f.path.join(' '))?.label || f.path.join(' › ');
+    const unfilledFilters = semanticFieldFilters
+        .map((f) => fieldOptions.find((o) => o.key === f.path.join(' ')))
+        .filter((o) => o && o.filled === 0);
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -734,7 +737,11 @@ const BrowseDataspacePopup = ({
 
                     {semanticResults !== null && semanticResults.length === 0 && !semanticLoading && !semanticError && (
                         <div style={{ textAlign: 'center', padding: '30px 10px', color: '#64748b', fontSize: '0.8rem' }}>
-                            {hiddenOwnResults > 0 ? 'Only your own assets matched. Own assets are hidden in semantic results.' : 'No matching assets found'}
+                            {hiddenOwnResults > 0
+                                ? 'Only your own assets matched. Own assets are hidden in semantic results.'
+                                : unfilledFilters.length > 0
+                                    ? `No catalog entry fills ${unfilledFilters.map((o) => o.label).join(', ')} yet.`
+                                    : 'No matching assets found'}
                         </div>
                     )}
 
