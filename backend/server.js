@@ -17,6 +17,7 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('./db');
 const scenarios = require('./scenarios');
 const vocabhub = require('./vocabhub');
+const catalogProfiles = require('./catalogprofiles');
 const { evaluatePolicyAgainstClaims, filterAssetsByClaims } = require('./policy');
 const {
     upsertSemanticDataset,
@@ -31,6 +32,8 @@ const server = http.createServer(app);
 const PORT = Number(process.env.PORT) || 3001;
 
 app.use(cors());
+// Profile files arrive as JSON text, and a shapes file alone can pass the 100kb default.
+app.use('/api/vocabhub/profiles', bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.json());
 
 app.use((req, _res, next) => {
@@ -553,7 +556,8 @@ app.patch('/api/dataspaces/:id/settings', (req, res) => {
 // ============================================================
 // Vocabulary Hub
 //
-// One hub per dataspace. Read-only: the contents come from scenario files.
+// One hub per dataspace. Catalogue exports come from scenario files; catalog
+// profiles come from scenario files or are uploaded.
 // ============================================================
 
 const NO_HUB = 'This dataspace runs no vocabulary service';
@@ -572,6 +576,7 @@ function hubRoute(handler) {
             if (result === null) return res.status(404).json({ error: 'Not found in the Vocabulary Hub' });
             res.json(result);
         } catch (err) {
+            if (err instanceof catalogProfiles.ProfileError) return res.status(400).json({ error: err.message });
             res.status(502).json({ error: `Vocabulary Hub unavailable: ${err.message}` });
         }
     };
@@ -587,6 +592,30 @@ app.get('/api/vocabhub/alignments', hubRoute((req, ds) => vocabhub.listAlignment
     target: req.query.target,
     minCoverage: req.query.minCoverage,
 })));
+
+app.get('/api/vocabhub/catalog-profiles', hubRoute((_req, ds) => vocabhub.listCatalogProfiles(ds)));
+
+// Uploads always create a new profile, so they cannot overwrite one a scenario ships.
+app.post('/api/vocabhub/profiles', hubRoute((req, ds) => catalogProfiles.addProfile(ds, {
+    title: req.body?.title,
+    version: req.body?.version,
+    description: req.body?.description,
+    files: req.body?.files,
+})));
+
+app.delete('/api/vocabhub/profiles/:id', hubRoute(async (req, ds) => {
+    if (db.getHubProfile(ds, req.params.id)?.source !== 'upload') return null;
+    await catalogProfiles.removeProfile(ds, req.params.id);
+    return { success: true };
+}));
+
+app.get('/api/vocabhub/artifacts/:id', (req, res) => {
+    const dataspaceId = resolveDataspaceId(req.query?.dataspaceId);
+    if (!hubEnabled(dataspaceId)) return res.status(409).json({ error: NO_HUB });
+    const artifact = catalogProfiles.artifact(dataspaceId, req.params.id);
+    if (!artifact) return res.status(404).json({ error: 'Not found in the Vocabulary Hub' });
+    res.type(artifact.media_type).attachment(artifact.file_name).send(artifact.content);
+});
 
 // ============================================================
 // Semantic search (SPARQL via Fuseki)

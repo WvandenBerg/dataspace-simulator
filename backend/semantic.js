@@ -137,12 +137,16 @@ async function executeSelect(selectQuery) {
 
 // Replaces a whole named graph in one request, so a graph built from files can
 // be rebuilt from those files rather than reconciled triple by triple.
-async function replaceGraph(graphIri, turtle) {
-    const response = await axios.put(GRAPH_STORE_ENDPOINT, turtle, withAuth({
+async function replaceGraph(graphIri, body, contentType = 'text/turtle') {
+    const response = await axios.put(GRAPH_STORE_ENDPOINT, body, withAuth({
         params: { graph: graphIri },
-        headers: { 'Content-Type': 'text/turtle' }
+        headers: { 'Content-Type': contentType }
     }));
     return response.data?.tripleCount ?? 0;
+}
+
+async function dropGraph(graphIri) {
+    await executeUpdate(`DROP SILENT GRAPH <${graphIri}>`);
 }
 
 // ---------------------------------------------------------------------------
@@ -585,6 +589,8 @@ module.exports = {
     executeSelect,
     executeUpdate,
     replaceGraph,
+    dropGraph,
     escapeIri,
+    escapeLiteral,
     DCAT_FIELD_TO_PREDICATE,
 };

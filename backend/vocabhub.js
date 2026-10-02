@@ -15,6 +15,7 @@
 const fs = require('fs');
 const db = require('./db');
 const scenarios = require('./scenarios');
+const catalogProfiles = require('./catalogprofiles');
 const { executeSelect, executeUpdate, replaceGraph, escapeIri } = require('./semantic');
 
 const LEGACY_SHARED_GRAPH = 'urn:graph:vocabhub';
@@ -39,7 +40,7 @@ function scenarioGraph(dataspaceId) {
 }
 
 function hubGraphs(dataspaceId) {
-    return [scenarioGraph(dataspaceId)];
+    return [scenarioGraph(dataspaceId), catalogProfiles.uploadsGraph(dataspaceId)];
 }
 
 // FROM merges the hub's graphs into one default graph, so a pattern may span them.
@@ -194,10 +195,20 @@ async function listAlignments(dataspaceId, { target, minCoverage } = {}) {
     }));
 }
 
+// Holding shapes is what makes a profile usable as a catalog profile, whatever
+// kind of standard it otherwise is.
+async function listCatalogProfiles(dataspaceId) {
+    const described = new Map((await listProfiles(dataspaceId)).map((p) => [p.id, p]));
+    return catalogProfiles.listFileProfiles(dataspaceId)
+        .filter((p) => p.files.some((f) => f.role === 'validation'))
+        .map((p) => ({ ...(described.get(p.id) || toProfile({})), id: p.id, source: p.source, files: p.files }));
+}
+
 module.exports = {
     loadScenarioIntoHub,
     refreshScenarioHubs,
     listProfiles,
+    listCatalogProfiles,
     getProfile,
     shapesFor,
     listAlignments,
