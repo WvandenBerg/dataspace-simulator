@@ -264,6 +264,9 @@ const BrowseDataspacePopup = ({
         setProfileListOpen(false);
     };
 
+    // Filtering on a data standard needs no hub, so an IRI typed by hand is accepted too.
+    const typedIri = /^[a-z][a-z0-9+.-]*:\S+$/i.test(profileQuery.trim()) ? profileQuery.trim() : null;
+
     const resetFilters = () => {
         setFilters({ location: '', domain: '', ontologies: [] });
     };
@@ -600,95 +603,98 @@ const BrowseDataspacePopup = ({
                         </div>
                     )}
 
-                    {hubProfiles.length > 0 && (
-                        <div style={{ marginBottom: '10px' }}>
-                            <div style={{ position: 'relative' }}>
-                                <input
-                                    type="text"
-                                    value={profileQuery}
-                                    onChange={(e) => { setProfileQuery(e.target.value); setProfileListOpen(true); }}
-                                    onFocus={() => setProfileListOpen(true)}
-                                    onBlur={() => setProfileListOpen(false)}
-                                    onClick={e => e.stopPropagation()}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && matchingProfiles.length > 0) {
-                                            e.preventDefault();
-                                            addSchemaProfile(matchingProfiles[0].id);
-                                        }
-                                        if (e.key === 'Escape') setProfileListOpen(false);
-                                    }}
-                                    placeholder="Data standard from the Vocabulary Hub..."
-                                    style={{ width: '100%', boxSizing: 'border-box', padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
-                                />
+                    <div style={{ marginBottom: '10px' }}>
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type="text"
+                                value={profileQuery}
+                                onChange={(e) => { setProfileQuery(e.target.value); setProfileListOpen(true); }}
+                                onFocus={() => setProfileListOpen(true)}
+                                onBlur={() => setProfileListOpen(false)}
+                                onClick={e => e.stopPropagation()}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && matchingProfiles.length > 0) {
+                                        e.preventDefault();
+                                        addSchemaProfile(matchingProfiles[0].id);
+                                    } else if (e.key === 'Enter' && typedIri) {
+                                        e.preventDefault();
+                                        addSchemaProfile(typedIri);
+                                    }
+                                    if (e.key === 'Escape') setProfileListOpen(false);
+                                }}
+                                placeholder={hubProfiles.length > 0
+                                    ? 'Data standard from the Vocabulary Hub...'
+                                    : 'Data standard IRI, Enter to add...'}
+                                style={{ width: '100%', boxSizing: 'border-box', padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
+                            />
 
-                                {profileListOpen && matchingProfiles.length > 0 && (
-                                    <div
-                                        onMouseDown={(e) => e.preventDefault()}
-                                        style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: '2px', maxHeight: '150px', overflowY: 'auto', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px' }}
-                                    >
-                                        {matchingProfiles.map((p) => (
-                                            <div
-                                                key={p.id}
-                                                onClick={() => addSchemaProfile(p.id)}
-                                                onMouseEnter={() => setHoveredProfile(p.id)}
-                                                onMouseLeave={() => setHoveredProfile(null)}
-                                                style={{ padding: '5px 8px', fontSize: '0.74rem', color: 'var(--text-primary)', cursor: 'pointer', background: hoveredProfile === p.id ? 'var(--color-primary-bg)' : 'transparent' }}
-                                            >
-                                                {p.title}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {schemaProfiles.length > 0 && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px', minWidth: 0 }}>
-                                    {schemaProfiles.map((id) => (
-                                        <button
-                                            key={id}
-                                            onClick={() => setSchemaProfiles((prev) => prev.filter((p) => p !== id))}
-                                            style={{ maxWidth: '100%', padding: '3px 8px', borderRadius: '999px', border: '1px solid #22c55e', background: '#14532d', color: '#dcfce7', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                                            title="Remove profile"
+                            {profileListOpen && matchingProfiles.length > 0 && (
+                                <div
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: '2px', maxHeight: '150px', overflowY: 'auto', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px' }}
+                                >
+                                    {matchingProfiles.map((p) => (
+                                        <div
+                                            key={p.id}
+                                            onClick={() => addSchemaProfile(p.id)}
+                                            onMouseEnter={() => setHoveredProfile(p.id)}
+                                            onMouseLeave={() => setHoveredProfile(null)}
+                                            style={{ padding: '5px 8px', fontSize: '0.74rem', color: 'var(--text-primary)', cursor: 'pointer', background: hoveredProfile === p.id ? 'var(--color-primary-bg)' : 'transparent' }}
                                         >
-                                            {hubProfiles.find((p) => p.id === id)?.title || id} x
-                                        </button>
+                                            {p.title}
+                                        </div>
                                     ))}
                                 </div>
                             )}
-
-                            {/* Widening asks the hub a question at search time, so it needs a hub to ask. */}
-                            {vocabularyConnected && schemaProfiles.length > 0 && (
-                                <div style={{ marginTop: '8px', padding: '7px 8px', border: '1px solid var(--border-subtle)', borderRadius: '6px', background: 'var(--bg-elevated)' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={useAlignments}
-                                            onChange={(e) => setUseAlignments(e.target.checked)}
-                                            style={{ cursor: 'pointer' }}
-                                        />
-                                        Also find aligned standards
-                                    </label>
-
-                                    {useAlignments && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="1"
-                                                step="0.05"
-                                                value={minCoverage}
-                                                onChange={(e) => setMinCoverage(Number(e.target.value))}
-                                                style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
-                                            />
-                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                                                {Math.round(minCoverage * 100)}% coverage
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
-                    )}
+
+                        {schemaProfiles.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px', minWidth: 0 }}>
+                                {schemaProfiles.map((id) => (
+                                    <button
+                                        key={id}
+                                        onClick={() => setSchemaProfiles((prev) => prev.filter((p) => p !== id))}
+                                        style={{ maxWidth: '100%', padding: '3px 8px', borderRadius: '999px', border: '1px solid #22c55e', background: '#14532d', color: '#dcfce7', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                        title="Remove profile"
+                                    >
+                                        {hubProfiles.find((p) => p.id === id)?.title || id} x
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Widening asks the hub a question at search time, so it needs a hub to ask. */}
+                        {vocabularyConnected && schemaProfiles.length > 0 && (
+                            <div style={{ marginTop: '8px', padding: '7px 8px', border: '1px solid var(--border-subtle)', borderRadius: '6px', background: 'var(--bg-elevated)' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={useAlignments}
+                                        onChange={(e) => setUseAlignments(e.target.checked)}
+                                        style={{ cursor: 'pointer' }}
+                                    />
+                                    Also find aligned standards
+                                </label>
+
+                                {useAlignments && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="1"
+                                            step="0.05"
+                                            value={minCoverage}
+                                            onChange={(e) => setMinCoverage(Number(e.target.value))}
+                                            style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                                        />
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                            {Math.round(minCoverage * 100)}% coverage
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
                     {semanticLoading && (
                         <div style={{ marginBottom: '10px', padding: '8px', border: '1px solid #334155', borderRadius: '7px', background: '#0f172a', color: '#f8fafc', fontSize: '0.74rem', fontWeight: 600, minHeight: '18px' }}>
