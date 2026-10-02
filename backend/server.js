@@ -515,6 +515,34 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
 });
 
 // ============================================================
+// Dataspace settings
+//
+// Configuration of the dataspace itself, as opposed to a view preference.
+// ============================================================
+
+function settingsPatchFrom(body) {
+    const hub = body?.vocabHub;
+    if (!hub || typeof hub !== 'object') return null;
+    const vocabHub = {};
+    if (typeof hub.enabled === 'boolean') vocabHub.enabled = hub.enabled;
+    if (Number.isFinite(hub.x) && Number.isFinite(hub.y)) {
+        vocabHub.x = hub.x;
+        vocabHub.y = hub.y;
+    }
+    return Object.keys(vocabHub).length > 0 ? { vocabHub } : null;
+}
+
+app.get('/api/dataspaces/:id/settings', (req, res) => {
+    res.json(db.getDataspaceSettings(resolveDataspaceId(req.params.id)));
+});
+
+app.patch('/api/dataspaces/:id/settings', (req, res) => {
+    const patch = settingsPatchFrom(req.body);
+    if (!patch) return res.status(400).json({ error: 'Expected { vocabHub: { enabled?, x?, y? } }' });
+    res.json(db.patchDataspaceSettings(resolveDataspaceId(req.params.id), patch));
+});
+
+// ============================================================
 // Vocabulary Hub
 //
 // One registry shared by every dataspace, so these routes take no
