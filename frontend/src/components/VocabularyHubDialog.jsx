@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Link2, Unlink, ArrowRight } from 'lucide-react';
+import CatalogProfilesTab from './CatalogProfilesTab';
 
 const API_BASE = '/api';
 
@@ -59,6 +60,8 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
     const [tab, setTab] = useState('profiles');
     const [profiles, setProfiles] = useState(null);
     const [alignments, setAlignments] = useState(null);
+    const [catalogCount, setCatalogCount] = useState(null);
+    const [hubVersion, setHubVersion] = useState(0);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -69,7 +72,7 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
         ])
             .then(([p, a]) => { setProfiles(p); setAlignments(a); })
             .catch(() => setError('Vocabulary Hub unavailable'));
-    }, [dataspaceId]);
+    }, [dataspaceId, hubVersion]);
 
     const tabStyle = (name) => ({
         padding: '6px 14px',
@@ -83,20 +86,18 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
     return (
         <div
             onClick={onClose}
+            onWheel={(e) => e.stopPropagation()}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2100 }}
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                style={{ width: '560px', maxHeight: '76vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px 18px' }}
+                style={{ width: tab === 'catalog' ? '680px' : '560px', maxWidth: '94vw', maxHeight: '76vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px 18px' }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#14532d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <img src="/assets/sth-logo.svg" alt="" style={{ width: '20px', height: '20px' }} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>Vocabulary Hub</div>
-                        <div style={labelStyle}>Vocabulary service of this dataspace</div>
-                    </div>
+                    <div style={{ flex: 1, fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>Vocabulary Hub</div>
                     <X size={18} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={onClose} />
                 </div>
 
@@ -119,11 +120,22 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
                     <div style={tabStyle('alignments')} onClick={() => setTab('alignments')}>
                         Alignments{alignments ? ` (${alignments.length})` : ''}
                     </div>
+                    <div style={tabStyle('catalog')} onClick={() => setTab('catalog')}>
+                        Catalog profiles{catalogCount !== null ? ` (${catalogCount})` : ''}
+                    </div>
                 </div>
 
                 <div style={{ overflowY: 'auto', marginTop: '4px' }}>
+                    {tab === 'catalog' && (
+                        <CatalogProfilesTab
+                            dataspaceId={dataspaceId}
+                            onCountChange={setCatalogCount}
+                            onChange={() => setHubVersion((v) => v + 1)}
+                        />
+                    )}
+
                     {error && <div style={{ fontSize: '0.78rem', color: '#b45309', padding: '10px 0' }}>{error}</div>}
-                    {!error && !profiles && <div style={{ ...labelStyle, padding: '10px 0' }}>Loading...</div>}
+                    {tab !== 'catalog' && !error && !profiles && <div style={{ ...labelStyle, padding: '10px 0' }}>Loading...</div>}
 
                     {tab === 'profiles' && (profiles || []).map((profile) => (
                         <ProfileRow key={profile.id} profile={profile} focused={profile.id === focusProfileId} />
@@ -142,7 +154,7 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
 
                     {profiles && ((tab === 'profiles' && profiles.length === 0) || (tab === 'alignments' && alignments.length === 0)) && (
                         <div style={{ ...labelStyle, textTransform: 'none', padding: '14px 0' }}>
-                            The hub is empty. No loaded scenario declares a catalogue export.
+                            The hub is empty. No loaded scenario declares a catalogue export, and nothing was uploaded.
                         </div>
                     )}
                 </div>

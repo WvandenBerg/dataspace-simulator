@@ -1,0 +1,69 @@
+# Simulator default catalog profile.
+#
+# The catalog entry model the simulator hardcoded before profiles could be
+# loaded, written as SHACL so it travels the same path as any uploaded profile.
+# It claims no standard: it is the field set the publish form, the search and
+# the result view used to share, nothing more.
+#
+# Severity carries the field status: Violation is mandatory, Warning is
+# recommended, Info is optional. mobilityDCAT-AP uses the same convention.
+
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dct:     <http://purl.org/dc/terms/> .
+@prefix mdcat:   <https://w3id.org/mobilitydcat-ap#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix sim:     <urn:vocabhub:profile:simulator-default#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+<urn:vocabhub:profile:simulator-default#shapes>
+    a owl:Ontology ;
+    dct:title "Simulator default catalog profile - shapes"@en .
+
+sim:DatasetShape
+    a sh:NodeShape ;
+    sh:targetClass dcat:Dataset ;
+    sh:name "Dataset"@en ;
+    sh:property
+        [ sh:path dct:title ; sh:name "Title"@en ; sh:order 1 ; sh:minCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Violation ] ,
+        [ sh:path dct:description ; sh:name "Description"@en ; sh:order 2 ; sh:nodeKind sh:Literal ; sh:severity sh:Warning ] ,
+        [ sh:path dcat:keyword ; sh:name "Keywords"@en ; sh:order 3 ; sh:nodeKind sh:Literal ; sh:severity sh:Warning ] ,
+        [ sh:path dcat:theme ; sh:name "Themes"@en ; sh:order 4 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:spatial ; sh:name "Spatial / Region"@en ; sh:order 5 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:temporal ; sh:name "Temporal"@en ; sh:order 6 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:language ; sh:name "Language"@en ; sh:order 7 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:format ; sh:name "Format"@en ; sh:order 8 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:license ; sh:name "License"@en ; sh:order 9 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:creator ; sh:name "Creator"@en ; sh:order 10 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:conformsTo ; sh:name "Conforms To"@en ; sh:order 11 ; sh:nodeKind sh:Literal ; sh:severity sh:Warning ] ,
+        [ sh:path dcat:landingPage ; sh:name "Landing Page"@en ; sh:order 12 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dcat:contactPoint ; sh:name "Contact Point"@en ; sh:order 13 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:accrualPeriodicity ; sh:name "Update Frequency"@en ; sh:order 14 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:relation ; sh:name "Related"@en ; sh:order 15 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path mdcat:mobilityTheme ; sh:name "Mobility Theme"@en ; sh:order 16 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path mdcat:transportMode ; sh:name "Transport Mode"@en ; sh:order 17 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path mdcat:networkCoverage ; sh:name "Network Coverage"@en ; sh:order 18 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path mdcat:georeferencingMethod ; sh:name "Georeferencing Method"@en ; sh:order 19 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path mdcat:intendedInformationService ; sh:name "Intended Information Service"@en ; sh:order 20 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dcat:distribution ; sh:name "Distribution"@en ; sh:order 21 ; sh:class dcat:Distribution ; sh:severity sh:Info ] .
+
+sim:DistributionShape
+    a sh:NodeShape ;
+    sh:targetClass dcat:Distribution ;
+    sh:name "Distribution"@en ;
+    sh:property
+        [ sh:path dct:title ; sh:name "Title"@en ; sh:order 1 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dcat:accessURL ; sh:name "Access URL"@en ; sh:order 2 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:severity sh:Info ] ,
+        [ sh:path dcat:mediaType ; sh:name "Media type"@en ; sh:order 3 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:format ; sh:name "Format"@en ; sh:order 4 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path mdcat:mobilityDataStandard ; sh:name "Data standard"@en ; sh:order 5 ; sh:maxCount 1 ; sh:class mdcat:MobilityDataStandard ; sh:severity sh:Info ] .
+
+sim:MobilityDataStandardShape
+    a sh:NodeShape ;
+    sh:targetClass mdcat:MobilityDataStandard ;
+    sh:name "Data standard"@en ;
+    sh:property
+        [ sh:path dct:title ; sh:name "Label"@en ; sh:order 1 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path dct:conformsTo ; sh:name "Conforms to"@en ; sh:order 2 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:severity sh:Info ] ,
+        [ sh:path owl:versionInfo ; sh:name "Version"@en ; sh:order 3 ; sh:maxCount 1 ; sh:nodeKind sh:Literal ; sh:severity sh:Info ] ,
+        [ sh:path mdcat:schema ; sh:name "Schema"@en ; sh:order 4 ; sh:nodeKind sh:IRI ; sh:severity sh:Info ] .

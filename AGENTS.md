@@ -1,7 +1,5 @@
 # AGENTS.md
 
-Context for coding agents working on this repository. Read this before changing code.
-
 ## 1) What this project is
 
 A standalone, local dataspace simulator for research and teaching. Three containers:
@@ -44,18 +42,6 @@ Before assuming a field or endpoint is wired up, grep for an actual use. Several
 
 These are verified, not suspected. Full evidence in `TEST-LOG.md`.
 
-**Browsing a catalog ignores access policy.** The catalog view reads the frontend's local
-asset list, loaded from `/api/assets` — a route with no policy logic. The policy-filtered
-`/api/catalog` endpoint exists, works, and **is never called by any frontend code**.
-Semantic search and contract negotiation *do* enforce policy correctly. The policy engine
-itself is sound; only this one path bypasses it.
-
-**Ten of fifteen DCAT predicates are filterable but not returnable.** The SPARQL `SELECT`
-in `backend/semantic.js` projects a fixed column list. A field filter joins its predicate
-under a generated variable purely so `FILTER` can test it, then never projects it. So
-`dct:conformsTo` can be searched on and its value is discarded in the same query. This
-blocks US-6.
-
 **Cold start under-indexes, and reports success.** `seedDemoAssets()` and
 `reindexAllAssetsToSemantic()` are both launched unawaited in `server.listen`. The reindexer
 snapshots the asset list before seeding finishes, so its retry loop covers only what existed
@@ -75,6 +61,15 @@ that look exactly like a loading spinner.
 `onViewCatalog` prop chain and `catalogRequestLine` that existed only to serve it. The line
 you see between two control planes is `ControlPlaneBeam`, driven by `setRingLight`. Check
 imports before editing a component.
+
+**The Vocabulary Hub is per dataspace and off by default.** Whether it runs and where it
+sits live in the `dataspace_settings` table, not the browser. Hub endpoints answer 409 while
+it is off, and the UI shows no hub data while it is off the ring.
+
+**Catalog profiles don't drive anything yet.** The hub stores their files (`hub_artifacts`,
+plus one Fuseki graph per file) and derives entry fields from the shapes. Publish, search
+and dataset detail still use four hardcoded field lists. Field status comes from
+`sh:severity`; `owl:imports` is never fetched.
 
 ## 5) Conventions
 
@@ -105,6 +100,8 @@ Conventional Commits. **Keep messages brief.**
 - Subject in the imperative, lowercase, no trailing period.
 - Body only when the *why* is not obvious. Wrap at 72 characters.
 - One concern per commit. Split mixed changes rather than bundling them.
+- Commits written by an agent end with a `Co-Authored-By: <model> <noreply@anthropic.com>`
+  trailer.
 
 ```
 feat: add zoom in/out buttons to the canvas
@@ -118,6 +115,9 @@ chore: translate German comments to English
 cd frontend && npx eslint src        # 60 problems is the known baseline — do not add to it
 cd frontend && npx vite build        # must succeed
 ```
+
+The backend's dependencies only exist in its Docker image, so check backend changes there
+or against the running stack.
 
 There is no test suite. Verify behaviour against the running stack:
 

@@ -93,6 +93,31 @@ db.exec(`
     dataspace_id TEXT PRIMARY KEY,
     settings     TEXT NOT NULL DEFAULT '{}'
   );
+
+  -- Profiles a hub learned from files rather than from a catalogue export.
+  -- title is null when the files attach to a profile the export already describes.
+  CREATE TABLE IF NOT EXISTS hub_profiles (
+    dataspace_id TEXT NOT NULL,
+    profile_id   TEXT NOT NULL,
+    title        TEXT,
+    version      TEXT,
+    description  TEXT,
+    source       TEXT NOT NULL,
+    created_at   TEXT NOT NULL,
+    PRIMARY KEY (dataspace_id, profile_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS hub_artifacts (
+    dataspace_id TEXT NOT NULL,
+    artifact_id  TEXT NOT NULL,
+    profile_id   TEXT NOT NULL,
+    role         TEXT NOT NULL,
+    file_name    TEXT NOT NULL,
+    media_type   TEXT NOT NULL,
+    content      TEXT NOT NULL,
+    created_at   TEXT NOT NULL,
+    PRIMARY KEY (dataspace_id, artifact_id)
+  );
 `);
 
 function ensureColumn(tableName, columnName, definitionSql) {
@@ -232,6 +257,40 @@ function patchDataspaceSettings(dataspaceId, patch) {
 }
 
 // ---------------------------------------------------------------------------
+// Hub profiles and their files
+// ---------------------------------------------------------------------------
+
+const _upsertHubProfile = db.prepare(`
+  INSERT OR REPLACE INTO hub_profiles (dataspace_id, profile_id, title, version, description, source, created_at)
+  VALUES (@dataspace_id, @profile_id, @title, @version, @description, @source, @created_at)
+`);
+const _getHubProfiles = db.prepare(`SELECT * FROM hub_profiles WHERE dataspace_id = ? ORDER BY created_at`);
+const _getHubProfile = db.prepare(`SELECT * FROM hub_profiles WHERE dataspace_id = ? AND profile_id = ?`);
+const _deleteHubProfile = db.prepare(`DELETE FROM hub_profiles WHERE dataspace_id = ? AND profile_id = ?`);
+const _insertHubArtifact = db.prepare(`
+  INSERT OR REPLACE INTO hub_artifacts
+    (dataspace_id, artifact_id, profile_id, role, file_name, media_type, content, created_at)
+  VALUES
+    (@dataspace_id, @artifact_id, @profile_id, @role, @file_name, @media_type, @content, @created_at)
+`);
+const _getHubArtifacts = db.prepare(`
+  SELECT dataspace_id, artifact_id, profile_id, role, file_name, media_type, created_at
+  FROM hub_artifacts WHERE dataspace_id = ? ORDER BY created_at, file_name
+`);
+const _getHubArtifact = db.prepare(`SELECT * FROM hub_artifacts WHERE dataspace_id = ? AND artifact_id = ?`);
+const _deleteHubArtifacts = db.prepare(`DELETE FROM hub_artifacts WHERE dataspace_id = ? AND profile_id = ?`);
+
+const removeHubProfile = db.transaction((dataspaceId, profileId) => {
+  _deleteHubArtifacts.run(dataspaceId, profileId);
+  _deleteHubProfile.run(dataspaceId, profileId);
+});
+
+const saveHubProfile = db.transaction((profile, artifacts) => {
+  _upsertHubProfile.run(profile);
+  for (const artifact of artifacts) _insertHubArtifact.run(artifact);
+});
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -256,6 +315,14 @@ module.exports = {
   // Dataspace settings
   getDataspaceSettings,
   patchDataspaceSettings,
+
+  // Hub profiles and their files
+  saveHubProfile,
+  removeHubProfile,
+  getHubProfiles: (dataspaceId) => _getHubProfiles.all(dataspaceId),
+  getHubProfile: (dataspaceId, profileId) => _getHubProfile.get(dataspaceId, profileId) || null,
+  getHubArtifacts: (dataspaceId) => _getHubArtifacts.all(dataspaceId),
+  getHubArtifact: (dataspaceId, artifactId) => _getHubArtifact.get(dataspaceId, artifactId) || null,
 
   // Nodes
   upsertNode: (n) => _upsertNode.run({ ...n, metadata: JSON.stringify(n.metadata || {}) }),

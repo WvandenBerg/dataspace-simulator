@@ -15,6 +15,7 @@
 const fs = require('fs');
 const db = require('./db');
 const scenarios = require('./scenarios');
+const catalogProfiles = require('./catalogprofiles');
 const { executeSelect, executeUpdate, replaceGraph, escapeIri } = require('./semantic');
 
 const LEGACY_SHARED_GRAPH = 'urn:graph:vocabhub';
@@ -39,7 +40,7 @@ function scenarioGraph(dataspaceId) {
 }
 
 function hubGraphs(dataspaceId) {
-    return [scenarioGraph(dataspaceId)];
+    return [scenarioGraph(dataspaceId), catalogProfiles.uploadsGraph(dataspaceId)];
 }
 
 // FROM merges the hub's graphs into one default graph, so a pattern may span them.
@@ -63,9 +64,11 @@ async function withRetry(task, { maxAttempts = 20, retryDelayMs = 1500 } = {}) {
 
 async function loadScenarioIntoHub(dataspaceId, scenario) {
     const file = scenarios.catalogExportFile(scenario);
-    if (!file) return { tripleCount: 0 };
-    const tripleCount = await replaceGraph(scenarioGraph(dataspaceId), fs.readFileSync(file, 'utf8'));
-    return { tripleCount };
+    const tripleCount = file
+        ? await replaceGraph(scenarioGraph(dataspaceId), fs.readFileSync(file, 'utf8'))
+        : 0;
+    const profile = await catalogProfiles.installScenarioProfile(dataspaceId, scenario);
+    return { tripleCount, profileFields: profile?.fields ?? 0 };
 }
 
 // Startup refresh, so an edited fixture takes effect on restart. A dataspace
@@ -80,9 +83,9 @@ async function refreshScenarioHubs() {
         for (const summary of scenarios.listScenarios()) {
             const scenario = scenarios.getScenario(summary.id);
             const holds = scenario.assets.some((a) => assetIds.has(scenarios.scopedId(dataspaceId, a.assetId)));
-            if (!holds || !scenarios.catalogExportFile(scenario)) continue;
-            const { tripleCount } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));
-            loaded.push({ dataspaceId, scenarioId: scenario.id, tripleCount });
+            if (!holds || (!scenarios.catalogExportFile(scenario) && !scenario.catalogProfile)) continue;
+            const { tripleCount, profileFields } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));
+            loaded.push({ dataspaceId, scenarioId: scenario.id, tripleCount, profileFields });
         }
     }
     return loaded;
@@ -194,10 +197,20 @@ async function listAlignments(dataspaceId, { target, minCoverage } = {}) {
     }));
 }
 
+// Holding shapes is what makes a profile usable as a catalog profile, whatever
+// kind of standard it otherwise is.
+async function listCatalogProfiles(dataspaceId) {
+    const described = new Map((await listProfiles(dataspaceId)).map((p) => [p.id, p]));
+    return catalogProfiles.listFileProfiles(dataspaceId)
+        .filter((p) => p.files.some((f) => f.role === 'validation'))
+        .map((p) => ({ ...(described.get(p.id) || toProfile({})), id: p.id, source: p.source, files: p.files }));
+}
+
 module.exports = {
     loadScenarioIntoHub,
     refreshScenarioHubs,
     listProfiles,
+    listCatalogProfiles,
     getProfile,
     shapesFor,
     listAlignments,
