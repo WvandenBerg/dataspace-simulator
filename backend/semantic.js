@@ -13,7 +13,7 @@
  */
 
 const axios = require('axios');
-const { RDF_TYPE, P } = require('./record');
+const { RDF_TYPE, P, curie } = require('./record');
 
 const FUSEKI_URL = process.env.FUSEKI_URL || 'http://sim-fuseki:3030';
 const FUSEKI_DATASET = process.env.FUSEKI_DATASET || 'simulator';
@@ -63,41 +63,6 @@ const DCAT_FIELD_TO_PREDICATE = {
     'mobilitydcatap:georeferencingMethod': 'https://w3id.org/mobilitydcat-ap#georeferencingMethod',
     'mobilitydcatap:intendedInformationService': 'https://w3id.org/mobilitydcat-ap#intendedInformationService',
 };
-
-// Multi-valued results are joined with an ASCII unit separator, not a comma:
-// titles, descriptions and spatial labels routinely contain commas themselves.
-const MULTI_VALUE_SEPARATOR = '\u001F';
-
-// Fields the search query already binds by name, so that filters written
-// against those variables keep working. Every other field gets a generated
-// variable and an OPTIONAL clause.
-const DCAT_QUERY_VARS = {
-    'dct:title': 'title',
-    'dct:description': 'description',
-    'dcat:keyword': 'keyword',
-    'dcat:theme': 'theme',
-    'dct:spatial': 'spatialValue',
-    'dct:temporal': 'temporalValue',
-};
-
-function sparqlSafeName(key) {
-    return key.replace(/[^A-Za-z0-9]/g, '_');
-}
-
-function dcatQueryVar(key) {
-    return DCAT_QUERY_VARS[key] || `dcatValue_${sparqlSafeName(key)}`;
-}
-
-function dcatResultVar(key) {
-    return `dcat_${sparqlSafeName(key)}`;
-}
-
-function splitMultiValue(value) {
-    return String(value || '')
-        .split(MULTI_VALUE_SEPARATOR)
-        .map(part => part.trim())
-        .filter(Boolean);
-}
 
 // ---------------------------------------------------------------------------
 // Low-level SPARQL helpers
@@ -286,231 +251,195 @@ WHERE {
 }
 
 // ---------------------------------------------------------------------------
-// Distributions for a set of datasets.
-//
-// Deliberately a second query. Folding these into the search SELECT would mean
-// GROUP_CONCAT over a cross-product, which loses which standard belongs to
-// which distribution the moment a dataset has more than one.
+// Triples back to records
 // ---------------------------------------------------------------------------
 
-async function distributionsForDatasets(datasetIds) {
-    if (!datasetIds || datasetIds.length === 0) return new Map();
+const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
 
-    const idList = datasetIds.map(id => `"${escapeLiteral(id)}"`).join(', ');
-    const query = `
-SELECT ?datasetId ?dist ?distTitle ?accessURL ?mediaType ?format ?stdLabel ?stdConformsTo ?stdVersion ?schema
+function termToValue(term) {
+    if (term.type === 'uri') return { iri: term.value };
+    return {
+        value: term.value,
+        ...(term['xml:lang'] ? { lang: term['xml:lang'] } : {}),
+        ...(term.datatype && term.datatype !== XSD_STRING ? { datatype: term.datatype } : {}),
+    };
+}
+
+// The record of every dataset in a dataspace, keyed by dataset id. It holds the
+// dataset's triples, those of the nodes minted under its IRI, and those of nodes
+// it links to directly, such as the publisher several datasets share.
+async function readRecords(sessionCode, datasetIds = null) {
+    const only = datasetIds ? `FILTER(STR(?id) IN (${datasetIds.map((id) => `"${escapeLiteral(id)}"`).join(', ')}))` : '';
+    const rows = await executeSelect(`
+SELECT DISTINCT ?id ?ds ?s ?p ?o
 WHERE {
     GRAPH ?g {
-        ?dataset <http://purl.org/dc/terms/identifier> ?datasetId ;
-            <${P.distribution}> ?dist .
-        FILTER(STR(?datasetId) IN (${idList}))
-        OPTIONAL { ?dist <${P.title}> ?distTitle . }
-        OPTIONAL { ?dist <${P.accessURL}> ?accessURL . }
-        OPTIONAL { ?dist <${P.mediaType}> ?mediaType . }
-        OPTIONAL { ?dist <${P.format}> ?format . }
-        OPTIONAL {
-            ?dist <${P.mobilityDataStandard}> ?std .
-            OPTIONAL { ?std <${P.title}> ?stdLabel . }
-            OPTIONAL { ?std <${P.conformsTo}> ?stdConformsTo . }
-            OPTIONAL { ?std <${P.versionInfo}> ?stdVersion . }
-            OPTIONAL { ?std <${P.schema}> ?schema . }
-        }
+        ?ds a <http://www.w3.org/ns/dcat#Dataset> ;
+            <http://purl.org/dc/terms/identifier> ?id ;
+            <http://purl.org/dc/terms/isPartOf> "${escapeLiteral(sessionCode)}" .
+        ${only}
+        ?s ?p ?o .
+        FILTER(?s = ?ds || STRSTARTS(STR(?s), CONCAT(STR(?ds), "#")) || EXISTS { ?ds ?link ?s })
     }
-}
-ORDER BY ?datasetId ?dist`;
+}`);
 
-    const byDataset = new Map();
-    const byIri = new Map();
-
-    for (const row of await executeSelect(query)) {
-        const datasetId = row.datasetId?.value || '';
-        const iri = row.dist?.value || '';
-        if (!iri) continue;
-
-        let dist = byIri.get(iri);
-        if (!dist) {
-            dist = {
-                title: row.distTitle?.value || '',
-                accessUrl: row.accessURL?.value || '',
-                mediaType: row.mediaType?.value || '',
-                format: row.format?.value || '',
-                dataStandard: null,
-            };
-            byIri.set(iri, dist);
-            if (!byDataset.has(datasetId)) byDataset.set(datasetId, []);
-            byDataset.get(datasetId).push(dist);
-        }
-
-        const conformsTo = row.stdConformsTo?.value || '';
-        const label = row.stdLabel?.value || '';
-        if (conformsTo || label) {
-            dist.dataStandard = dist.dataStandard || { label: '', conformsTo: '', version: '', schema: [] };
-            dist.dataStandard.label = label || dist.dataStandard.label;
-            dist.dataStandard.conformsTo = conformsTo || dist.dataStandard.conformsTo;
-            dist.dataStandard.version = row.stdVersion?.value || dist.dataStandard.version;
-        }
-        const schema = row.schema?.value;
-        if (schema && dist.dataStandard && !dist.dataStandard.schema.includes(schema)) {
-            dist.dataStandard.schema.push(schema);
-        }
+    const subjects = new Map();
+    const roots = new Map();
+    const seenTriples = new Set();
+    for (const row of rows) {
+        const s = row.s.value;
+        roots.set(row.id.value, row.ds.value);
+        const key = `${s} ${row.p.value} ${row.o.type} ${row.o.value}`;
+        if (seenTriples.has(key)) continue;
+        seenTriples.add(key);
+        if (!subjects.has(s)) subjects.set(s, { type: null, fields: {} });
+        const subject = subjects.get(s);
+        if (row.p.value === RDF_TYPE) subject.type = row.o.value;
+        else (subject.fields[row.p.value] ||= []).push(termToValue(row.o));
     }
 
-    return byDataset;
+    const build = (s, seen) => {
+        const fields = {};
+        for (const [path, values] of Object.entries(subjects.get(s)?.fields || {})) {
+            fields[path] = values.map((v) => {
+                const node = v.iri && subjects.get(v.iri);
+                if (!node || seen.has(v.iri)) return v;
+                return {
+                    // A node minted for this dataset has no identity outside it; a shared one keeps its IRI.
+                    ...(v.iri.startsWith(`${s.split('#')[0]}#`) ? {} : { iri: v.iri }),
+                    ...(node.type ? { type: node.type } : {}),
+                    fields: build(v.iri, new Set([...seen, v.iri])),
+                };
+            });
+        }
+        return fields;
+    };
+
+    return new Map([...roots].map(([id, ds]) => [id, build(ds, new Set([ds]))]));
 }
 
 // ---------------------------------------------------------------------------
-// Search: full parameterized SPARQL SELECT
-// Returns an array of result objects.
+// Search
+//
+// The query only decides which datasets match; what they hold is read back as
+// records afterwards.
 // ---------------------------------------------------------------------------
+
+const pathExpr = (path) => path.map((p) => `<${escapeIri(p)}>`).join('/');
+
+function valueFilter(variable, value) {
+    return `CONTAINS(LCASE(STR(${variable})), LCASE("${escapeLiteral(value)}"))`;
+}
+
+const strings = (values = []) => values.filter((v) => !v.fields).map((v) => v.value ?? v.iri);
+const first = (values) => strings(values)[0] || '';
+
+function distributionFromNode({ fields }) {
+    const standard = (fields[P.mobilityDataStandard] || []).find((v) => v.fields)?.fields;
+    return {
+        title: first(fields[P.title]),
+        accessUrl: first(fields[P.accessURL]),
+        mediaType: first(fields[P.mediaType]),
+        format: first(fields[P.format]),
+        dataStandard: standard ? {
+            label: first(standard[P.title]),
+            conformsTo: first(standard[P.conformsTo]),
+            version: first(standard[P.versionInfo]),
+            schema: strings(standard[P.schema]),
+        } : null,
+    };
+}
+
+// The shape results had before records, kept until the views read records themselves.
+function resultFromRecord(datasetId, record) {
+    const publisher = (record[P.publisher] || []).find((v) => v.fields)?.fields || {};
+    const dcat = {};
+    for (const [path, values] of Object.entries(record)) {
+        if (strings(values).length > 0) dcat[curie(path)] = strings(values);
+    }
+    return {
+        datasetId,
+        title: first(record[P.title]),
+        description: first(record[P.description]),
+        publisherBpn: first(publisher[P.identifier]),
+        publisherName: first(publisher[P.name]),
+        policyName: first(record[P.policy]),
+        publishedAt: first(record[P.issued]),
+        sessionCode: first(record[P.isPartOf]),
+        spatial: strings(record[P.spatial]),
+        temporalCoverage: first(record[P.temporal]),
+        keywords: strings(record[P.keyword]),
+        themes: strings(record[P.theme]),
+        dcat,
+        distributions: (record[P.distribution] || []).filter((v) => v.fields).map(distributionFromNode),
+        record,
+    };
+}
 
 async function semanticSearch({
     searchText = '',
-    sessionCode = null,
-    publisherBpns = null,
+    sessionCode,
     datasetIds = null,
-    policyName = null,
     dcatFilters = {},
     dcatFieldFilters = [],
     schemaProfiles = null,
     limit = 25
 }) {
-    const filters = [];
-    const safe = escapeLiteral;
+    const patterns = [];
+    const textPaths = [P.title, P.description, P.keyword, P.theme];
+    const fieldFilters = [
+        ...[['keyword', P.keyword], ['theme', P.theme], ['spatial', P.spatial]]
+            .filter(([key]) => dcatFilters[key])
+            .map(([key, path]) => ({ path: [path], value: String(dcatFilters[key]) })),
+        ...(Array.isArray(dcatFieldFilters) ? dcatFieldFilters : [])
+            .filter((entry) => DCAT_FIELD_TO_PREDICATE[entry?.key] && String(entry?.value || '').trim())
+            .map((entry) => ({ path: [DCAT_FIELD_TO_PREDICATE[entry.key]], value: String(entry.value).trim() })),
+    ];
 
-    if (searchText) {
-        filters.push(`(
-            CONTAINS(LCASE(STR(?title)), LCASE("${safe(searchText)}")) ||
-            CONTAINS(LCASE(STR(COALESCE(?description, ""))), LCASE("${safe(searchText)}")) ||
-            CONTAINS(LCASE(STR(COALESCE(?keyword, ""))), LCASE("${safe(searchText)}")) ||
-            CONTAINS(LCASE(STR(COALESCE(?theme, ""))), LCASE("${safe(searchText)}"))
-        )`);
-    }
-    if (sessionCode) {
-        filters.push(`STR(COALESCE(?sessionCode, "")) = "${safe(sessionCode)}"`);
-    }
-    if (publisherBpns && publisherBpns.length > 0) {
-        const bpnList = publisherBpns.map(b => `"${safe(b)}"`).join(', ');
-        filters.push(`STR(?publisherBpn) IN (${bpnList})`);
-    }
     if (datasetIds && datasetIds.length > 0) {
-        const datasetList = datasetIds.map(id => `"${safe(id)}"`).join(', ');
-        filters.push(`STR(?datasetId) IN (${datasetList})`);
+        patterns.push(`FILTER(STR(?datasetId) IN (${datasetIds.map((id) => `"${escapeLiteral(id)}"`).join(', ')}))`);
     }
-    if (policyName) {
-        filters.push(`CONTAINS(LCASE(STR(COALESCE(?policyName, ""))), LCASE("${safe(policyName)}"))`);
+    if (searchText) {
+        patterns.push(`FILTER EXISTS {
+            VALUES ?textPath { ${textPaths.map((p) => `<${p}>`).join(' ')} }
+            ?dataset ?textPath ?text .
+            FILTER(CONTAINS(LCASE(STR(?text)), LCASE("${escapeLiteral(searchText)}")))
+        }`);
     }
-    if (dcatFilters.keyword) {
-        filters.push(`CONTAINS(LCASE(STR(COALESCE(?keyword, ""))), LCASE("${safe(dcatFilters.keyword)}"))`);
-    }
-    if (dcatFilters.theme) {
-        filters.push(`CONTAINS(LCASE(STR(COALESCE(?theme, ""))), LCASE("${safe(dcatFilters.theme)}"))`);
-    }
-    if (dcatFilters.spatial) {
-        filters.push(`CONTAINS(LCASE(STR(COALESCE(?spatialValue, ""))), LCASE("${safe(dcatFilters.spatial)}"))`);
-    }
-
-    const fieldTriples = [];
-    (Array.isArray(dcatFieldFilters) ? dcatFieldFilters : []).forEach((entry, idx) => {
-        const key = entry?.key;
-        const value = String(entry?.value || '').trim();
-        const predicate = DCAT_FIELD_TO_PREDICATE[key];
-        if (!predicate || !value) return;
-        const varName = `?f${idx}`;
-        fieldTriples.push(`?dataset <${predicate}> ${varName} .`);
-        filters.push(`CONTAINS(LCASE(STR(${varName})), LCASE("${safe(value)}"))`);
+    fieldFilters.forEach(({ path, value }, i) => {
+        patterns.push(`?dataset ${pathExpr(path)} ?f${i} .`, `FILTER(${valueFilter(`?f${i}`, value)})`);
     });
 
-    // The schema a distribution declares is two hops from the dataset, so this
-    // cannot go through DCAT_FIELD_TO_PREDICATE like the one-hop filters above.
     // Set membership rather than substring: a profile IRI either is or is not
     // the one asked for, and VALUES lets the store do that join.
     const schemaSet = Array.isArray(schemaProfiles)
-        ? [...new Set(schemaProfiles.map(p => escapeIri(p)).filter(Boolean))]
+        ? [...new Set(schemaProfiles.map((p) => escapeIri(p)).filter(Boolean))]
         : [];
-    const schemaTriples = schemaSet.length > 0
-        ? [
-            `?dataset <${P.distribution}>/<${P.mobilityDataStandard}>/<${P.schema}> ?schemaMatch .`,
-            `VALUES ?schemaMatch { ${schemaSet.map(p => `<${p}>`).join(' ')} }`,
-        ]
-        : [];
-
-    const whereFilter = filters.length > 0 ? `FILTER(${filters.join(' && ')})` : '';
-    const maxLimit = Math.max(1, Math.min(Number(limit) || 25, 200));
-
-    // Every mapped field is projected, not just the handful the query used to
-    // hardcode. A field could previously be filtered on and have its value
-    // discarded by the same query (US-3).
-    const projectionKeys = Object.keys(DCAT_FIELD_TO_PREDICATE);
-    const projectionOptionals = projectionKeys
-        .filter(key => !DCAT_QUERY_VARS[key])
-        .map(key => `OPTIONAL { ?dataset <${DCAT_FIELD_TO_PREDICATE[key]}> ?${dcatQueryVar(key)} . }`)
-        .join('\n        ');
-    const projectionSelects = projectionKeys
-        .map(key => `       (GROUP_CONCAT(DISTINCT STR(?${dcatQueryVar(key)}); separator="${MULTI_VALUE_SEPARATOR}") AS ?${dcatResultVar(key)})`)
-        .join('\n');
+    if (schemaSet.length > 0) {
+        patterns.push(
+            `?dataset ${pathExpr([P.distribution, P.mobilityDataStandard, P.schema])} ?schemaMatch .`,
+            `VALUES ?schemaMatch { ${schemaSet.map((p) => `<${p}>`).join(' ')} }`,
+        );
+    }
 
     const query = `
-SELECT ?datasetId ?title ?description ?publisherBpn ?publisherName ?policyName ?publishedAt ?sessionCode
-${projectionSelects}
+SELECT DISTINCT ?datasetId ?publishedAt
 WHERE {
     GRAPH ?g {
         ?dataset a <http://www.w3.org/ns/dcat#Dataset> ;
-            <http://purl.org/dc/terms/identifier> ?datasetId ;
-            <http://purl.org/dc/terms/title> ?title ;
-            <http://purl.org/dc/terms/publisher> ?publisher ;
-            <http://purl.org/dc/terms/issued> ?publishedAt .
-
-        ?publisher <http://purl.org/dc/terms/identifier> ?publisherBpn .
-        OPTIONAL { ?publisher <http://xmlns.com/foaf/0.1/name> ?publisherName . }
-        OPTIONAL { ?dataset <http://purl.org/dc/terms/description> ?description . }
-        OPTIONAL { ?dataset <http://www.w3.org/ns/dcat#keyword> ?keyword . }
-        OPTIONAL { ?dataset <http://www.w3.org/ns/dcat#theme> ?theme . }
-        OPTIONAL { ?dataset <http://purl.org/dc/terms/spatial> ?spatialValue . }
-        OPTIONAL { ?dataset <http://purl.org/dc/terms/temporal> ?temporalValue . }
-        OPTIONAL { ?dataset <http://www.w3.org/ns/odrl/2/policy> ?policyName . }
-        OPTIONAL { ?dataset <http://purl.org/dc/terms/isPartOf> ?sessionCode . }
-        ${projectionOptionals}
-        ${fieldTriples.join('\n        ')}
-        ${schemaTriples.join('\n        ')}
+            <${P.identifier}> ?datasetId ;
+            <${P.issued}> ?publishedAt ;
+            <${P.isPartOf}> "${escapeLiteral(sessionCode)}" .
+        ${patterns.join('\n        ')}
     }
-    ${whereFilter}
 }
-GROUP BY ?datasetId ?title ?description ?publisherBpn ?publisherName ?policyName ?publishedAt ?sessionCode
 ORDER BY DESC(?publishedAt)
-LIMIT ${maxLimit}`;
+LIMIT ${Math.max(1, Math.min(Number(limit) || 25, 200))}`;
 
-    const bindings = await executeSelect(query);
-    const results = bindings.map(row => {
-        const dcat = {};
-        for (const key of projectionKeys) {
-            const values = splitMultiValue(row[dcatResultVar(key)]?.value);
-            if (values.length > 0) {
-                dcat[key] = values;
-            }
-        }
-        return {
-            datasetId: row.datasetId?.value || '',
-            title: row.title?.value || '',
-            description: row.description?.value || '',
-            publisherBpn: row.publisherBpn?.value || '',
-            publisherName: row.publisherName?.value || '',
-            policyName: row.policyName?.value || '',
-            publishedAt: row.publishedAt?.value || '',
-            sessionCode: row.sessionCode?.value || '',
-            spatial: dcat['dct:spatial'] || [],
-            temporalCoverage: (dcat['dct:temporal'] || [])[0] || '',
-            keywords: dcat['dcat:keyword'] || [],
-            themes: dcat['dcat:theme'] || [],
-            dcat,
-            distributions: [],
-        };
-    });
-
-    const distributions = await distributionsForDatasets(results.map(r => r.datasetId));
-    for (const result of results) {
-        result.distributions = distributions.get(result.datasetId) || [];
-    }
-    return results;
+    const ids = (await executeSelect(query)).map((row) => row.datasetId.value);
+    if (ids.length === 0) return [];
+    const records = await readRecords(sessionCode, ids);
+    return ids.filter((id) => records.has(id)).map((id) => resultFromRecord(id, records.get(id)));
 }
 
 module.exports = {
@@ -518,7 +447,7 @@ module.exports = {
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
     semanticSearch,
-    distributionsForDatasets,
+    readRecords,
     executeSelect,
     executeUpdate,
     replaceGraph,

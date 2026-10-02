@@ -49,6 +49,12 @@ const P = {
     mobilityDataStandard: `${PREFIXES.mobilitydcatap}mobilityDataStandard`,
     mobilityDataStandardClass: `${PREFIXES.mobilitydcatap}MobilityDataStandard`,
     schema: `${PREFIXES.mobilitydcatap}schema`,
+    identifier: `${PREFIXES.dct}identifier`,
+    publisher: `${PREFIXES.dct}publisher`,
+    issued: `${PREFIXES.dct}issued`,
+    isPartOf: `${PREFIXES.dct}isPartOf`,
+    name: `${PREFIXES.foaf}name`,
+    policy: `${PREFIXES.odrl}policy`,
 };
 
 function curie(iri) {
