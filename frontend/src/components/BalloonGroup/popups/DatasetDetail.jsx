@@ -132,7 +132,7 @@ const SchemaLink = ({ uri, dataspaceId }) => {
                 <span>{uri}</span>
             </div>
 
-            {open && status === 'loading' && <div style={{ ...labelStyle, marginLeft: '14px' }}>Resolving...</div>}
+            {open && status === 'loading' && <div style={{ ...labelStyle, marginLeft: '14px' }}>Asking the Vocabulary Hub...</div>}
 
             {open && (status === 'missing' || status === 'unavailable') && (
                 <div style={{ ...noteStyle, color: '#d97706', marginLeft: '14px' }}>
@@ -142,7 +142,14 @@ const SchemaLink = ({ uri, dataspaceId }) => {
             )}
 
             {open && status === 'found' && profile && (
-                <div style={{ marginLeft: '14px', marginTop: '4px', padding: '6px 8px', background: 'rgba(37, 99, 235, 0.06)', borderRadius: '4px' }}>
+                <div style={{ marginLeft: '14px', marginTop: '4px', padding: '6px 8px', background: 'rgba(22, 163, 74, 0.06)', border: '1px solid rgba(22, 163, 74, 0.35)', borderRadius: '4px' }}>
+                    {/* Styled after the hub itself, so it reads as the hub answering rather than more asset metadata. */}
+                    <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px', color: '#15803d' }}>
+                        <span style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#14532d', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <img src="/assets/sth-logo.svg" alt="" style={{ width: '9px', height: '9px' }} />
+                        </span>
+                        From the Vocabulary Hub
+                    </div>
                     <div style={{ ...valueStyle, fontWeight: 600 }}>{profile.title}</div>
                     {profile.publisher && <div style={labelStyle}>{profile.publisher}</div>}
                     {profile.description && <div style={{ ...valueStyle, marginTop: '4px' }}>{profile.description}</div>}
