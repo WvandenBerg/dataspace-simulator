@@ -18,11 +18,13 @@ const db = require('./db');
 const scenarios = require('./scenarios');
 const vocabhub = require('./vocabhub');
 const catalogProfiles = require('./catalogprofiles');
+const { assetToRecord, valuesAt } = require('./record');
 const { evaluatePolicyAgainstClaims, filterAssetsByClaims } = require('./policy');
 const {
     upsertSemanticDataset,
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
+    readRecords,
     semanticSearch
 } = require('./semantic');
 const { initiateNegotiation, advanceNegotiation, initiateTransfer } = require('./state-machine');
@@ -140,14 +142,7 @@ async function indexAsset(asset) {
 
     await upsertSemanticDataset({
         datasetId: asset.asset_id,
-        title: asset.name,
-        description: asset.description,
-        keywords: normalizeList(asset?.dcat_fields?.keywords),
-        themes: normalizeList(asset?.dcat_fields?.themes),
-        spatial: normalizeList(asset?.dcat_fields?.spatial),
-        temporalCoverage: asset?.dcat_fields?.temporalCoverage || '',
-        additionalDcat: asset?.dcat_fields?.additionalDcat || [],
-        distributions: asset?.dcat_fields?.distributions || [],
+        record: assetToRecord({ title: asset.name, description: asset.description, dcatFields: asset.dcat_fields || {} }),
         policyName: policyLabel(asset.policy_id),
         publisherBpn: asset.owner_node_id,
         publisherName: ownerName,
@@ -339,24 +334,8 @@ app.post('/api/assets', async (req, res) => {
 
     db.insertAsset(row);
 
-    // Index in Fuseki
     try {
-        await upsertSemanticDataset({
-            datasetId: assetId,
-            title: row.name,
-            description: row.description,
-            keywords: normalizeList(row.dcat_fields.keywords),
-            themes: normalizeList(row.dcat_fields.themes),
-            spatial: normalizeList(row.dcat_fields.spatial),
-            temporalCoverage: row.dcat_fields.temporalCoverage || '',
-            additionalDcat: row.dcat_fields.additionalDcat || [],
-            distributions: row.dcat_fields.distributions || [],
-            policyName: policyLabel(asset.policyId),
-            publisherBpn: nodeId,  // use nodeId as the "publisher" identifier in Fuseki
-            publisherName: node.name,
-            sessionCode: dataspaceId,
-            publishedAt: now,
-        });
+        await indexAsset(row);
     } catch (err) {
         console.error('[Semantic] Indexing failed:', err.message);
     }
@@ -400,29 +379,14 @@ app.put('/api/assets/:id', async (req, res) => {
     };
 
     db.updateAsset(updated);
+    const out = db.getAsset(existing.asset_id);
 
     try {
-        await upsertSemanticDataset({
-            datasetId: existing.asset_id,
-            title: updated.name,
-            description: updated.description,
-            keywords: normalizeList(updated.dcat_fields.keywords),
-            themes: normalizeList(updated.dcat_fields.themes),
-            spatial: normalizeList(updated.dcat_fields.spatial),
-            temporalCoverage: updated.dcat_fields.temporalCoverage || '',
-            additionalDcat: updated.dcat_fields.additionalDcat || [],
-            distributions: updated.dcat_fields.distributions || [],
-            policyName: policyLabel(updated.policy_id),
-            publisherBpn: ownerNodeId,
-            publisherName: ownerNode.name,
-            sessionCode: dataspaceId,
-            publishedAt: existing.published_at,
-        });
+        await indexAsset(out);
     } catch (err) {
         console.error('[Semantic] Update indexing failed:', err.message);
     }
 
-    const out = db.getAsset(existing.asset_id);
     res.json({ success: true, asset: assetToResponse(out) });
 });
 
@@ -533,16 +497,27 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
 // Configuration of the dataspace itself, as opposed to a view preference.
 // ============================================================
 
-function settingsPatchFrom(body) {
+function settingsPatchFrom(body, dataspaceId) {
     const hub = body?.vocabHub;
-    if (!hub || typeof hub !== 'object') return null;
-    const vocabHub = {};
-    if (typeof hub.enabled === 'boolean') vocabHub.enabled = hub.enabled;
-    if (Number.isFinite(hub.x) && Number.isFinite(hub.y)) {
-        vocabHub.x = hub.x;
-        vocabHub.y = hub.y;
+    const patch = {};
+    if (hub && typeof hub === 'object') {
+        const vocabHub = {};
+        if (typeof hub.enabled === 'boolean') vocabHub.enabled = hub.enabled;
+        if (Number.isFinite(hub.x) && Number.isFinite(hub.y)) {
+            vocabHub.x = hub.x;
+            vocabHub.y = hub.y;
+        }
+        if (Object.keys(vocabHub).length > 0) patch.vocabHub = vocabHub;
     }
-    return Object.keys(vocabHub).length > 0 ? { vocabHub } : null;
+    // null goes back to the default profile.
+    const profileId = body?.catalog?.profileId;
+    if (profileId === null || isCatalogProfile(dataspaceId, profileId)) patch.catalog = { profileId };
+    return Object.keys(patch).length > 0 ? patch : null;
+}
+
+function isCatalogProfile(dataspaceId, profileId) {
+    return catalogProfiles.listFileProfiles(dataspaceId)
+        .some((p) => p.id === profileId && p.files.some((f) => f.role === 'validation'));
 }
 
 app.get('/api/dataspaces/:id/settings', (req, res) => {
@@ -550,9 +525,28 @@ app.get('/api/dataspaces/:id/settings', (req, res) => {
 });
 
 app.patch('/api/dataspaces/:id/settings', (req, res) => {
-    const patch = settingsPatchFrom(req.body);
-    if (!patch) return res.status(400).json({ error: 'Expected { vocabHub: { enabled?, x?, y? } }' });
-    res.json(db.patchDataspaceSettings(resolveDataspaceId(req.params.id), patch));
+    const dataspaceId = resolveDataspaceId(req.params.id);
+    const patch = settingsPatchFrom(req.body, dataspaceId);
+    if (!patch) {
+        return res.status(400).json({ error: 'Expected { vocabHub: { enabled?, x?, y? } } or { catalog: { profileId } } naming a catalog profile in this hub, or null' });
+    }
+    res.json(db.patchDataspaceSettings(dataspaceId, patch));
+});
+
+// The fields a catalog entry has in this dataspace, and how many entries fill each.
+app.get('/api/dataspaces/:id/catalog-model', async (req, res) => {
+    const dataspaceId = resolveDataspaceId(req.params.id);
+    try {
+        const model = await catalogProfiles.catalogModel(dataspaceId, hubEnabled(dataspaceId));
+        // A scenario's profile takes its title from the catalogue export, which only the hub reads.
+        const title = model.source === 'hub'
+            ? (await vocabhub.listCatalogProfiles(dataspaceId)).find((p) => p.id === model.profileId)?.title
+            : model.title;
+        const records = [...(await readRecords(dataspaceId)).values()];
+        res.json({ ...model, title: title || model.profileId, total: records.length, fields: catalogProfiles.withCoverage(model.fields, records) });
+    } catch (err) {
+        res.status(502).json({ error: `Catalog model unavailable: ${err.message}` });
+    }
 });
 
 // ============================================================
@@ -607,6 +601,8 @@ app.post('/api/vocabhub/profiles', hubRoute((req, ds) => catalogProfiles.addProf
     files: req.body?.files,
 })));
 
+app.patch('/api/vocabhub/profiles/:id', hubRoute((req, ds) => catalogProfiles.setDataStandard(ds, req.params.id, req.body?.dataStandardPath ?? null)));
+
 app.delete('/api/vocabhub/profiles/:id', hubRoute(async (req, ds) => {
     if (db.getHubProfile(ds, req.params.id)?.source !== 'upload') return null;
     await catalogProfiles.removeProfile(ds, req.params.id);
@@ -648,8 +644,21 @@ async function widenByAlignments(dataspaceId, requested, minCoverage) {
     return reach;
 }
 
+// Only a path the catalog's profile defines can be filtered on, so a request cannot steer the query elsewhere.
+function modelFieldFilters(model, requested) {
+    const known = new Set();
+    const walk = (fields, prefix) => fields.forEach((f) => {
+        known.add([...prefix, f.path].join(' '));
+        walk(f.fields, [...prefix, f.path]);
+    });
+    walk(model.fields, []);
+    return (Array.isArray(requested) ? requested : [])
+        .filter((f) => Array.isArray(f?.path) && known.has(f.path.join(' ')) && String(f.value ?? '').trim())
+        .map((f) => ({ path: f.path, value: String(f.value).trim() }));
+}
+
 app.post('/api/semantic/search', async (req, res) => {
-    const { searchText = '', consumerNodeId, providerNodeIds = null, dcatFilters = {}, dcatFieldFilters = [], schemaProfiles = null, useAlignments = false, minCoverage = null, limit = 25 } = req.body || {};
+    const { searchText = '', consumerNodeId, providerNodeIds = null, fieldFilters = [], schemaProfiles = null, useAlignments = false, minCoverage = null, limit = 25 } = req.body || {};
     const dataspaceId = resolveDataspaceId(req.body?.dataspaceId);
 
     // Catalog-first visibility: determine exactly which assets are visible
@@ -692,12 +701,14 @@ app.post('/api/semantic/search', async (req, res) => {
     }
 
     try {
+        const model = await catalogProfiles.catalogModel(dataspaceId, hubEnabled(dataspaceId));
         const rawResults = await semanticSearch({
             searchText,
             sessionCode: dataspaceId,
             datasetIds: visibleDatasetIds,
-            dcatFilters,
-            dcatFieldFilters,
+            textPaths: model.fields.map((f) => f.path),
+            fieldFilters: modelFieldFilters(model, fieldFilters),
+            schemaPath: model.dataStandard?.path || null,
             schemaProfiles: requestedProfiles.length > 0 ? [...reach.keys()] : null,
             limit: Math.min(Number(limit) || 25, 100),
         });
@@ -711,7 +722,7 @@ app.post('/api/semantic/search', async (req, res) => {
         // A result that declares a picked profile needs no explanation, even if
         // it also declares a reached one. Only the rest get labelled.
         const reachedVia = (result) => {
-            const declared = (result.distributions || []).flatMap((d) => d.dataStandard?.schema || []);
+            const declared = model.dataStandard ? valuesAt(result.record, model.dataStandard.path) : [];
             if (declared.some((s) => reach.has(s) && reach.get(s) === null)) return null;
             return declared.map((s) => reach.get(s)).find(Boolean) || null;
         };
@@ -837,12 +848,6 @@ app.post('/api/reset', async (req, res) => {
 // ============================================================
 // Helpers
 // ============================================================
-
-function normalizeList(value) {
-    if (!value) return [];
-    if (Array.isArray(value)) return value.map(String).map(s => s.trim()).filter(Boolean);
-    return String(value).split(',').map(s => s.trim()).filter(Boolean);
-}
 
 function resolveDataspaceId(raw) {
     const id = String(raw || '').trim();

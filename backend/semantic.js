@@ -13,6 +13,7 @@
  */
 
 const axios = require('axios');
+const { RDF_TYPE, P, curie } = require('./record');
 
 const FUSEKI_URL = process.env.FUSEKI_URL || 'http://sim-fuseki:3030';
 const FUSEKI_DATASET = process.env.FUSEKI_DATASET || 'simulator';
@@ -33,88 +34,6 @@ function withAuth(config = {}) {
             password: FUSEKI_PASSWORD,
         },
     };
-}
-
-// ---------------------------------------------------------------------------
-// DCAT field → RDF predicate mapping
-// Portable: same mapping used in real participant backend
-// ---------------------------------------------------------------------------
-
-const DCAT_FIELD_TO_PREDICATE = {
-    'dct:title': 'http://purl.org/dc/terms/title',
-    'dct:description': 'http://purl.org/dc/terms/description',
-    'dcat:keyword': 'http://www.w3.org/ns/dcat#keyword',
-    'dcat:theme': 'http://www.w3.org/ns/dcat#theme',
-    'dct:spatial': 'http://purl.org/dc/terms/spatial',
-    'dct:temporal': 'http://purl.org/dc/terms/temporal',
-    'dct:language': 'http://purl.org/dc/terms/language',
-    'dct:license': 'http://purl.org/dc/terms/license',
-    'dct:format': 'http://purl.org/dc/terms/format',
-    'dct:creator': 'http://purl.org/dc/terms/creator',
-    'dct:conformsTo': 'http://purl.org/dc/terms/conformsTo',
-    'dct:accrualPeriodicity': 'http://purl.org/dc/terms/accrualPeriodicity',
-    'dct:relation': 'http://purl.org/dc/terms/relation',
-    'dcat:landingPage': 'http://www.w3.org/ns/dcat#landingPage',
-    'dcat:contactPoint': 'http://www.w3.org/ns/dcat#contactPoint',
-    'mobilitydcatap:mobilityTheme': 'https://w3id.org/mobilitydcat-ap#mobilityTheme',
-    'mobilitydcatap:transportMode': 'https://w3id.org/mobilitydcat-ap#transportMode',
-    'mobilitydcatap:networkCoverage': 'https://w3id.org/mobilitydcat-ap#networkCoverage',
-    'mobilitydcatap:georeferencingMethod': 'https://w3id.org/mobilitydcat-ap#georeferencingMethod',
-    'mobilitydcatap:intendedInformationService': 'https://w3id.org/mobilitydcat-ap#intendedInformationService',
-};
-
-// mobilityDCAT-AP 1.1.0 (NAPCORE Recommendation, January 2025). A Distribution
-// must declare the data standard its payload follows, and that standard may
-// point at the schema registry the profile asks for — which is the hook the
-// Vocabulary Hub resolves.
-const MDCAT = 'https://w3id.org/mobilitydcat-ap#';
-const PREDICATES = {
-    distribution: 'http://www.w3.org/ns/dcat#distribution',
-    accessURL: 'http://www.w3.org/ns/dcat#accessURL',
-    mediaType: 'http://www.w3.org/ns/dcat#mediaType',
-    title: 'http://purl.org/dc/terms/title',
-    format: 'http://purl.org/dc/terms/format',
-    conformsTo: 'http://purl.org/dc/terms/conformsTo',
-    versionInfo: 'http://www.w3.org/2002/07/owl#versionInfo',
-    mobilityDataStandard: `${MDCAT}mobilityDataStandard`,
-    mobilityDataStandardClass: `${MDCAT}MobilityDataStandard`,
-    schema: `${MDCAT}schema`,
-    distributionClass: 'http://www.w3.org/ns/dcat#Distribution',
-};
-
-// Multi-valued results are joined with an ASCII unit separator, not a comma:
-// titles, descriptions and spatial labels routinely contain commas themselves.
-const MULTI_VALUE_SEPARATOR = '\u001F';
-
-// Fields the search query already binds by name, so that filters written
-// against those variables keep working. Every other field gets a generated
-// variable and an OPTIONAL clause.
-const DCAT_QUERY_VARS = {
-    'dct:title': 'title',
-    'dct:description': 'description',
-    'dcat:keyword': 'keyword',
-    'dcat:theme': 'theme',
-    'dct:spatial': 'spatialValue',
-    'dct:temporal': 'temporalValue',
-};
-
-function sparqlSafeName(key) {
-    return key.replace(/[^A-Za-z0-9]/g, '_');
-}
-
-function dcatQueryVar(key) {
-    return DCAT_QUERY_VARS[key] || `dcatValue_${sparqlSafeName(key)}`;
-}
-
-function dcatResultVar(key) {
-    return `dcat_${sparqlSafeName(key)}`;
-}
-
-function splitMultiValue(value) {
-    return String(value || '')
-        .split(MULTI_VALUE_SEPARATOR)
-        .map(part => part.trim())
-        .filter(Boolean);
 }
 
 // ---------------------------------------------------------------------------
@@ -167,14 +86,6 @@ function graphIriForDataset(dataset) {
     return `urn:graph:participant:${publisher}:session:${session}`;
 }
 
-function distributionIri(datasetId, index) {
-    return `urn:distribution:${encodeURIComponent(datasetId)}:${index}`;
-}
-
-function dataStandardIri(datasetId, index) {
-    return `urn:datastandard:${encodeURIComponent(datasetId)}:${index}`;
-}
-
 function escapeLiteral(value) {
     return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
 }
@@ -186,127 +97,87 @@ function escapeIri(value) {
 }
 
 // ---------------------------------------------------------------------------
-// Distributions
+// Record to triples
 //
-// A distribution is a node of its own, not a literal on the dataset, because
-// mobilityDCAT-AP puts the mandatory mobilityDataStandard there. Its IRI is
-// derived from the dataset IRI so a re-publish can find and replace it.
+// A nested node is minted under its dataset's IRI, so everything a dataset
+// owns can be found and replaced without knowing which properties lead there.
 // ---------------------------------------------------------------------------
 
-function distributionTriples(datasetId, distributions) {
-    const dsIri = datasetIri(datasetId);
+function literalTerm(v) {
+    const text = `"${escapeLiteral(v.value)}"`;
+    if (v.lang) return `${text}@${v.lang}`;
+    if (v.datatype) return `${text}^^<${escapeIri(v.datatype)}>`;
+    return text;
+}
+
+function recordTriples(subjectIri, record, mint) {
     const triples = [];
-
-    distributions.forEach((dist, index) => {
-        const distIri = distributionIri(datasetId, index);
-        triples.push(`<${dsIri}> <${PREDICATES.distribution}> <${distIri}> .`);
-        triples.push(`<${distIri}> a <${PREDICATES.distributionClass}> .`);
-
-        if (dist.title) triples.push(`<${distIri}> <${PREDICATES.title}> "${escapeLiteral(dist.title)}" .`);
-        if (dist.accessUrl) triples.push(`<${distIri}> <${PREDICATES.accessURL}> <${escapeIri(dist.accessUrl)}> .`);
-        if (dist.mediaType) triples.push(`<${distIri}> <${PREDICATES.mediaType}> "${escapeLiteral(dist.mediaType)}" .`);
-        if (dist.format) triples.push(`<${distIri}> <${PREDICATES.format}> "${escapeLiteral(dist.format)}" .`);
-
-        const standard = dist.dataStandard;
-        if (!standard) return;
-
-        const stdIri = dataStandardIri(datasetId, index);
-        triples.push(`<${distIri}> <${PREDICATES.mobilityDataStandard}> <${stdIri}> .`);
-        triples.push(`<${stdIri}> a <${PREDICATES.mobilityDataStandardClass}> .`);
-        if (standard.conformsTo) {
-            triples.push(`<${stdIri}> <${PREDICATES.conformsTo}> <${escapeIri(standard.conformsTo)}> .`);
+    for (const [path, values] of Object.entries(record || {})) {
+        const predicate = `<${escapeIri(path)}>`;
+        for (const v of values) {
+            if (v.fields) {
+                const node = mint();
+                triples.push(`<${subjectIri}> ${predicate} <${node}> .`);
+                if (v.type) triples.push(`<${node}> <${RDF_TYPE}> <${escapeIri(v.type)}> .`);
+                triples.push(...recordTriples(node, v.fields, mint));
+            } else if (v.iri) {
+                triples.push(`<${subjectIri}> ${predicate} <${escapeIri(v.iri)}> .`);
+            } else {
+                triples.push(`<${subjectIri}> ${predicate} ${literalTerm(v)} .`);
+            }
         }
-        if (standard.label) {
-            triples.push(`<${stdIri}> <${PREDICATES.title}> "${escapeLiteral(standard.label)}" .`);
-        }
-        if (standard.version) {
-            triples.push(`<${stdIri}> <${PREDICATES.versionInfo}> "${escapeLiteral(standard.version)}" .`);
-        }
-        for (const schema of (standard.schema ? [].concat(standard.schema) : [])) {
-            triples.push(`<${stdIri}> <${PREDICATES.schema}> <${escapeIri(schema)}> .`);
-        }
-    });
-
+    }
     return triples;
 }
 
-// Deleting `<dataset> ?p ?o` alone would strand the distribution and standard
-// nodes, which keep matching searches long after the dataset is gone. Deepest
-// hop first, because each step is found through the link the next one removes.
-function cascadeDeleteFor(subjectPattern) {
-    return [
-        `DELETE { GRAPH ?g { ?std ?sp ?so } }
-WHERE  { GRAPH ?g { ${subjectPattern} <${PREDICATES.distribution}> ?dist .
-                    ?dist <${PREDICATES.mobilityDataStandard}> ?std .
-                    ?std ?sp ?so } }`,
-        `DELETE { GRAPH ?g { ?dist ?dp ?do } }
-WHERE  { GRAPH ?g { ${subjectPattern} <${PREDICATES.distribution}> ?dist .
-                    ?dist ?dp ?do } }`,
-    ];
+// Removes a dataset's own nodes; datasetPattern must bind ?ds. Nodes used to be
+// minted as urn:distribution:<id>:<n> and urn:datastandard:<id>:<n>, which a
+// store from before this change still holds until each dataset is re-indexed.
+function ownedNodesDelete(datasetPattern) {
+    return `DELETE { GRAPH ?g { ?n ?p ?o } }
+WHERE {
+    GRAPH ?g {
+        ${datasetPattern}
+        ?n ?p ?o .
+        BIND(STRAFTER(STR(?ds), "urn:dataset:") AS ?id)
+        FILTER(STRSTARTS(STR(?n), CONCAT(STR(?ds), "#"))
+            || STRSTARTS(STR(?n), CONCAT("urn:distribution:", ?id, ":"))
+            || STRSTARTS(STR(?n), CONCAT("urn:datastandard:", ?id, ":")))
+    }
+}`;
 }
 
 // ---------------------------------------------------------------------------
 // Upsert a dataset (delete all existing triples for this IRI, then insert fresh)
-// dataset: {
-//   datasetId, title, description, keywords[], themes[], spatial[], temporalCoverage,
-//   additionalDcat: [{ key, value }],
-//   distributions: [{ title, accessUrl, mediaType, format,
-//                     dataStandard: { conformsTo, label, version, schema } }],
-//   policyName, publisherBpn, publisherName, sessionCode, publishedAt
-// }
+// dataset: { datasetId, record, policyName, publisherBpn, publisherName, sessionCode, publishedAt }
 // ---------------------------------------------------------------------------
 
 async function upsertSemanticDataset(dataset) {
     const dsIri = datasetIri(dataset.datasetId);
     const pubIri = participantIri(dataset.publisherBpn);
     const graphIri = graphIriForDataset(dataset);
+    let nodes = 0;
+    const mint = () => `${dsIri}#n${nodes++}`;
 
-    // Collect all triples to insert
     const triples = [
         `<${dsIri}> a <http://www.w3.org/ns/dcat#Dataset> .`,
         `<${dsIri}> <http://purl.org/dc/terms/identifier> "${escapeLiteral(dataset.datasetId)}" .`,
-        `<${dsIri}> <http://purl.org/dc/terms/title> "${escapeLiteral(dataset.title)}" .`,
         `<${dsIri}> <http://purl.org/dc/terms/publisher> <${pubIri}> .`,
         `<${dsIri}> <http://purl.org/dc/terms/issued> "${escapeLiteral(dataset.publishedAt)}" .`,
         `<${pubIri}> <http://purl.org/dc/terms/identifier> "${escapeLiteral(dataset.publisherBpn)}" .`,
         `<${pubIri}> <http://xmlns.com/foaf/0.1/name> "${escapeLiteral(dataset.publisherName || dataset.publisherBpn)}" .`,
+        ...recordTriples(dsIri, dataset.record, mint),
     ];
 
-    if (dataset.description) {
-        triples.push(`<${dsIri}> <http://purl.org/dc/terms/description> "${escapeLiteral(dataset.description)}" .`);
-    }
     if (dataset.policyName) {
         triples.push(`<${dsIri}> <http://www.w3.org/ns/odrl/2/policy> "${escapeLiteral(dataset.policyName)}" .`);
     }
     if (dataset.sessionCode) {
         triples.push(`<${dsIri}> <http://purl.org/dc/terms/isPartOf> "${escapeLiteral(dataset.sessionCode)}" .`);
     }
-    if (dataset.temporalCoverage) {
-        triples.push(`<${dsIri}> <http://purl.org/dc/terms/temporal> "${escapeLiteral(dataset.temporalCoverage)}" .`);
-    }
-
-    for (const kw of (dataset.keywords || [])) {
-        triples.push(`<${dsIri}> <http://www.w3.org/ns/dcat#keyword> "${escapeLiteral(kw)}" .`);
-    }
-    for (const th of (dataset.themes || [])) {
-        triples.push(`<${dsIri}> <http://www.w3.org/ns/dcat#theme> "${escapeLiteral(th)}" .`);
-    }
-    for (const sp of (dataset.spatial || [])) {
-        triples.push(`<${dsIri}> <http://purl.org/dc/terms/spatial> "${escapeLiteral(sp)}" .`);
-    }
-
-    // Additional DCAT fields from the dynamic UI form
-    for (const entry of (dataset.additionalDcat || [])) {
-        const predicate = DCAT_FIELD_TO_PREDICATE[entry.key];
-        if (predicate && entry.value) {
-            triples.push(`<${dsIri}> <${predicate}> "${escapeLiteral(entry.value)}" .`);
-        }
-    }
-
-    triples.push(...distributionTriples(dataset.datasetId, dataset.distributions || []));
 
     const updateQuery = `
-${cascadeDeleteFor(`<${dsIri}>`).join(' ;\n\n')} ;
+${ownedNodesDelete(`VALUES ?ds { <${dsIri}> }`)} ;
 
 DELETE { GRAPH ?g { <${dsIri}> ?p ?o } }
 WHERE  { GRAPH ?g { <${dsIri}> ?p ?o } } ;
@@ -326,7 +197,7 @@ INSERT DATA {
 
 async function deleteSemanticDataset(datasetId) {
     const dsIri = datasetIri(datasetId);
-    const q = `${cascadeDeleteFor(`<${dsIri}>`).join(' ;\n\n')} ;
+    const q = `${ownedNodesDelete(`VALUES ?ds { <${dsIri}> }`)} ;
 
 DELETE { GRAPH ?g { <${dsIri}> ?p ?o } } WHERE { GRAPH ?g { <${dsIri}> ?p ?o } }`;
     await executeUpdate(q);
@@ -338,9 +209,8 @@ DELETE { GRAPH ?g { <${dsIri}> ?p ?o } } WHERE { GRAPH ?g { <${dsIri}> ?p ?o } }
 
 async function deleteSemanticDatasetsForParticipant(publisherBpn) {
     const pubIri = participantIri(publisherBpn);
-    const owned = `?ds <http://purl.org/dc/terms/publisher> <${pubIri}> . ?ds`;
     const q = `
-${cascadeDeleteFor(owned).join(' ;\n\n')} ;
+${ownedNodesDelete(`?ds <http://purl.org/dc/terms/publisher> <${pubIri}> .`)} ;
 
 DELETE { GRAPH ?g { ?ds ?p ?o } }
 WHERE {
@@ -353,231 +223,194 @@ WHERE {
 }
 
 // ---------------------------------------------------------------------------
-// Distributions for a set of datasets.
-//
-// Deliberately a second query. Folding these into the search SELECT would mean
-// GROUP_CONCAT over a cross-product, which loses which standard belongs to
-// which distribution the moment a dataset has more than one.
+// Triples back to records
 // ---------------------------------------------------------------------------
 
-async function distributionsForDatasets(datasetIds) {
-    if (!datasetIds || datasetIds.length === 0) return new Map();
+const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
 
-    const idList = datasetIds.map(id => `"${escapeLiteral(id)}"`).join(', ');
-    const query = `
-SELECT ?datasetId ?dist ?distTitle ?accessURL ?mediaType ?format ?stdLabel ?stdConformsTo ?stdVersion ?schema
+function termToValue(term) {
+    if (term.type === 'uri') return { iri: term.value };
+    return {
+        value: term.value,
+        ...(term['xml:lang'] ? { lang: term['xml:lang'] } : {}),
+        ...(term.datatype && term.datatype !== XSD_STRING ? { datatype: term.datatype } : {}),
+    };
+}
+
+// The record of every dataset in a dataspace, keyed by dataset id. It holds the
+// dataset's triples, those of the nodes minted under its IRI, and those of nodes
+// it links to directly, such as the publisher several datasets share.
+async function readRecords(sessionCode, datasetIds = null) {
+    const only = datasetIds ? `FILTER(STR(?id) IN (${datasetIds.map((id) => `"${escapeLiteral(id)}"`).join(', ')}))` : '';
+    const rows = await executeSelect(`
+SELECT DISTINCT ?id ?ds ?s ?p ?o
 WHERE {
     GRAPH ?g {
-        ?dataset <http://purl.org/dc/terms/identifier> ?datasetId ;
-            <${PREDICATES.distribution}> ?dist .
-        FILTER(STR(?datasetId) IN (${idList}))
-        OPTIONAL { ?dist <${PREDICATES.title}> ?distTitle . }
-        OPTIONAL { ?dist <${PREDICATES.accessURL}> ?accessURL . }
-        OPTIONAL { ?dist <${PREDICATES.mediaType}> ?mediaType . }
-        OPTIONAL { ?dist <${PREDICATES.format}> ?format . }
-        OPTIONAL {
-            ?dist <${PREDICATES.mobilityDataStandard}> ?std .
-            OPTIONAL { ?std <${PREDICATES.title}> ?stdLabel . }
-            OPTIONAL { ?std <${PREDICATES.conformsTo}> ?stdConformsTo . }
-            OPTIONAL { ?std <${PREDICATES.versionInfo}> ?stdVersion . }
-            OPTIONAL { ?std <${PREDICATES.schema}> ?schema . }
-        }
+        ?ds a <http://www.w3.org/ns/dcat#Dataset> ;
+            <http://purl.org/dc/terms/identifier> ?id ;
+            <http://purl.org/dc/terms/isPartOf> "${escapeLiteral(sessionCode)}" .
+        ${only}
+        ?s ?p ?o .
+        FILTER(?s = ?ds || STRSTARTS(STR(?s), CONCAT(STR(?ds), "#")) || EXISTS { ?ds ?link ?s })
     }
-}
-ORDER BY ?datasetId ?dist`;
+}`);
 
-    const byDataset = new Map();
-    const byIri = new Map();
-
-    for (const row of await executeSelect(query)) {
-        const datasetId = row.datasetId?.value || '';
-        const iri = row.dist?.value || '';
-        if (!iri) continue;
-
-        let dist = byIri.get(iri);
-        if (!dist) {
-            dist = {
-                title: row.distTitle?.value || '',
-                accessUrl: row.accessURL?.value || '',
-                mediaType: row.mediaType?.value || '',
-                format: row.format?.value || '',
-                dataStandard: null,
-            };
-            byIri.set(iri, dist);
-            if (!byDataset.has(datasetId)) byDataset.set(datasetId, []);
-            byDataset.get(datasetId).push(dist);
-        }
-
-        const conformsTo = row.stdConformsTo?.value || '';
-        const label = row.stdLabel?.value || '';
-        if (conformsTo || label) {
-            dist.dataStandard = dist.dataStandard || { label: '', conformsTo: '', version: '', schema: [] };
-            dist.dataStandard.label = label || dist.dataStandard.label;
-            dist.dataStandard.conformsTo = conformsTo || dist.dataStandard.conformsTo;
-            dist.dataStandard.version = row.stdVersion?.value || dist.dataStandard.version;
-        }
-        const schema = row.schema?.value;
-        if (schema && dist.dataStandard && !dist.dataStandard.schema.includes(schema)) {
-            dist.dataStandard.schema.push(schema);
-        }
+    const subjects = new Map();
+    const roots = new Map();
+    const seenTriples = new Set();
+    for (const row of rows) {
+        const s = row.s.value;
+        roots.set(row.id.value, row.ds.value);
+        const key = `${s} ${row.p.value} ${row.o.type} ${row.o.value}`;
+        if (seenTriples.has(key)) continue;
+        seenTriples.add(key);
+        if (!subjects.has(s)) subjects.set(s, { type: null, fields: {} });
+        const subject = subjects.get(s);
+        if (row.p.value === RDF_TYPE) subject.type = row.o.value;
+        else (subject.fields[row.p.value] ||= []).push(termToValue(row.o));
     }
 
-    return byDataset;
+    const build = (s, seen) => {
+        const fields = {};
+        for (const [path, values] of Object.entries(subjects.get(s)?.fields || {})) {
+            fields[path] = values.map((v) => {
+                const node = v.iri && subjects.get(v.iri);
+                if (!node || seen.has(v.iri)) return v;
+                return {
+                    // A node minted for this dataset has no identity outside it; a shared one keeps its IRI.
+                    ...(v.iri.startsWith(`${s.split('#')[0]}#`) ? {} : { iri: v.iri }),
+                    ...(node.type ? { type: node.type } : {}),
+                    fields: build(v.iri, new Set([...seen, v.iri])),
+                };
+            });
+        }
+        return fields;
+    };
+
+    return new Map([...roots].map(([id, ds]) => [id, build(ds, new Set([ds]))]));
 }
 
 // ---------------------------------------------------------------------------
-// Search: full parameterized SPARQL SELECT
-// Returns an array of result objects.
+// Search
+//
+// Which fields exist comes from the catalog's profile: callers pass paths, each
+// a list of property IRIs from the dataset down. The query only decides which
+// datasets match; what they hold is read back as records afterwards.
 // ---------------------------------------------------------------------------
+
+const ABSOLUTE_IRI = /^[a-z][a-z0-9+.-]*:\S+$/i;
+
+const pathExpr = (path) => path.map((p) => `<${escapeIri(p)}>`).join('/');
+
+// A code-list value is an IRI and matches whole; anything else matches as text.
+function valueFilter(variable, value) {
+    return ABSOLUTE_IRI.test(value)
+        ? `STR(${variable}) = "${escapeLiteral(value)}"`
+        : `CONTAINS(LCASE(STR(${variable})), LCASE("${escapeLiteral(value)}"))`;
+}
+
+const strings = (values = []) => values.filter((v) => !v.fields).map((v) => v.value ?? v.iri);
+const first = (values) => strings(values)[0] || '';
+
+function distributionFromNode({ fields }) {
+    const standard = (fields[P.mobilityDataStandard] || []).find((v) => v.fields)?.fields;
+    return {
+        title: first(fields[P.title]),
+        accessUrl: first(fields[P.accessURL]),
+        mediaType: first(fields[P.mediaType]),
+        format: first(fields[P.format]),
+        dataStandard: standard ? {
+            label: first(standard[P.title]),
+            conformsTo: first(standard[P.conformsTo]),
+            version: first(standard[P.versionInfo]),
+            schema: strings(standard[P.schema]),
+        } : null,
+    };
+}
+
+// The shape results had before records, kept until the views read records themselves.
+function resultFromRecord(datasetId, record) {
+    const publisher = (record[P.publisher] || []).find((v) => v.fields)?.fields || {};
+    const dcat = {};
+    for (const [path, values] of Object.entries(record)) {
+        if (strings(values).length > 0) dcat[curie(path)] = strings(values);
+    }
+    return {
+        datasetId,
+        title: first(record[P.title]),
+        description: first(record[P.description]),
+        publisherBpn: first(publisher[P.identifier]),
+        publisherName: first(publisher[P.name]),
+        policyName: first(record[P.policy]),
+        publishedAt: first(record[P.issued]),
+        sessionCode: first(record[P.isPartOf]),
+        spatial: strings(record[P.spatial]),
+        temporalCoverage: first(record[P.temporal]),
+        keywords: strings(record[P.keyword]),
+        themes: strings(record[P.theme]),
+        dcat,
+        distributions: (record[P.distribution] || []).filter((v) => v.fields).map(distributionFromNode),
+        record,
+    };
+}
 
 async function semanticSearch({
     searchText = '',
-    sessionCode = null,
-    publisherBpns = null,
+    sessionCode,
     datasetIds = null,
-    policyName = null,
-    dcatFilters = {},
-    dcatFieldFilters = [],
+    textPaths = [],
+    fieldFilters = [],
+    schemaPath = null,
     schemaProfiles = null,
     limit = 25
 }) {
-    const filters = [];
-    const safe = escapeLiteral;
+    const patterns = [];
 
-    if (searchText) {
-        filters.push(`(
-            CONTAINS(LCASE(STR(?title)), LCASE("${safe(searchText)}")) ||
-            CONTAINS(LCASE(STR(COALESCE(?description, ""))), LCASE("${safe(searchText)}")) ||
-            CONTAINS(LCASE(STR(COALESCE(?keyword, ""))), LCASE("${safe(searchText)}")) ||
-            CONTAINS(LCASE(STR(COALESCE(?theme, ""))), LCASE("${safe(searchText)}"))
-        )`);
-    }
-    if (sessionCode) {
-        filters.push(`STR(COALESCE(?sessionCode, "")) = "${safe(sessionCode)}"`);
-    }
-    if (publisherBpns && publisherBpns.length > 0) {
-        const bpnList = publisherBpns.map(b => `"${safe(b)}"`).join(', ');
-        filters.push(`STR(?publisherBpn) IN (${bpnList})`);
-    }
     if (datasetIds && datasetIds.length > 0) {
-        const datasetList = datasetIds.map(id => `"${safe(id)}"`).join(', ');
-        filters.push(`STR(?datasetId) IN (${datasetList})`);
+        patterns.push(`FILTER(STR(?datasetId) IN (${datasetIds.map((id) => `"${escapeLiteral(id)}"`).join(', ')}))`);
     }
-    if (policyName) {
-        filters.push(`CONTAINS(LCASE(STR(COALESCE(?policyName, ""))), LCASE("${safe(policyName)}"))`);
+    // Free text looks at literals only, so a theme stored as a label still matches where the profile expects an IRI.
+    if (searchText) {
+        const onPaths = textPaths.length > 0 ? `VALUES ?textPath { ${textPaths.map((p) => `<${escapeIri(p)}>`).join(' ')} }` : '';
+        patterns.push(`FILTER EXISTS {
+            ${onPaths}
+            ?dataset ?textPath ?text .
+            FILTER(isLiteral(?text) && CONTAINS(LCASE(STR(?text)), LCASE("${escapeLiteral(searchText)}")))
+        }`);
     }
-    if (dcatFilters.keyword) {
-        filters.push(`CONTAINS(LCASE(STR(COALESCE(?keyword, ""))), LCASE("${safe(dcatFilters.keyword)}"))`);
-    }
-    if (dcatFilters.theme) {
-        filters.push(`CONTAINS(LCASE(STR(COALESCE(?theme, ""))), LCASE("${safe(dcatFilters.theme)}"))`);
-    }
-    if (dcatFilters.spatial) {
-        filters.push(`CONTAINS(LCASE(STR(COALESCE(?spatialValue, ""))), LCASE("${safe(dcatFilters.spatial)}"))`);
-    }
-
-    const fieldTriples = [];
-    (Array.isArray(dcatFieldFilters) ? dcatFieldFilters : []).forEach((entry, idx) => {
-        const key = entry?.key;
-        const value = String(entry?.value || '').trim();
-        const predicate = DCAT_FIELD_TO_PREDICATE[key];
-        if (!predicate || !value) return;
-        const varName = `?f${idx}`;
-        fieldTriples.push(`?dataset <${predicate}> ${varName} .`);
-        filters.push(`CONTAINS(LCASE(STR(${varName})), LCASE("${safe(value)}"))`);
+    fieldFilters.forEach(({ path, value }, i) => {
+        patterns.push(`?dataset ${pathExpr(path)} ?f${i} .`, `FILTER(${valueFilter(`?f${i}`, value)})`);
     });
 
-    // The schema a distribution declares is two hops from the dataset, so this
-    // cannot go through DCAT_FIELD_TO_PREDICATE like the one-hop filters above.
     // Set membership rather than substring: a profile IRI either is or is not
-    // the one asked for, and VALUES lets the store do that join.
+    // the one asked for. Compared as strings, because a legacy entry may hold it as a literal.
     const schemaSet = Array.isArray(schemaProfiles)
-        ? [...new Set(schemaProfiles.map(p => escapeIri(p)).filter(Boolean))]
+        ? [...new Set(schemaProfiles.map((p) => escapeIri(p)).filter(Boolean))]
         : [];
-    const schemaTriples = schemaSet.length > 0
-        ? [
-            `?dataset <${PREDICATES.distribution}>/<${PREDICATES.mobilityDataStandard}>/<${PREDICATES.schema}> ?schemaMatch .`,
-            `VALUES ?schemaMatch { ${schemaSet.map(p => `<${p}>`).join(' ')} }`,
-        ]
-        : [];
-
-    const whereFilter = filters.length > 0 ? `FILTER(${filters.join(' && ')})` : '';
-    const maxLimit = Math.max(1, Math.min(Number(limit) || 25, 200));
-
-    // Every mapped field is projected, not just the handful the query used to
-    // hardcode. A field could previously be filtered on and have its value
-    // discarded by the same query (US-3).
-    const projectionKeys = Object.keys(DCAT_FIELD_TO_PREDICATE);
-    const projectionOptionals = projectionKeys
-        .filter(key => !DCAT_QUERY_VARS[key])
-        .map(key => `OPTIONAL { ?dataset <${DCAT_FIELD_TO_PREDICATE[key]}> ?${dcatQueryVar(key)} . }`)
-        .join('\n        ');
-    const projectionSelects = projectionKeys
-        .map(key => `       (GROUP_CONCAT(DISTINCT STR(?${dcatQueryVar(key)}); separator="${MULTI_VALUE_SEPARATOR}") AS ?${dcatResultVar(key)})`)
-        .join('\n');
+    if (schemaSet.length > 0) {
+        patterns.push(schemaPath
+            ? `?dataset ${pathExpr(schemaPath)} ?schemaMatch . FILTER(STR(?schemaMatch) IN (${schemaSet.map((p) => `"${escapeLiteral(p)}"`).join(', ')}))`
+            : 'FILTER(false)');
+    }
 
     const query = `
-SELECT ?datasetId ?title ?description ?publisherBpn ?publisherName ?policyName ?publishedAt ?sessionCode
-${projectionSelects}
+SELECT DISTINCT ?datasetId ?publishedAt
 WHERE {
     GRAPH ?g {
         ?dataset a <http://www.w3.org/ns/dcat#Dataset> ;
-            <http://purl.org/dc/terms/identifier> ?datasetId ;
-            <http://purl.org/dc/terms/title> ?title ;
-            <http://purl.org/dc/terms/publisher> ?publisher ;
-            <http://purl.org/dc/terms/issued> ?publishedAt .
-
-        ?publisher <http://purl.org/dc/terms/identifier> ?publisherBpn .
-        OPTIONAL { ?publisher <http://xmlns.com/foaf/0.1/name> ?publisherName . }
-        OPTIONAL { ?dataset <http://purl.org/dc/terms/description> ?description . }
-        OPTIONAL { ?dataset <http://www.w3.org/ns/dcat#keyword> ?keyword . }
-        OPTIONAL { ?dataset <http://www.w3.org/ns/dcat#theme> ?theme . }
-        OPTIONAL { ?dataset <http://purl.org/dc/terms/spatial> ?spatialValue . }
-        OPTIONAL { ?dataset <http://purl.org/dc/terms/temporal> ?temporalValue . }
-        OPTIONAL { ?dataset <http://www.w3.org/ns/odrl/2/policy> ?policyName . }
-        OPTIONAL { ?dataset <http://purl.org/dc/terms/isPartOf> ?sessionCode . }
-        ${projectionOptionals}
-        ${fieldTriples.join('\n        ')}
-        ${schemaTriples.join('\n        ')}
+            <${P.identifier}> ?datasetId ;
+            <${P.issued}> ?publishedAt ;
+            <${P.isPartOf}> "${escapeLiteral(sessionCode)}" .
+        ${patterns.join('\n        ')}
     }
-    ${whereFilter}
 }
-GROUP BY ?datasetId ?title ?description ?publisherBpn ?publisherName ?policyName ?publishedAt ?sessionCode
 ORDER BY DESC(?publishedAt)
-LIMIT ${maxLimit}`;
+LIMIT ${Math.max(1, Math.min(Number(limit) || 25, 200))}`;
 
-    const bindings = await executeSelect(query);
-    const results = bindings.map(row => {
-        const dcat = {};
-        for (const key of projectionKeys) {
-            const values = splitMultiValue(row[dcatResultVar(key)]?.value);
-            if (values.length > 0) {
-                dcat[key] = values;
-            }
-        }
-        return {
-            datasetId: row.datasetId?.value || '',
-            title: row.title?.value || '',
-            description: row.description?.value || '',
-            publisherBpn: row.publisherBpn?.value || '',
-            publisherName: row.publisherName?.value || '',
-            policyName: row.policyName?.value || '',
-            publishedAt: row.publishedAt?.value || '',
-            sessionCode: row.sessionCode?.value || '',
-            spatial: dcat['dct:spatial'] || [],
-            temporalCoverage: (dcat['dct:temporal'] || [])[0] || '',
-            keywords: dcat['dcat:keyword'] || [],
-            themes: dcat['dcat:theme'] || [],
-            dcat,
-            distributions: [],
-        };
-    });
-
-    const distributions = await distributionsForDatasets(results.map(r => r.datasetId));
-    for (const result of results) {
-        result.distributions = distributions.get(result.datasetId) || [];
-    }
-    return results;
+    const ids = (await executeSelect(query)).map((row) => row.datasetId.value);
+    if (ids.length === 0) return [];
+    const records = await readRecords(sessionCode, ids);
+    return ids.filter((id) => records.has(id)).map((id) => resultFromRecord(id, records.get(id)));
 }
 
 module.exports = {
@@ -585,12 +418,11 @@ module.exports = {
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
     semanticSearch,
-    distributionsForDatasets,
+    readRecords,
     executeSelect,
     executeUpdate,
     replaceGraph,
     dropGraph,
     escapeIri,
     escapeLiteral,
-    DCAT_FIELD_TO_PREDICATE,
 };

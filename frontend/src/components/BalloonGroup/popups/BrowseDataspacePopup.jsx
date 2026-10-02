@@ -6,25 +6,18 @@ import DatasetDetail from './DatasetDetail';
 
 const API_BASE = '/api';
 
-const SEMANTIC_DCAT_OPTIONS = [
-    { key: 'dcat:keyword', label: 'Keywords' },
-    { key: 'dcat:theme', label: 'Themes' },
-    { key: 'dct:spatial', label: 'Spatial / Region' },
-    { key: 'dct:temporal', label: 'Temporal' },
-    { key: 'dct:language', label: 'Language' },
-    { key: 'dct:format', label: 'Format' },
-    { key: 'dct:license', label: 'License' },
-    { key: 'dct:creator', label: 'Creator' },
-    { key: 'dct:conformsTo', label: 'Conforms To' },
-    { key: 'dct:accrualPeriodicity', label: 'Update Frequency' },
-    { key: 'dcat:landingPage', label: 'Landing Page' },
-    { key: 'dcat:contactPoint', label: 'Contact Point' },
-    { key: 'mobilitydcatap:mobilityTheme', label: 'Mobility Theme' },
-    { key: 'mobilitydcatap:transportMode', label: 'Transport Mode' },
-    { key: 'mobilitydcatap:networkCoverage', label: 'Network Coverage' },
-    { key: 'mobilitydcatap:georeferencingMethod', label: 'Georeferencing Method' },
-    { key: 'mobilitydcatap:intendedInformationService', label: 'Intended Information Service' },
-];
+// Every field of the catalog's profile, nested ones under their parent's label.
+// A nested field is only as required as the weakest field above it.
+const STATUSES = ['mandatory', 'recommended', 'optional'];
+const filterableFields = (fields, prefix = [], labels = [], weakest = 0) => fields.flatMap((f) => {
+    const path = [...prefix, f.path];
+    const label = [...labels, f.label];
+    const rank = Math.max(weakest, STATUSES.indexOf(f.status));
+    const own = f.kind === 'node' ? [] : [{ key: path.join(' '), path, label: label.join(' \u203a '), filled: f.filled, in: f.in, status: STATUSES[rank] }];
+    return [...own, ...filterableFields(f.fields, path, label, rank)];
+});
+
+const shortIri = (iri) => String(iri).split(/[#/]/).filter(Boolean).pop() || iri;
 
 const BrowseDataspacePopup = ({
     show,
@@ -66,9 +59,10 @@ const BrowseDataspacePopup = ({
     // Semantic search state
     const [activeTab, setActiveTab] = useState('browse');
     const [semanticQuery, setSemanticQuery] = useState('');
-    const [semanticFieldKey, setSemanticFieldKey] = useState('dcat:keyword');
+    const [semanticFieldKey, setSemanticFieldKey] = useState('');
     const [semanticFieldValue, setSemanticFieldValue] = useState('');
     const [semanticFieldFilters, setSemanticFieldFilters] = useState([]);
+    const [catalogModel, setCatalogModel] = useState(null);
     const [fetchedProfiles, setFetchedProfiles] = useState([]);
     const [schemaProfiles, setSchemaProfiles] = useState([]);
     const [profileQuery, setProfileQuery] = useState('');
@@ -105,6 +99,24 @@ const BrowseDataspacePopup = ({
 
     const hubProfiles = vocabularyConnected ? fetchedProfiles : [];
 
+    // Fetched each time the tab opens, so a profile switched in the hub shows up without a reload.
+    useEffect(() => {
+        if (activeTab !== 'semantic') return undefined;
+        let cancelled = false;
+        fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId)}/catalog-model`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => { if (!cancelled) setCatalogModel(data); })
+            .catch(() => { if (!cancelled) setCatalogModel(null); });
+        return () => { cancelled = true; };
+    }, [activeTab, dataspaceId, vocabularyConnected]);
+
+    const fieldOptions = catalogModel ? filterableFields(catalogModel.fields) : [];
+    const selectedField = fieldOptions.find((o) => o.key === semanticFieldKey) || fieldOptions[0] || null;
+    const filterLabel = (f) => fieldOptions.find((o) => o.key === f.path.join(' '))?.label || f.path.join(' › ');
+    const unfilledFilters = semanticFieldFilters
+        .map((f) => fieldOptions.find((o) => o.key === f.path.join(' ')))
+        .filter((o) => o && o.filled === 0);
+
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     const getProtocolStateColor = (state) => {
@@ -134,8 +146,8 @@ const BrowseDataspacePopup = ({
         if (!hasFreeText && !hasFilter) return;
         setSemanticLoading(true); setSemanticError(null); setSemanticResults(null); setHiddenOwnResults(0);
         try {
-            const fieldFilters = hasPendingFieldFilter
-                ? [...semanticFieldFilters, { key: semanticFieldKey, value: semanticFieldValue.trim() }]
+            const fieldFilters = hasPendingFieldFilter && selectedField
+                ? [...semanticFieldFilters, { path: selectedField.path, value: semanticFieldValue.trim() }]
                 : semanticFieldFilters;
             if (hasPendingFieldFilter) {
                 setSemanticFieldFilters(fieldFilters);
@@ -214,7 +226,7 @@ const BrowseDataspacePopup = ({
                     dataspaceId,
                     consumerNodeId: currentNodeId,
                     providerNodeIds: providerIds,
-                    dcatFieldFilters: fieldFilters,
+                    fieldFilters,
                     schemaProfiles,
                     useAlignments: useAlignments && vocabularyConnected,
                     minCoverage,
@@ -249,8 +261,8 @@ const BrowseDataspacePopup = ({
 
     const addSemanticFieldFilter = () => {
         const value = semanticFieldValue.trim();
-        if (!semanticFieldKey || !value) return;
-        setSemanticFieldFilters((prev) => [...prev, { key: semanticFieldKey, value }]);
+        if (!selectedField || !value) return;
+        setSemanticFieldFilters((prev) => [...prev, { path: selectedField.path, value }]);
         setSemanticFieldValue('');
     };
 
@@ -553,27 +565,46 @@ const BrowseDataspacePopup = ({
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) auto', gap: '6px', marginBottom: '8px' }}>
                         <select
-                            value={semanticFieldKey}
-                            onChange={(e) => setSemanticFieldKey(e.target.value)}
+                            value={selectedField?.key || ''}
+                            onChange={(e) => { setSemanticFieldKey(e.target.value); setSemanticFieldValue(''); }}
+                            title={catalogModel ? `Fields of ${catalogModel.title}` : ''}
                             style={{ minWidth: 0, padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
                         >
-                            {SEMANTIC_DCAT_OPTIONS.map((o) => (
-                                <option key={o.key} value={o.key}>{o.label}</option>
-                            ))}
+                            {STATUSES.map((status) => {
+                                const group = fieldOptions.filter((o) => o.status === status);
+                                return group.length > 0 && (
+                                    <optgroup key={status} label={status.charAt(0).toUpperCase() + status.slice(1)}>
+                                        {group.map((o) => (
+                                            <option key={o.key} value={o.key}>{o.label} ({o.filled}/{catalogModel.total})</option>
+                                        ))}
+                                    </optgroup>
+                                );
+                            })}
                         </select>
-                        <input
-                            type="text"
-                            value={semanticFieldValue}
-                            onChange={(e) => setSemanticFieldValue(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    addSemanticFieldFilter();
-                                }
-                            }}
-                            placeholder="Filter value"
-                            style={{ minWidth: 0, padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
-                        />
+                        {selectedField?.in ? (
+                            <select
+                                value={semanticFieldValue}
+                                onChange={(e) => setSemanticFieldValue(e.target.value)}
+                                style={{ minWidth: 0, padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
+                            >
+                                <option value="">Any value...</option>
+                                {selectedField.in.map((v) => <option key={v} value={v}>{shortIri(v)}</option>)}
+                            </select>
+                        ) : (
+                            <input
+                                type="text"
+                                value={semanticFieldValue}
+                                onChange={(e) => setSemanticFieldValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        addSemanticFieldFilter();
+                                    }
+                                }}
+                                placeholder="Filter value"
+                                style={{ minWidth: 0, padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
+                            />
+                        )}
                         <button
                             onClick={addSemanticFieldFilter}
                             style={{ padding: '7px 9px', background: '#334155', border: '1px solid #475569', borderRadius: '6px', color: '#e2e8f0', cursor: 'pointer', fontSize: '0.74rem', fontWeight: 600 }}
@@ -581,30 +612,6 @@ const BrowseDataspacePopup = ({
                             Add
                         </button>
                     </div>
-
-                    {semanticFieldFilters.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', minWidth: 0 }}>
-                            {semanticFieldFilters.map((f, i) => {
-                                const label = SEMANTIC_DCAT_OPTIONS.find(o => o.key === f.key)?.label || f.key;
-                                return (
-                                    <button
-                                        key={`${f.key}-${i}`}
-                                        onClick={() => setSemanticFieldFilters(prev => prev.filter((_, idx) => idx !== i))}
-                                        style={{ maxWidth: '100%', padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: '#0f172a', color: '#cbd5e1', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                                        title="Remove filter"
-                                    >
-                                        {label}: {f.value} x
-                                    </button>
-                                );
-                            })}
-                            <button
-                                onClick={() => setSemanticFieldFilters([])}
-                                style={{ padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: 'transparent', color: '#94a3b8', fontSize: '0.7rem', cursor: 'pointer' }}
-                            >
-                                Clear
-                            </button>
-                        </div>
-                    )}
 
                     <div style={{ marginBottom: '10px' }}>
                         <div style={{ position: 'relative' }}>
@@ -625,9 +632,13 @@ const BrowseDataspacePopup = ({
                                     }
                                     if (e.key === 'Escape') setProfileListOpen(false);
                                 }}
-                                placeholder={hubProfiles.length > 0
-                                    ? 'Data standard from the Vocabulary Hub...'
-                                    : 'Data standard IRI, Enter to add...'}
+                                placeholder={catalogModel && !catalogModel.dataStandard
+                                    ? 'This catalog has no data-standard field'
+                                    : hubProfiles.length > 0
+                                        ? 'Data standard from the Vocabulary Hub...'
+                                        : 'Data standard IRI, Enter to add...'}
+                                disabled={Boolean(catalogModel && !catalogModel.dataStandard)}
+                                title={catalogModel?.dataStandard ? `Matches ${catalogModel.dataStandard.label}` : ''}
                                 style={{ width: '100%', boxSizing: 'border-box', padding: '7px 8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.74rem' }}
                             />
 
@@ -699,6 +710,30 @@ const BrowseDataspacePopup = ({
                         )}
                     </div>
 
+                    {(semanticFieldFilters.length > 0 || schemaProfiles.length > 0) && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', minWidth: 0 }}>
+                            {semanticFieldFilters.map((f, i) => {
+                                const label = filterLabel(f);
+                                return (
+                                    <button
+                                        key={`${f.path.join(' ')}-${i}`}
+                                        onClick={() => setSemanticFieldFilters(prev => prev.filter((_, idx) => idx !== i))}
+                                        style={{ maxWidth: '100%', padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: '#0f172a', color: '#cbd5e1', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                        title="Remove filter"
+                                    >
+                                        {label}: {shortIri(f.value)} x
+                                    </button>
+                                );
+                            })}
+                            <button
+                                onClick={() => { setSemanticFieldFilters([]); setSchemaProfiles([]); }}
+                                style={{ padding: '3px 8px', borderRadius: '999px', border: '1px solid #475569', background: 'transparent', color: '#94a3b8', fontSize: '0.7rem', cursor: 'pointer' }}
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    )}
+
                     {semanticLoading && (
                         <div style={{ marginBottom: '10px', padding: '8px', border: '1px solid #334155', borderRadius: '7px', background: '#0f172a', color: '#f8fafc', fontSize: '0.74rem', fontWeight: 600, minHeight: '18px' }}>
                             {semanticStatusText || 'Searching...'}
@@ -719,7 +754,11 @@ const BrowseDataspacePopup = ({
 
                     {semanticResults !== null && semanticResults.length === 0 && !semanticLoading && !semanticError && (
                         <div style={{ textAlign: 'center', padding: '30px 10px', color: '#64748b', fontSize: '0.8rem' }}>
-                            {hiddenOwnResults > 0 ? 'Only your own assets matched. Own assets are hidden in semantic results.' : 'No matching assets found'}
+                            {hiddenOwnResults > 0
+                                ? 'Only your own assets matched. Own assets are hidden in semantic results.'
+                                : unfilledFilters.length > 0
+                                    ? `No catalog entry fills ${unfilledFilters.map((o) => o.label).join(', ')} yet.`
+                                    : 'No matching assets found'}
                         </div>
                     )}
 

@@ -17,6 +17,7 @@ const path = require('path');
 const db = require('./db');
 const scenarios = require('./scenarios');
 const { executeSelect, replaceGraph, dropGraph, escapeIri, escapeLiteral } = require('./semantic');
+const { curie, P } = require('./record');
 
 const MEDIA_TYPES = {
     '.ttl': 'text/turtle',
@@ -35,26 +36,6 @@ const DATASET = 'http://www.w3.org/ns/dcat#Dataset';
 const CONCEPT = 'http://www.w3.org/2004/02/skos/core#Concept';
 const SH = 'http://www.w3.org/ns/shacl#';
 
-const PREFIXES = {
-    dcat: 'http://www.w3.org/ns/dcat#',
-    dct: 'http://purl.org/dc/terms/',
-    foaf: 'http://xmlns.com/foaf/0.1/',
-    skos: 'http://www.w3.org/2004/02/skos/core#',
-    mobilitydcatap: 'https://w3id.org/mobilitydcat-ap#',
-    adms: 'http://www.w3.org/ns/adms#',
-    vcard: 'http://www.w3.org/2006/vcard/ns#',
-    locn: 'http://www.w3.org/ns/locn#',
-    owl: 'http://www.w3.org/2002/07/owl#',
-    rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
-    xsd: 'http://www.w3.org/2001/XMLSchema#',
-    dcatap: 'http://data.europa.eu/r5r/',
-    prov: 'http://www.w3.org/ns/prov#',
-    odrl: 'http://www.w3.org/ns/odrl/2/',
-    spdx: 'http://spdx.org/rdf/terms#',
-    dqv: 'http://www.w3.org/ns/dqv#',
-    cnt: 'http://www.w3.org/2011/content#',
-};
-
 class ProfileError extends Error {}
 
 const enc = (dataspaceId) => encodeURIComponent(dataspaceId);
@@ -63,13 +44,6 @@ const artifactGraph = (dataspaceId, artifactId) => `urn:graph:vocabhub:${enc(dat
 const artifactIri = (dataspaceId, artifactId) => `urn:vocabhub:artifact:${enc(dataspaceId)}:${artifactId}`;
 const resourceIri = (dataspaceId, artifactId) => `urn:vocabhub:resource:${enc(dataspaceId)}:${artifactId}`;
 const val = (row, key) => row[key]?.value;
-
-function curie(iri) {
-    for (const [prefix, ns] of Object.entries(PREFIXES)) {
-        if (iri.startsWith(ns)) return `${prefix}:${iri.slice(ns.length)}`;
-    }
-    return iri;
-}
 
 function humanize(iri) {
     const local = iri.split(/[#/:]/).filter(Boolean).pop() || iri;
@@ -158,7 +132,7 @@ function parseMessage(err) {
     return String(typeof body === 'string' && body.trim() ? body : err.message).split('\n')[0].slice(0, 300);
 }
 
-async function addProfile(dataspaceId, { profileId, title, version, description, files, source = 'upload', artifactIds }) {
+async function addProfile(dataspaceId, { profileId, title, version, description, files, source = 'upload', artifactIds, dataStandardPath }) {
     const checked = checkFiles(files);
     const id = profileId || `urn:vocabhub:profile:upload:${crypto.randomUUID()}`;
     if (!profileId && !String(title || '').trim()) throw new ProfileError('A new profile needs a title');
@@ -207,6 +181,7 @@ async function addProfile(dataspaceId, { profileId, title, version, description,
             description: String(description || '').trim() || existing?.description || null,
             source,
             created_at: existing?.created_at || createdAt,
+            data_standard_path: dataStandardPath !== undefined ? JSON.stringify(dataStandardPath) : (existing?.data_standard_path ?? null),
         },
         report.map((r, i) => ({
             dataspace_id: dataspaceId,
@@ -222,7 +197,7 @@ async function addProfile(dataspaceId, { profileId, title, version, description,
     await writeUploadsGraph(dataspaceId);
 
     const model = await fieldModel(dataspaceId, id);
-    return { profileId: id, files: report, fields: countFields(model.fields), unsupported: model.unsupported };
+    return { profileId: id, files: report, fields: countFields(model.fields), dataStandard: model.dataStandard, unsupported: model.unsupported };
 }
 
 async function removeProfile(dataspaceId, profileId) {
@@ -232,10 +207,12 @@ async function removeProfile(dataspaceId, profileId) {
     await writeUploadsGraph(dataspaceId);
 }
 
-// Deterministic artifact ids keep a reloaded scenario from piling up copies.
+// Deterministic artifact ids keep a reloaded scenario from piling up copies. A
+// data-standard field chosen in the hub survives the reload; the scenario's only seeds it.
 async function installScenarioProfile(dataspaceId, scenario) {
     const spec = scenario.catalogProfile;
     if (!spec) return null;
+    const existing = db.getHubProfile(dataspaceId, spec.profileId);
     await removeProfile(dataspaceId, spec.profileId);
     return addProfile(dataspaceId, {
         profileId: spec.profileId,
@@ -245,6 +222,7 @@ async function installScenarioProfile(dataspaceId, scenario) {
         source: 'scenario',
         files: spec.files.map((rel) => ({ name: path.basename(rel), content: fs.readFileSync(scenarios.scenarioFile(rel), 'utf8') })),
         artifactIds: spec.files.map((_, i) => `${scenario.id}-${i}`),
+        dataStandardPath: existing?.data_standard_path != null ? JSON.parse(existing.data_standard_path) : (spec.dataStandardPath ?? null),
     });
 }
 
@@ -284,6 +262,7 @@ SELECT ?shape ?target ?prop ?path
        (MAX(?mn) AS ?min) (MIN(?mx) AS ?max) (SAMPLE(?dt) AS ?datatype) (SAMPLE(?cl) AS ?class)
        (SAMPLE(?ocl) AS ?orClass) (SAMPLE(?nk) AS ?nodeKind) (SAMPLE(?nd) AS ?node)
        (SAMPLE(?sv) AS ?severity) (MAX(?cx) AS ?complex)
+       (GROUP_CONCAT(DISTINCT STR(?iv); separator="\u001F") AS ?inList)
 ${fromClause(graphs)}
 WHERE {
   ?shape sh:property ?prop .
@@ -301,6 +280,7 @@ WHERE {
   OPTIONAL { ?prop sh:nodeKind ?nk }
   OPTIONAL { ?prop sh:node ?nd }
   OPTIONAL { ?prop sh:severity ?sv }
+  OPTIONAL { ?prop sh:in/rdf:rest*/rdf:first ?iv }
   BIND(IF(EXISTS { ?prop sh:or|sh:and|sh:xone|sh:not ?x }, 1, 0) AS ?cx)
 }
 GROUP BY ?shape ?target ?prop ?path`);
@@ -317,15 +297,10 @@ WHERE { ?node sh:property ?p . ?p sh:path skos:inScheme ; sh:hasValue ?scheme }`
     return new Map(rows.map((r) => [val(r, 'node'), val(r, 'scheme')]));
 }
 
-async function inValues(graphs) {
-    const rows = await executeSelect(`
-PREFIX sh: <${SH}>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-SELECT ?prop ?v ${fromClause(graphs)}
-WHERE { ?prop sh:in/rdf:rest*/rdf:first ?v }`);
-    const byProp = new Map();
-    for (const r of rows) byProp.set(val(r, 'prop'), [...(byProp.get(val(r, 'prop')) || []), val(r, 'v')]);
-    return byProp;
+// GROUP_CONCAT loses the list's order, so the values come back sorted.
+function inList(row) {
+    const values = (val(row, 'inList') || '').split('\u001F').filter(Boolean);
+    return values.length > 0 ? values.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })) : null;
 }
 
 async function labels(graphs, iris) {
@@ -351,7 +326,7 @@ SELECT (COUNT(*) AS ?n) ${fromClause(graphs)} WHERE { ?prop sh:path ?p FILTER(!i
 
 // Several shapes may constrain the same property of a class, as when a profile
 // tightens its base. They merge into one field; the strictest bound wins.
-function mergeInto(map, row, inByProp, schemes) {
+function mergeInto(map, row, schemes) {
     const pathIri = val(row, 'path');
     const min = Number(val(row, 'min') || 0);
     const max = val(row, 'max') === undefined ? null : Number(val(row, 'max'));
@@ -371,7 +346,7 @@ function mergeInto(map, row, inByProp, schemes) {
     field.orClass = field.orClass || val(row, 'orClass') || null;
     field.nodeKind = field.nodeKind || val(row, 'nodeKind') || null;
     field.node = field.node || val(row, 'node') || null;
-    field.in = field.in || inByProp.get(val(row, 'prop')) || null;
+    field.in = field.in || inList(row);
     field.complex = field.complex || val(row, 'complex') === '1';
     // A warning that only steers which code-list term to use says nothing about whether to fill the field.
     const valueOnly = min === 0 && schemes.has(val(row, 'node'));
@@ -386,22 +361,25 @@ function countFields(fields) {
 
 async function fieldModel(dataspaceId, profileId) {
     const artifacts = artifactsOf(dataspaceId, profileId);
-    const graphs = artifacts.map((a) => artifactGraph(dataspaceId, a.artifact_id));
     if (!artifacts.some((a) => a.role === 'validation')) return null;
+    const stored = db.getHubProfile(dataspaceId, profileId)?.data_standard_path;
+    return modelFromGraphs(profileId, artifacts.map((a) => artifactGraph(dataspaceId, a.artifact_id)), stored ? JSON.parse(stored) : null);
+}
 
-    const [rows, inByProp, nonIriPaths, schemes] = await Promise.all([
-        propertyRows(graphs), inValues(graphs), countNonIriPaths(graphs), codeLists(graphs),
+async function modelFromGraphs(profileId, graphs, dataStandardPath = null) {
+    const [rows, nonIriPaths, schemes] = await Promise.all([
+        propertyRows(graphs), countNonIriPaths(graphs), codeLists(graphs),
     ]);
     const byClass = new Map();
     const byShape = new Map();
     for (const row of rows) {
         const shape = val(row, 'shape');
         if (!byShape.has(shape)) byShape.set(shape, new Map());
-        mergeInto(byShape.get(shape), row, inByProp, schemes);
+        mergeInto(byShape.get(shape), row, schemes);
         const target = val(row, 'target');
         if (target) {
             if (!byClass.has(target)) byClass.set(target, new Map());
-            mergeInto(byClass.get(target), row, inByProp, schemes);
+            mergeInto(byClass.get(target), row, schemes);
         }
     }
 
@@ -447,15 +425,93 @@ async function fieldModel(dataspaceId, profileId) {
     }).sort(order);
 
     const root = byClass.get(DATASET);
+    const fields = root ? build(root, 1, new Set([`class:${DATASET}`])) : [];
     return {
         profileId,
         root: curie(DATASET),
-        fields: root ? build(root, 1, new Set([`class:${DATASET}`])) : [],
+        fields,
+        dataStandard: dataStandardField(fields, dataStandardPath),
         unsupported: {
             complexConstraints: rows.filter((r) => val(r, 'complex') === '1').length,
             nonIriPaths,
         },
     };
+}
+
+// ---------------------------------------------------------------------------
+// The catalog model a dataspace uses
+// ---------------------------------------------------------------------------
+
+// Without a hub, or before one is chosen, a dataspace falls back to the profile
+// the default scenario ships, loaded once into graphs of its own.
+const DEFAULT_PROFILE = scenarios.getScenario(scenarios.DEFAULT_SCENARIO_ID).catalogProfile;
+const defaultGraph = (i) => `urn:graph:catalog-profile:default:${i}`;
+let defaultLoaded = null;
+
+function loadDefaultProfile() {
+    defaultLoaded ||= Promise.all(DEFAULT_PROFILE.files.map((rel, i) => replaceGraph(
+        defaultGraph(i),
+        fs.readFileSync(scenarios.scenarioFile(rel), 'utf8'),
+        MEDIA_TYPES[path.extname(rel).toLowerCase()],
+    ))).catch((err) => {
+        defaultLoaded = null;
+        throw err;
+    });
+    return defaultLoaded;
+}
+
+async function catalogModel(dataspaceId, hubOn) {
+    const chosen = hubOn ? db.getDataspaceSettings(dataspaceId).catalog?.profileId : null;
+    const model = chosen ? await fieldModel(dataspaceId, chosen) : null;
+    if (model) return { ...model, source: 'hub' };
+
+    await loadDefaultProfile();
+    const graphs = DEFAULT_PROFILE.files.map((_, i) => defaultGraph(i));
+    const fallback = await modelFromGraphs(DEFAULT_PROFILE.profileId, graphs, DEFAULT_PROFILE.dataStandardPath);
+    return { ...fallback, title: DEFAULT_PROFILE.title, source: 'default' };
+}
+
+function fieldAt(fields, path) {
+    const [head, ...rest] = path;
+    const field = fields.find((f) => f.path === head);
+    if (!field) return null;
+    if (rest.length === 0) return field.kind === 'node' ? null : [field.label];
+    const below = fieldAt(field.fields, rest);
+    return below && [field.label, ...below];
+}
+
+// Where an entry names the data standard it follows: the path the profile was
+// given, or dct:conformsTo, which every DCAT-AP profile inherits.
+function dataStandardField(fields, chosenPath) {
+    const chosenLabels = Array.isArray(chosenPath) && chosenPath.length > 0 ? fieldAt(fields, chosenPath) : null;
+    if (chosenLabels) return { path: chosenPath, label: chosenLabels.join(' \u203a '), chosen: true };
+    const labels = fieldAt(fields, [P.conformsTo]);
+    return labels ? { path: [P.conformsTo], label: labels.join(' \u203a '), chosen: false } : null;
+}
+
+async function setDataStandard(dataspaceId, profileId, dataStandardPath) {
+    if (!db.getHubProfile(dataspaceId, profileId)) return null;
+    const model = await fieldModel(dataspaceId, profileId);
+    if (!model) return null;
+    if (dataStandardPath !== null && !(Array.isArray(dataStandardPath) && fieldAt(model.fields, dataStandardPath))) {
+        throw new ProfileError('dataStandardPath must be null or the path of a field this profile defines');
+    }
+    db.setHubProfileDataStandard(dataspaceId, profileId, dataStandardPath);
+    return { dataStandard: dataStandardField(model.fields, dataStandardPath) };
+}
+
+// Counts per field how many entries fill it, so a field the catalog has not
+// caught up with shows as such.
+function withCoverage(fields, records) {
+    const annotate = (level, perEntry) => level.map((f) => {
+        const values = perEntry.map((maps) => maps.flatMap((m) => m[f.path] || []));
+        return {
+            ...f,
+            filled: values.filter((v) => v.length > 0).length,
+            fields: annotate(f.fields, values.map((v) => v.filter((x) => x.fields).map((x) => x.fields))),
+        };
+    });
+    return annotate(fields, records.map((r) => [r]));
 }
 
 module.exports = {
@@ -466,5 +522,8 @@ module.exports = {
     installScenarioProfile,
     listFileProfiles,
     fieldModel,
+    catalogModel,
+    setDataStandard,
+    withCoverage,
     artifact: (dataspaceId, artifactId) => db.getHubArtifact(dataspaceId, artifactId),
 };

@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ChevronDown, ChevronRight, Download, FileText, Trash2, Upload } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronRight, Download, FileText, Info, Trash2, Upload } from 'lucide-react';
 
 const API_BASE = '/api';
 const ACCEPT = '.ttl,.n3,.nt,.jsonld,.json,.rdf,.owl,.xml';
+const DATA_STANDARD_HELP = 'The field in which a catalog entry following this profile names the data standard '
+    + 'its data follows. When the catalog uses this profile, the data-standard filter in the semantic search '
+    + 'looks here, and so does widening a search along the Vocabulary Hub\'s alignments. Automatic uses '
+    + 'dct:conformsTo, which every DCAT-AP profile inherits; choose another if the profile names the standard elsewhere.';
 
 const labelStyle = { fontSize: '0.64rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
 const uriStyle = { fontSize: '0.66rem', color: 'var(--color-primary)', fontFamily: 'monospace', wordBreak: 'break-all' };
@@ -85,7 +89,69 @@ const FieldTree = ({ dataspaceId, profileId }) => {
     );
 };
 
-const ProfileEntry = ({ dataspaceId, profile, onDelete }) => {
+// A data standard is identified by IRI, so only fields that hold one can name it.
+const standardFields = (fields, prefix = [], labels = []) => fields.flatMap((f) => {
+    const path = [...prefix, f.path];
+    const label = [...labels, f.label];
+    const own = f.kind === 'iri' ? [{ key: path.join(' '), path, label: label.join(' \u203a ') }] : [];
+    return [...own, ...standardFields(f.fields, path, label)];
+});
+
+const DataStandardField = ({ dataspaceId, profileId }) => {
+    const [model, setModel] = useState(null);
+    const [error, setError] = useState(null);
+    const url = `${API_BASE}/vocabhub/profiles/${encodeURIComponent(profileId)}`;
+    const query = `?dataspaceId=${encodeURIComponent(dataspaceId)}`;
+
+    useEffect(() => {
+        fetch(`${url}/fields${query}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then(setModel)
+            .catch(() => setModel(null));
+    }, [url, query]);
+
+    if (!model) return null;
+    const options = standardFields(model.fields);
+
+    const choose = async (key) => {
+        setError(null);
+        const res = await fetch(`${url}${query}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dataStandardPath: options.find((o) => o.key === key)?.path || null }),
+        });
+        const data = await res.json();
+        if (!res.ok) return setError(data.error || 'Could not save');
+        setModel((m) => ({ ...m, dataStandard: data.dataStandard }));
+    };
+
+    return (
+        <div style={{ margin: '4px 0 8px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: 'var(--text-primary)' }}>
+                Data standard field
+                <span title={DATA_STANDARD_HELP} style={{ display: 'inline-flex', cursor: 'help' }}>
+                    <Info size={13} color="var(--text-muted)" />
+                </span>
+                <select
+                    value={model.dataStandard?.chosen ? model.dataStandard.path.join(' ') : ''}
+                    onChange={(e) => choose(e.target.value)}
+                    style={{ ...inputStyle, flex: '0 1 auto', maxWidth: '420px' }}
+                >
+                    <option value="">Automatic (dct:conformsTo)</option>
+                    {options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+                </select>
+            </label>
+            {!model.dataStandard && (
+                <div style={{ ...warnStyle, marginTop: '4px' }}>
+                    <AlertTriangle size={11} style={{ flexShrink: 0, marginTop: '1px' }} /> This profile has no dct:conformsTo, so searching by data standard finds nothing until you choose a field.
+                </div>
+            )}
+            {error && <div style={{ ...warnStyle, color: '#dc2626', marginTop: '4px' }}>{error}</div>}
+        </div>
+    );
+};
+
+const ProfileEntry = ({ dataspaceId, profile, inUse, onUse, onDelete }) => {
     const [open, setOpen] = useState(false);
     const Chevron = open ? ChevronDown : ChevronRight;
     const query = `?dataspaceId=${encodeURIComponent(dataspaceId)}`;
@@ -97,6 +163,19 @@ const ProfileEntry = ({ dataspaceId, profile, onDelete }) => {
                 <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>{profile.title}</span>
                 {profile.version && <span style={labelStyle}>{profile.version}</span>}
                 <span style={{ ...labelStyle, marginLeft: 'auto' }}>{profile.source === 'upload' ? 'uploaded' : 'from scenario'}</span>
+                {inUse ? (
+                    <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '0.64rem', fontWeight: 600, color: '#15803d', background: 'rgba(22, 163, 74, 0.12)', border: '1px solid rgba(22, 163, 74, 0.45)' }}>
+                        In use
+                    </span>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onUse(profile); }}
+                        style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '0.64rem', fontWeight: 600, cursor: 'pointer', color: 'var(--text-secondary)', background: 'transparent', border: '1px solid var(--border-subtle)' }}
+                    >
+                        Use for this catalog
+                    </button>
+                )}
                 {profile.source === 'upload' && (
                     <Trash2
                         size={13}
@@ -121,6 +200,7 @@ const ProfileEntry = ({ dataspaceId, profile, onDelete }) => {
                             </a>
                         ))}
                     </div>
+                    <DataStandardField dataspaceId={dataspaceId} profileId={profile.id} />
                     <FieldTree dataspaceId={dataspaceId} profileId={profile.id} />
                 </div>
             )}
@@ -128,11 +208,12 @@ const ProfileEntry = ({ dataspaceId, profile, onDelete }) => {
     );
 };
 
-const UploadReport = ({ report }) => (
+const UploadReport = ({ dataspaceId, report }) => (
     <div style={{ marginTop: '8px', padding: '8px', borderRadius: '6px', background: 'rgba(22, 163, 74, 0.08)', border: '1px solid rgba(22, 163, 74, 0.35)' }}>
         <div style={{ fontSize: '0.76rem', color: '#15803d', fontWeight: 600 }}>
             Loaded: {report.fields} catalog entry field(s)
         </div>
+        <DataStandardField dataspaceId={dataspaceId} profileId={report.profileId} />
         {report.files.map((f) => (
             <div key={f.artifactId} style={{ marginTop: '4px' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
@@ -235,30 +316,46 @@ const UploadForm = ({ dataspaceId, onUploaded }) => {
             )}
 
             {error && <div style={{ ...warnStyle, color: '#dc2626', marginTop: '8px' }}><AlertTriangle size={11} style={{ flexShrink: 0, marginTop: '1px' }} /> {error}</div>}
-            {report && <UploadReport report={report} />}
+            {report && <UploadReport dataspaceId={dataspaceId} report={report} />}
         </div>
     );
 };
 
 const CatalogProfilesTab = ({ dataspaceId, onCountChange, onChange }) => {
     const [profiles, setProfiles] = useState(null);
+    const [model, setModel] = useState(null);
     const [error, setError] = useState(null);
     const [reloadKey, setReloadKey] = useState(0);
+    const query = `?dataspaceId=${encodeURIComponent(dataspaceId)}`;
 
     useEffect(() => {
-        fetch(`${API_BASE}/vocabhub/catalog-profiles?dataspaceId=${encodeURIComponent(dataspaceId)}`)
+        fetch(`${API_BASE}/vocabhub/catalog-profiles${query}`)
             .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
             .then((data) => { setProfiles(data); onCountChange?.(data.length); })
             .catch(() => setError('Vocabulary Hub unavailable'));
-    }, [dataspaceId, reloadKey, onCountChange]);
+        // The model, not the setting, says what is in use: a chosen profile that was deleted no longer is.
+        fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId)}/catalog-model`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then(setModel)
+            .catch(() => setModel(null));
+    }, [dataspaceId, query, reloadKey, onCountChange]);
 
     const changed = () => {
         setReloadKey((k) => k + 1);
         onChange?.();
     };
 
+    const use = async (profile) => {
+        await fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId)}/settings`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ catalog: { profileId: profile.id } }),
+        });
+        changed();
+    };
+
     const remove = async (profile) => {
-        await fetch(`${API_BASE}/vocabhub/profiles/${encodeURIComponent(profile.id)}?dataspaceId=${encodeURIComponent(dataspaceId)}`, { method: 'DELETE' });
+        await fetch(`${API_BASE}/vocabhub/profiles/${encodeURIComponent(profile.id)}${query}`, { method: 'DELETE' });
         changed();
     };
 
@@ -268,6 +365,12 @@ const CatalogProfilesTab = ({ dataspaceId, onCountChange, onChange }) => {
                 A catalog profile is the data model for this dataspace's catalog entries. Its SHACL shapes
                 say which fields an entry has and which of them are required.
             </div>
+            {model && (
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-primary)', padding: '6px 0 0' }}>
+                    Catalog uses <strong>{model.title}</strong>
+                    {model.source === 'default' && <span style={{ color: 'var(--text-muted)' }}>, the simulator's built-in default</span>}
+                </div>
+            )}
             <UploadForm dataspaceId={dataspaceId} onUploaded={changed} />
             {error && <div style={{ ...warnStyle, padding: '10px 0' }}>{error}</div>}
             {!error && !profiles && <div style={{ ...labelStyle, padding: '10px 0' }}>Loading...</div>}
@@ -275,7 +378,7 @@ const CatalogProfilesTab = ({ dataspaceId, onCountChange, onChange }) => {
                 <div style={{ ...labelStyle, textTransform: 'none', padding: '12px 0' }}>This hub holds no catalog profile yet.</div>
             )}
             {(profiles || []).map((p) => (
-                <ProfileEntry key={p.id} dataspaceId={dataspaceId} profile={p} onDelete={remove} />
+                <ProfileEntry key={p.id} dataspaceId={dataspaceId} profile={p} inUse={model?.source === 'hub' && p.id === model.profileId} onUse={use} onDelete={remove} />
             ))}
         </div>
     );
