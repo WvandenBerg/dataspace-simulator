@@ -68,6 +68,10 @@ async function loadScenarioIntoHub(dataspaceId, scenario) {
         ? await replaceGraph(scenarioGraph(dataspaceId), fs.readFileSync(file, 'utf8'))
         : 0;
     const profile = await catalogProfiles.installScenarioProfile(dataspaceId, scenario);
+    // Only a dataspace that never chose gets the scenario's profile; null is a choice too.
+    if (profile && db.getDataspaceSettings(dataspaceId).catalog?.profileId === undefined) {
+        db.patchDataspaceSettings(dataspaceId, { catalog: { profileId: profile.profileId } });
+    }
     return { tripleCount, profileFields: profile?.fields ?? 0 };
 }
 

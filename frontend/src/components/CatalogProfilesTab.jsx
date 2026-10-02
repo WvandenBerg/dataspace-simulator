@@ -85,7 +85,7 @@ const FieldTree = ({ dataspaceId, profileId }) => {
     );
 };
 
-const ProfileEntry = ({ dataspaceId, profile, onDelete }) => {
+const ProfileEntry = ({ dataspaceId, profile, inUse, onUse, onDelete }) => {
     const [open, setOpen] = useState(false);
     const Chevron = open ? ChevronDown : ChevronRight;
     const query = `?dataspaceId=${encodeURIComponent(dataspaceId)}`;
@@ -97,6 +97,19 @@ const ProfileEntry = ({ dataspaceId, profile, onDelete }) => {
                 <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)' }}>{profile.title}</span>
                 {profile.version && <span style={labelStyle}>{profile.version}</span>}
                 <span style={{ ...labelStyle, marginLeft: 'auto' }}>{profile.source === 'upload' ? 'uploaded' : 'from scenario'}</span>
+                {inUse ? (
+                    <span style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '0.64rem', fontWeight: 600, color: '#15803d', background: 'rgba(22, 163, 74, 0.12)', border: '1px solid rgba(22, 163, 74, 0.45)' }}>
+                        In use
+                    </span>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onUse(profile); }}
+                        style={{ padding: '1px 7px', borderRadius: '999px', fontSize: '0.64rem', fontWeight: 600, cursor: 'pointer', color: 'var(--text-secondary)', background: 'transparent', border: '1px solid var(--border-subtle)' }}
+                    >
+                        Use for this catalog
+                    </button>
+                )}
                 {profile.source === 'upload' && (
                     <Trash2
                         size={13}
@@ -242,23 +255,38 @@ const UploadForm = ({ dataspaceId, onUploaded }) => {
 
 const CatalogProfilesTab = ({ dataspaceId, onCountChange, onChange }) => {
     const [profiles, setProfiles] = useState(null);
+    const [inUse, setInUse] = useState(null);
     const [error, setError] = useState(null);
     const [reloadKey, setReloadKey] = useState(0);
+    const query = `?dataspaceId=${encodeURIComponent(dataspaceId)}`;
 
     useEffect(() => {
-        fetch(`${API_BASE}/vocabhub/catalog-profiles?dataspaceId=${encodeURIComponent(dataspaceId)}`)
+        fetch(`${API_BASE}/vocabhub/catalog-profiles${query}`)
             .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
             .then((data) => { setProfiles(data); onCountChange?.(data.length); })
             .catch(() => setError('Vocabulary Hub unavailable'));
-    }, [dataspaceId, reloadKey, onCountChange]);
+        fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId)}/settings`)
+            .then((r) => (r.ok ? r.json() : {}))
+            .then((settings) => setInUse(settings.catalog?.profileId ?? null))
+            .catch(() => setInUse(null));
+    }, [dataspaceId, query, reloadKey, onCountChange]);
 
     const changed = () => {
         setReloadKey((k) => k + 1);
         onChange?.();
     };
 
+    const use = async (profile) => {
+        await fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId)}/settings`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ catalog: { profileId: profile.id } }),
+        });
+        changed();
+    };
+
     const remove = async (profile) => {
-        await fetch(`${API_BASE}/vocabhub/profiles/${encodeURIComponent(profile.id)}?dataspaceId=${encodeURIComponent(dataspaceId)}`, { method: 'DELETE' });
+        await fetch(`${API_BASE}/vocabhub/profiles/${encodeURIComponent(profile.id)}${query}`, { method: 'DELETE' });
         changed();
     };
 
@@ -275,7 +303,7 @@ const CatalogProfilesTab = ({ dataspaceId, onCountChange, onChange }) => {
                 <div style={{ ...labelStyle, textTransform: 'none', padding: '12px 0' }}>This hub holds no catalog profile yet.</div>
             )}
             {(profiles || []).map((p) => (
-                <ProfileEntry key={p.id} dataspaceId={dataspaceId} profile={p} onDelete={remove} />
+                <ProfileEntry key={p.id} dataspaceId={dataspaceId} profile={p} inUse={p.id === inUse} onUse={use} onDelete={remove} />
             ))}
         </div>
     );

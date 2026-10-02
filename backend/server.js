@@ -496,16 +496,27 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
 // Configuration of the dataspace itself, as opposed to a view preference.
 // ============================================================
 
-function settingsPatchFrom(body) {
+function settingsPatchFrom(body, dataspaceId) {
     const hub = body?.vocabHub;
-    if (!hub || typeof hub !== 'object') return null;
-    const vocabHub = {};
-    if (typeof hub.enabled === 'boolean') vocabHub.enabled = hub.enabled;
-    if (Number.isFinite(hub.x) && Number.isFinite(hub.y)) {
-        vocabHub.x = hub.x;
-        vocabHub.y = hub.y;
+    const patch = {};
+    if (hub && typeof hub === 'object') {
+        const vocabHub = {};
+        if (typeof hub.enabled === 'boolean') vocabHub.enabled = hub.enabled;
+        if (Number.isFinite(hub.x) && Number.isFinite(hub.y)) {
+            vocabHub.x = hub.x;
+            vocabHub.y = hub.y;
+        }
+        if (Object.keys(vocabHub).length > 0) patch.vocabHub = vocabHub;
     }
-    return Object.keys(vocabHub).length > 0 ? { vocabHub } : null;
+    // null goes back to the default profile.
+    const profileId = body?.catalog?.profileId;
+    if (profileId === null || isCatalogProfile(dataspaceId, profileId)) patch.catalog = { profileId };
+    return Object.keys(patch).length > 0 ? patch : null;
+}
+
+function isCatalogProfile(dataspaceId, profileId) {
+    return catalogProfiles.listFileProfiles(dataspaceId)
+        .some((p) => p.id === profileId && p.files.some((f) => f.role === 'validation'));
 }
 
 app.get('/api/dataspaces/:id/settings', (req, res) => {
@@ -513,9 +524,12 @@ app.get('/api/dataspaces/:id/settings', (req, res) => {
 });
 
 app.patch('/api/dataspaces/:id/settings', (req, res) => {
-    const patch = settingsPatchFrom(req.body);
-    if (!patch) return res.status(400).json({ error: 'Expected { vocabHub: { enabled?, x?, y? } }' });
-    res.json(db.patchDataspaceSettings(resolveDataspaceId(req.params.id), patch));
+    const dataspaceId = resolveDataspaceId(req.params.id);
+    const patch = settingsPatchFrom(req.body, dataspaceId);
+    if (!patch) {
+        return res.status(400).json({ error: 'Expected { vocabHub: { enabled?, x?, y? } } or { catalog: { profileId } } naming a catalog profile in this hub, or null' });
+    }
+    res.json(db.patchDataspaceSettings(dataspaceId, patch));
 });
 
 // ============================================================
