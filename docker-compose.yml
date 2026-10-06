@@ -28,10 +28,12 @@ services:
       - DB_PATH=/data/simulator.db
       - AUTO_ACCEPT_NEGOTIATIONS=${AUTO_ACCEPT_NEGOTIATIONS:-true}
       - HEARTBEAT_TIMEOUT_MS=${HEARTBEAT_TIMEOUT_MS:-120000}
+      - VALIDATOR_URL=http://sim-validator:8000
     volumes:
       - backend-data:/data
     depends_on:
       - sim-fuseki
+      - sim-validator
     networks:
       - simulator-network
     restart: unless-stopped
@@ -45,6 +47,16 @@ services:
       - FUSEKI_DATASET_1=${FUSEKI_DATASET:-simulator}
     volumes:
       - fuseki-data:/fuseki
+    networks:
+      - simulator-network
+    restart: unless-stopped
+
+  # Semantic Treehouse's SHACL validator (json-ld-validator). Pinned to the image its CI
+  # published for one commit, so its improvements arrive when this tag is moved.
+  sim-validator:
+    image: europe-west4-docker.pkg.dev/sacred-sol-99413/sth-public/shacl-validator:87c963c0
+    ports:
+      - "4040:8000"
     networks:
       - simulator-network
     restart: unless-stopped
