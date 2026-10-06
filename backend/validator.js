@@ -9,8 +9,9 @@
 
 const axios = require('axios');
 const catalogProfiles = require('./catalogprofiles');
-const { entryTriples, graphsAsTurtle } = require('./semantic');
-const { P } = require('./record');
+const vocabhub = require('./vocabhub');
+const { entryTriples, executeSelect, graphsAsTurtle } = require('./semantic');
+const { P, RDF_TYPE } = require('./record');
 
 const VALIDATOR_URL = process.env.VALIDATOR_URL || 'http://sim-validator:8000';
 const SH = 'http://www.w3.org/ns/shacl#';
@@ -54,6 +55,19 @@ function pathsFromDatasets(rows) {
 
 const one = (node, key) => node[key]?.[0];
 
+// The classes the profile's shapes expect as values of each property.
+async function rangeClasses(graphs) {
+    const rows = await executeSelect(`
+SELECT DISTINCT ?path ?class ${graphs.map((g) => `FROM <${g}>`).join(' ')}
+WHERE { ?shape <${SH}path> ?path ; <${SH}class> ?class . FILTER(isIRI(?path)) }`);
+    const ranges = new Map();
+    for (const r of rows) {
+        if (!ranges.has(r.path.value)) ranges.set(r.path.value, new Set());
+        ranges.get(r.path.value).add(r.class.value);
+    }
+    return ranges;
+}
+
 function parseReport(report) {
     const nodes = Array.isArray(report) ? report : report['@graph'] || [];
     return nodes
@@ -74,8 +88,9 @@ function parseReport(report) {
 
 async function validateCatalog(dataspaceId, hubOn) {
     const shapes = await catalogProfiles.catalogShapes(dataspaceId, hubOn);
-    const [shapesTurtle, rows] = await Promise.all([
+    const [shapesTurtle, vocabularyTurtle, rows] = await Promise.all([
         graphsAsTurtle(shapes.graphs),
+        shapes.vocabularies.length > 0 ? graphsAsTurtle(shapes.vocabularies) : '',
         entryTriples(dataspaceId),
     ]);
 
@@ -87,7 +102,22 @@ async function validateCatalog(dataspaceId, hubOn) {
 
     let results = [];
     if (titles.size > 0) {
-        const data = [...new Set(rows.map(({ s, p, o }) => `${ntTerm(s)} <${p.value}> ${ntTerm(o)} .`))].join('\n');
+        const triples = [...new Set(rows.map(({ s, p, o }) => `${ntTerm(s)} <${p.value}> ${ntTerm(o)} .`))];
+        const described = new Set(rows.map(({ s }) => s.value));
+        const referencedBy = new Map();
+        for (const { p, o } of rows) {
+            if (o.type !== 'uri' || described.has(o.value)) continue;
+            if (!referencedBy.has(o.value)) referencedBy.set(o.value, new Set());
+            referencedBy.get(o.value).add(p.value);
+        }
+        // The hub also calls its profiles datasets; only the class expected at the referring property is wanted.
+        const ranges = await rangeClasses(shapes.graphs);
+        const known = hubOn
+            ? (await vocabhub.typesOf(dataspaceId, [...referencedBy.keys()]))
+                .filter(([s, type]) => [...referencedBy.get(s)].some((p) => ranges.get(p)?.has(type)))
+            : [];
+        // Reference data goes in the data graph: the validator's ontology graph only takes class and property definitions.
+        const data = [...triples, ...known.map(([s, type]) => `<${s}> <${RDF_TYPE}> <${type}> .`), vocabularyTurtle].join('\n');
         const response = await axios.post(`${VALIDATOR_URL}/validate`, {
             data_graph: { format: 'auto', data },
             shacl_graph: { format: 'auto', data: shapesTurtle },

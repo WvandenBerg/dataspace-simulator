@@ -475,15 +475,16 @@ async function catalogModel(dataspaceId, hubOn) {
     return { ...fallback, title: DEFAULT_PROFILE.title, source: 'default' };
 }
 
-// The shapes of that same profile, chosen by the same rule.
+// The graphs of that same profile, chosen by the same rule: its shapes, and the
+// vocabularies its entries draw on.
 async function catalogShapes(dataspaceId, hubOn) {
     const chosen = hubOn ? db.getDataspaceSettings(dataspaceId).catalog?.profileId : null;
     const artifacts = chosen ? artifactsOf(dataspaceId, chosen) : [];
-    const graphs = artifacts.filter((a) => a.role === 'validation').map((a) => artifactGraph(dataspaceId, a.artifact_id));
-    if (graphs.length > 0) return { profileId: chosen, graphs };
+    const graphsOf = (role) => artifacts.filter((a) => a.role === role).map((a) => artifactGraph(dataspaceId, a.artifact_id));
+    if (graphsOf('validation').length > 0) return { profileId: chosen, graphs: graphsOf('validation'), vocabularies: graphsOf('vocabulary') };
 
     await loadDefaultProfile();
-    return { profileId: DEFAULT_PROFILE.profileId, graphs: DEFAULT_PROFILE.files.map((_, i) => defaultGraph(i)) };
+    return { profileId: DEFAULT_PROFILE.profileId, graphs: DEFAULT_PROFILE.files.map((_, i) => defaultGraph(i)), vocabularies: [] };
 }
 
 function fieldAt(fields, path) {
