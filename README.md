@@ -76,7 +76,8 @@ These claims are evaluated by policies during catalog and negotiation phases.
 A provider publishes an asset with:
 - Base fields: title, description, filename
 - Optional policy template
-- Optional DCAT metadata fields
+- Metadata fields from the catalog's profile: the mandatory ones are in the form from the
+  start, the others can be added
 - File payload (`JSON`, `CSV`, or `TXT`)
 
 On publish:
@@ -136,7 +137,7 @@ It holds:
   DCAT-AP), shipped with a scenario or uploaded in the hub dialog.
 
 In the hub's Catalog profiles tab a dataspace chooses which profile its catalog uses. The
-semantic search then offers that profile's fields. Without a hub, or with nothing chosen, the
+publish form, the entry view and the semantic search then follow that profile's fields. Without a hub, or with nothing chosen, the
 catalog falls back to the simulator's default profile. Each profile also names the field in
 which an entry gives its data standard; it defaults to `dct:conformsTo` and can be changed per
 profile.

@@ -66,12 +66,16 @@ imports before editing a component.
 sits live in the `dataspace_settings` table, not the browser. Hub endpoints answer 409 while
 it is off, and the UI shows no hub data while it is off the ring.
 
-**Catalog profiles drive search, not yet publishing.** Each dataspace chooses its catalog
+**Catalog profiles drive the catalog.** Each dataspace chooses its catalog
 profile in the hub (`dataspace_settings` → `catalog.profileId`). With the hub off or nothing
 chosen it falls back to the default scenario's profile file, never to a list in code. Search
-filters, free text and the per-field counts follow that profile. Publish, edit and dataset
-detail still use their own hardcoded field lists. Field status comes from `sh:severity`;
-`owl:imports` is never fetched.
+filters, free text, the per-field counts, the publish and edit form and the entry view all
+follow that profile. Field status comes from `sh:severity`; `owl:imports` is never fetched.
+
+**The form writes records, one node per nested path.** Publish and edit send
+`dcatFields.record`. An edit replaces only the top-level fields the user touched and keeps
+the rest of the stored record, so fields outside the profile survive, and so do several
+distributions unless one of their fields is edited.
 
 **The data-standard field belongs to the profile.** It is stored per hub profile
 (`hub_profiles.data_standard_path`) and seeded by the scenario that ships the profile. Code
