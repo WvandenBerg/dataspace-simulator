@@ -371,7 +371,7 @@ function SimulatorPage() {
                 }}
                 onPublish={handlePublishAsset}
                 participantName={publishingNodeName}
-
+                dataspaceId={activeDataspaceId}
             />
         </div>
     );

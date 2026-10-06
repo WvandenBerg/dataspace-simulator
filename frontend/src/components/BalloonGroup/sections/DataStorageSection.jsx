@@ -117,6 +117,7 @@ const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onE
                 onPublish={() => { }}
                 mode="edit"
                 initialAsset={editingAsset}
+                dataspaceId={dataspaceId}
                 onSaveAsset={async (payload) => {
                     if (!editingAsset?.id) return;
                     await onEditAsset?.(editingAsset.id, payload);
