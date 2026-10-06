@@ -87,16 +87,16 @@ const BrowseDataspacePopup = ({
 
     const hubProfiles = vocabularyConnected ? fetchedProfiles : [];
 
-    // Fetched each time the tab opens, so a profile switched in the hub shows up without a reload.
+    // Fetched each time a tab opens, so a profile switched in the hub shows up without a reload.
     useEffect(() => {
-        if (activeTab !== 'semantic') return undefined;
+        if (!show) return undefined;
         let cancelled = false;
         fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId)}/catalog-model`)
             .then((r) => (r.ok ? r.json() : null))
             .then((data) => { if (!cancelled) setCatalogModel(data); })
             .catch(() => { if (!cancelled) setCatalogModel(null); });
         return () => { cancelled = true; };
-    }, [activeTab, dataspaceId, vocabularyConnected]);
+    }, [show, activeTab, selectedProvider, dataspaceId, vocabularyConnected]);
 
     const fieldOptions = catalogModel ? flattenFields(catalogModel.fields) : [];
     const selectedField = fieldOptions.find((o) => o.key === semanticFieldKey) || fieldOptions[0] || null;
@@ -456,7 +456,7 @@ const BrowseDataspacePopup = ({
                                                 </div>
                                                 {isExpanded && (
                                                     <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', marginBottom: '8px' }}>
-                                                        <DatasetDetail dataset={asset} dataspaceId={dataspaceId} />
+                                                        <DatasetDetail dataset={asset} dataspaceId={dataspaceId} model={catalogModel} />
                                                     </div>
                                                 )}
                                                 <button
@@ -784,7 +784,7 @@ const BrowseDataspacePopup = ({
                                             </div>
                                             {isExpanded && (
                                                 <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '10px', background: 'rgba(37,99,235,0.08)' }}>
-                                                    <DatasetDetail dataset={result} dataspaceId={dataspaceId} />
+                                                    <DatasetDetail dataset={result} dataspaceId={dataspaceId} model={catalogModel} />
                                                     <button onClick={() => {
                                                         const providerId = result.publisherNodeId || result.publisherBpn;
                                                         if (!providerId) return;
