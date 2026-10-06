@@ -190,8 +190,10 @@ const MacroView = forwardRef(({
     const hubPositions = vocabHub.isEnabled && vocabHub.position ? [vocabHub.position] : [];
     const [hubDialogOpen, setHubDialogOpen] = useState(false);
     const [hubFocusProfileId, setHubFocusProfileId] = useState(null);
-    const openHubDialog = (profileId = null) => {
+    const [hubDialogTab, setHubDialogTab] = useState('profiles');
+    const openHubDialog = (profileId = null, tab = 'profiles') => {
         setHubFocusProfileId(profileId);
+        setHubDialogTab(tab);
         setHubDialogOpen(true);
     };
 
@@ -451,7 +453,7 @@ const MacroView = forwardRef(({
                         onDragEnd={vocabHub.onDragEnd}
                         onClick={() => openHubDialog()}
                         validation={validator.isActive ? validator : null}
-                        onValidatorClick={() => openHubDialog()}
+                        onValidatorClick={() => openHubDialog(null, 'validation')}
                     />
                 )}
 
@@ -601,6 +603,9 @@ const MacroView = forwardRef(({
                     dataspaceId={dataspaceId}
                     isConnected={vocabHub.isConnected}
                     focusProfileId={hubFocusProfileId}
+                    initialTab={hubDialogTab === 'validation' && !validator.isActive ? 'profiles' : hubDialogTab}
+                    validation={validator.isActive ? validator : null}
+                    onCatalogChange={validator.run}
                     onClose={() => setHubDialogOpen(false)}
                 />
             )}

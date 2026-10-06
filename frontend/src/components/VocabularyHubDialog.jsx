@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Link2, Unlink, ArrowRight } from 'lucide-react';
 import CatalogProfilesTab from './CatalogProfilesTab';
+import ValidationTab from './ValidationTab';
 
 const API_BASE = '/api';
 
@@ -63,8 +64,8 @@ const DisconnectedNotice = ({ children }) => (
     </div>
 );
 
-const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, onClose }) => {
-    const [tab, setTab] = useState('profiles');
+const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, initialTab = 'profiles', validation = null, onCatalogChange, onClose }) => {
+    const [tab, setTab] = useState(initialTab);
     const [profiles, setProfiles] = useState(null);
     const [alignments, setAlignments] = useState(null);
     const [catalogCount, setCatalogCount] = useState(null);
@@ -98,7 +99,7 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                style={{ width: tab === 'catalog' ? '680px' : '560px', maxWidth: '94vw', maxHeight: '76vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px 18px' }}
+                style={{ width: tab === 'catalog' || tab === 'validation' ? '680px' : '560px', maxWidth: '94vw', maxHeight: '76vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px 18px' }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#14532d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -122,19 +123,29 @@ const VocabularyHubDialog = ({ dataspaceId, isConnected, focusProfileId = null, 
                     <div style={tabStyle('catalog')} onClick={() => setTab('catalog')}>
                         Catalog profiles{catalogCount !== null ? ` (${catalogCount})` : ''}
                     </div>
+                    {validation && (
+                        <div style={tabStyle('validation')} onClick={() => setTab('validation')}>
+                            Validation{validation.report ? ` (${validation.report.total - validation.report.violations}/${validation.report.total})` : ''}
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ overflowY: 'auto', marginTop: '4px' }}>
+                    {tab === 'validation' && validation && <ValidationTab dataspaceId={dataspaceId} validation={validation} />}
+
                     {tab === 'catalog' && (
                         <CatalogProfilesTab
                             dataspaceId={dataspaceId}
                             onCountChange={setCatalogCount}
-                            onChange={() => setHubVersion((v) => v + 1)}
+                            onChange={() => {
+                                setHubVersion((v) => v + 1);
+                                onCatalogChange?.();
+                            }}
                         />
                     )}
 
                     {error && <div style={{ fontSize: '0.78rem', color: '#b45309', padding: '10px 0' }}>{error}</div>}
-                    {tab !== 'catalog' && !error && !profiles && <div style={{ ...labelStyle, padding: '10px 0' }}>Loading...</div>}
+                    {(tab === 'profiles' || tab === 'alignments') && !error && !profiles && <div style={{ ...labelStyle, padding: '10px 0' }}>Loading...</div>}
 
                     {!isConnected && tab === 'profiles' && (
                         <DisconnectedNotice>
