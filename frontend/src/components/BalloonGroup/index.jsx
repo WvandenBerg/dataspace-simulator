@@ -11,6 +11,7 @@ import BrowseDataspacePopup from './popups/BrowseDataspacePopup';
 const BalloonGroup = ({
     balloonX,
     balloonY,
+    cardOffset = null,
     name,
     bpn,
     isConnected,
@@ -45,6 +46,7 @@ const BalloonGroup = ({
     const [cardSize, setCardSize] = useState(null);
     const cardRef = useRef(null);
     const resizeRef = useRef(null);
+    const moveRef = useRef(null);
     const [showFilters, setShowFilters] = useState(false);
     const [searchResults, setSearchResults] = useState(null);
     const [filters, setFilters] = useState({
@@ -142,6 +144,30 @@ const BalloonGroup = ({
         },
     };
 
+    const moveHandlers = cardOffset ? {
+        onPointerDown: (e) => {
+            moveRef.current = { x: e.clientX, y: e.clientY, dx: cardOffset.x.get(), dy: cardOffset.y.get(), moved: false };
+            e.currentTarget.setPointerCapture(e.pointerId);
+        },
+        onPointerMove: (e) => {
+            const start = moveRef.current;
+            if (!start) return;
+            const dx = (e.clientX - start.x) / viewScale;
+            const dy = (e.clientY - start.y) / viewScale;
+            if (Math.abs(dx) + Math.abs(dy) > 3) start.moved = true;
+            cardOffset.x.set(start.dx + dx);
+            cardOffset.y.set(start.dy + dy);
+        },
+        onPointerUp: (e) => {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        },
+        // A click on the card zooms in, which is not what ending a drag means.
+        onClick: (e) => {
+            if (moveRef.current?.moved) e.stopPropagation();
+            moveRef.current = null;
+        },
+    } : {};
+
     return (
         <Motion.div
             className="schematic-balloon-group"
@@ -209,8 +235,12 @@ const BalloonGroup = ({
                 {!minimalView && (
                     <>
                         <div
+                            {...moveHandlers}
                             className="schematic-header"
+                            title={cardOffset ? 'Drag to move' : undefined}
                             style={{
+                                cursor: cardOffset ? 'move' : undefined,
+                                touchAction: 'none',
                                 borderBottom: '1px solid var(--border-subtle)',
                                 paddingBottom: '0.5rem',
                                 marginBottom: '0.5rem',

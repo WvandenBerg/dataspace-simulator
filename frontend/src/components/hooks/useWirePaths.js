@@ -1,13 +1,16 @@
-import { useTransform } from 'framer-motion';
+import { useMotionValue, useTransform } from 'framer-motion';
 
 /**
  * Hook für Wire-Path-Berechnungen im ConnectorNode
  * Berechnet einen einzelnen neutralen Draht zum vereinigten Balloon-Box
  */
-export const useWirePaths = (springRotation, balloonDistance = 350) => {
+export const useWirePaths = (springRotation, balloonDistance = 350, offset = null) => {
+    const noOffset = useMotionValue(0);
+    const offsetX = offset?.x ?? noOffset;
+    const offsetY = offset?.y ?? noOffset;
     const balloonAngleRad = useTransform(springRotation, r => (r * Math.PI) / 180);
-    const balloonX = useTransform(balloonAngleRad, rad => Math.cos(rad) * balloonDistance);
-    const balloonY = useTransform(balloonAngleRad, rad => Math.sin(rad) * balloonDistance);
+    const balloonX = useTransform([balloonAngleRad, offsetX], ([rad, dx]) => Math.cos(rad) * balloonDistance + dx);
+    const balloonY = useTransform([balloonAngleRad, offsetY], ([rad, dy]) => Math.sin(rad) * balloonDistance + dy);
 
     const connectorAnchor = { x: 0, y: 0 };
 

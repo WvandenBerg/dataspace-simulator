@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 import ConnectorStack from './ConnectorStack';
 import BalloonGroup from './BalloonGroup/index.jsx';
 import WireSVG from './WireSVG';
@@ -91,7 +91,8 @@ const ConnectorNode = ({
     const springRotation = useSpring(rotation, { stiffness: 60, damping: 10 });
 
     // Wire Paths
-    const { balloonX, balloonY, wire1Path, wire2Path } = useWirePaths(springRotation);
+    const cardOffset = { x: useMotionValue(0), y: useMotionValue(0) };
+    const { balloonX, balloonY, wire1Path, wire2Path } = useWirePaths(springRotation, 350, cardOffset);
 
     // Drag Handling
     const { isDragging, hasDragged, handlePointerDown } = useNodeDrag({
@@ -181,6 +182,7 @@ const ConnectorNode = ({
             <BalloonGroup
                 balloonX={balloonX}
                 balloonY={balloonY}
+                cardOffset={cardOffset}
                 name={name}
                 bpn={bpn}
                 isConnected={isConnected}
