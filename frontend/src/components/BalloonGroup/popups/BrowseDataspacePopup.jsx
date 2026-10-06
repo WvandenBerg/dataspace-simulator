@@ -794,9 +794,6 @@ const BrowseDataspacePopup = ({
                                                             sourceId: result.datasetId,
                                                             name: result.title || result.datasetId,
                                                             description: result.description || '',
-                                                            keywords: result.keywords || [],
-                                                            themes: result.themes || [],
-                                                            spatial: result.spatial || [],
                                                         };
                                                         onStartNegotiation(asset, provider, { autoTransfer: true });
                                                     }} style={{ width: '100%', padding: '6px', marginTop: '10px', background: '#1d4ed8', border: '1px solid #2563eb', borderRadius: '5px', color: '#ffffff', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>

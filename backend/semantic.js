@@ -13,7 +13,7 @@
  */
 
 const axios = require('axios');
-const { RDF_TYPE, P, curie } = require('./record');
+const { RDF_TYPE, P } = require('./record');
 
 const FUSEKI_URL = process.env.FUSEKI_URL || 'http://sim-fuseki:3030';
 const FUSEKI_DATASET = process.env.FUSEKI_DATASET || 'simulator';
@@ -312,29 +312,9 @@ function valueFilter(variable, value) {
 const strings = (values = []) => values.filter((v) => !v.fields).map((v) => v.value ?? v.iri);
 const first = (values) => strings(values)[0] || '';
 
-function distributionFromNode({ fields }) {
-    const standard = (fields[P.mobilityDataStandard] || []).find((v) => v.fields)?.fields;
-    return {
-        title: first(fields[P.title]),
-        accessUrl: first(fields[P.accessURL]),
-        mediaType: first(fields[P.mediaType]),
-        format: first(fields[P.format]),
-        dataStandard: standard ? {
-            label: first(standard[P.title]),
-            conformsTo: first(standard[P.conformsTo]),
-            version: first(standard[P.versionInfo]),
-            schema: strings(standard[P.schema]),
-        } : null,
-    };
-}
-
-// The shape results had before records, kept until the views read records themselves.
+// What the result list shows before an entry is opened; the rest is in the record.
 function resultFromRecord(datasetId, record) {
     const publisher = (record[P.publisher] || []).find((v) => v.fields)?.fields || {};
-    const dcat = {};
-    for (const [path, values] of Object.entries(record)) {
-        if (strings(values).length > 0) dcat[curie(path)] = strings(values);
-    }
     return {
         datasetId,
         title: first(record[P.title]),
@@ -343,13 +323,6 @@ function resultFromRecord(datasetId, record) {
         publisherName: first(publisher[P.name]),
         policyName: first(record[P.policy]),
         publishedAt: first(record[P.issued]),
-        sessionCode: first(record[P.isPartOf]),
-        spatial: strings(record[P.spatial]),
-        temporalCoverage: first(record[P.temporal]),
-        keywords: strings(record[P.keyword]),
-        themes: strings(record[P.theme]),
-        dcat,
-        distributions: (record[P.distribution] || []).filter((v) => v.fields).map(distributionFromNode),
         record,
     };
 }
