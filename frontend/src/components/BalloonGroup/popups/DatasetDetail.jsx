@@ -24,7 +24,10 @@ const Section = ({ title, children }) => (
     </>
 );
 
-const FieldValues = ({ field }) => {
+const FieldValues = ({ field, dataspaceId }) => {
+    if (field.isStandard) {
+        return field.values.map((v) => <SchemaLink key={v.iri || v.value} uri={v.iri || v.value} dataspaceId={dataspaceId} />);
+    }
     const literals = field.values.filter((v) => !v.iri).map((v) => v.value);
     const iris = field.values.filter((v) => v.iri).map((v) => v.iri);
     return (
@@ -125,17 +128,15 @@ const DatasetDetail = ({ dataset, dataspaceId, model }) => {
     const [showOptional, setShowOptional] = useState(false);
     if (!dataset) return null;
 
-    const standard = model?.dataStandard;
-    const standardKey = standard?.path.join(' ');
+    const standardKey = model?.dataStandard?.path.join(' ');
     const entries = model
         ? flattenFields(model.fields)
-            .filter((f) => !BASIC_PATHS.includes(f.path[0]) && f.key !== standardKey)
-            .map((f) => ({ ...f, values: valuesAt(dataset.record, f.path) }))
+            .filter((f) => !BASIC_PATHS.includes(f.path[0]))
+            .map((f) => ({ ...f, isStandard: f.key === standardKey, values: valuesAt(dataset.record, f.path) }))
             .filter((f) => f.values.length > 0)
         : [];
     const shown = entries.filter((f) => f.status !== 'optional');
     const optional = entries.filter((f) => f.status === 'optional');
-    const schemas = standard ? valuesAt(dataset.record, standard.path).map((v) => v.iri || v.value) : [];
 
     const publisher = dataset.publisherName || dataset.ownerName || dataset.publisherBpn;
     const policy = dataset.policyName || dataset.policyId;
@@ -149,7 +150,7 @@ const DatasetDetail = ({ dataset, dataspaceId, model }) => {
 
             {entries.length > 0 && (
                 <Section title="Metadata">
-                    {shown.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} /></Field>)}
+                    {shown.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} dataspaceId={dataspaceId} /></Field>)}
                     {optional.length > 0 && (
                         <button
                             type="button"
@@ -160,17 +161,7 @@ const DatasetDetail = ({ dataset, dataspaceId, model }) => {
                             {showOptional ? 'Fewer fields' : `${optional.length} optional field${optional.length === 1 ? '' : 's'}`}
                         </button>
                     )}
-                    {showOptional && optional.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} /></Field>)}
-                </Section>
-            )}
-
-            {standard && (
-                <Section title="Data standard">
-                    <Field label={standard.label}>
-                        {schemas.length > 0
-                            ? schemas.map((uri) => <SchemaLink key={uri} uri={uri} dataspaceId={dataspaceId} />)
-                            : <div style={{ ...noteStyle, color: '#d97706' }}><AlertTriangle size={11} /> None declared</div>}
-                    </Field>
+                    {showOptional && optional.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} dataspaceId={dataspaceId} /></Field>)}
                 </Section>
             )}
 
