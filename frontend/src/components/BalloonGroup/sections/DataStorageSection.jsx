@@ -111,19 +111,21 @@ const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onE
                 <AssetViewDialog asset={viewingAsset} dataspaceId={dataspaceId} onClose={() => setViewingAsset(null)} />
             )}
 
-            <PublishAssetDialog
-                isOpen={Boolean(editingAsset)}
-                onClose={() => setEditingAsset(null)}
-                onPublish={() => { }}
-                mode="edit"
-                initialAsset={editingAsset}
-                dataspaceId={dataspaceId}
-                onSaveAsset={async (payload) => {
-                    if (!editingAsset?.id) return;
-                    await onEditAsset?.(editingAsset.id, payload);
-                    setEditingAsset(null);
-                }}
-            />
+            {editingAsset && (
+                <PublishAssetDialog
+                    isOpen
+                    onClose={() => setEditingAsset(null)}
+                    onPublish={() => { }}
+                    mode="edit"
+                    initialAsset={editingAsset}
+                    dataspaceId={dataspaceId}
+                    onSaveAsset={async (payload) => {
+                        if (!editingAsset?.id) return;
+                        await onEditAsset?.(editingAsset.id, payload);
+                        setEditingAsset(null);
+                    }}
+                />
+            )}
         </div>
     );
 };

@@ -363,16 +363,18 @@ function SimulatorPage() {
                 existingNodes={macroViewRef.current?.nodes || {}}
             />
 
-            <PublishAssetDialog
-                isOpen={publishDialogOpen}
-                onClose={() => {
-                    setPublishDialogOpen(false);
-                    setPublishingNodeId(null);
-                }}
-                onPublish={handlePublishAsset}
-                participantName={publishingNodeName}
-                dataspaceId={activeDataspaceId}
-            />
+            {publishDialogOpen && (
+                <PublishAssetDialog
+                    isOpen
+                    onClose={() => {
+                        setPublishDialogOpen(false);
+                        setPublishingNodeId(null);
+                    }}
+                    onPublish={handlePublishAsset}
+                    participantName={publishingNodeName}
+                    dataspaceId={activeDataspaceId}
+                />
+            )}
         </div>
     );
 }

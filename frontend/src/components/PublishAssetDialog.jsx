@@ -385,6 +385,8 @@ export default function PublishAssetDialog({
                         <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0', color: '#10b981' }}>
                             <CheckCircle size={56} /><p style={{ margin: '12px 0 0', fontWeight: 600 }}>{mode === 'edit' ? 'Saved!' : 'Published!'}</p>
                         </motion.div>
+                    ) : !model && !modelError ? (
+                        <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading the catalog profile…</div>
                     ) : (<>
 
                         {/* Drop Zone */}
