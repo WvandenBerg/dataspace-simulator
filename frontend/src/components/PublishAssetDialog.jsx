@@ -239,6 +239,7 @@ export default function PublishAssetDialog({
             }
             const payload = {
                 name: title.trim(),
+                description: description.trim(),
                 fileName: mode === 'edit' ? (initialAsset?.fileName || '') : file.name,
                 content: parsedContent,
                 policyId,
