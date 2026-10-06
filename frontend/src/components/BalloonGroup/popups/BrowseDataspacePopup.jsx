@@ -3,21 +3,9 @@ import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { Search, X, GripHorizontal, ArrowLeft, Package, Settings2, Download, MapPin, Building, Eye, ChevronUp, ChevronDown, AlertCircle, ArrowRight } from 'lucide-react';
 import { DOMAIN_OPTIONS } from '../constants';
 import DatasetDetail from './DatasetDetail';
+import { STATUSES, flattenFields, shortIri } from '../../catalogFields';
 
 const API_BASE = '/api';
-
-// Every field of the catalog's profile, nested ones under their parent's label.
-// A nested field is only as required as the weakest field above it.
-const STATUSES = ['mandatory', 'recommended', 'optional'];
-const filterableFields = (fields, prefix = [], labels = [], weakest = 0) => fields.flatMap((f) => {
-    const path = [...prefix, f.path];
-    const label = [...labels, f.label];
-    const rank = Math.max(weakest, STATUSES.indexOf(f.status));
-    const own = f.kind === 'node' ? [] : [{ key: path.join(' '), path, label: label.join(' \u203a '), filled: f.filled, in: f.in, status: STATUSES[rank] }];
-    return [...own, ...filterableFields(f.fields, path, label, rank)];
-});
-
-const shortIri = (iri) => String(iri).split(/[#/]/).filter(Boolean).pop() || iri;
 
 const BrowseDataspacePopup = ({
     show,
@@ -99,18 +87,18 @@ const BrowseDataspacePopup = ({
 
     const hubProfiles = vocabularyConnected ? fetchedProfiles : [];
 
-    // Fetched each time the tab opens, so a profile switched in the hub shows up without a reload.
+    // Fetched each time a tab opens, so a profile switched in the hub shows up without a reload.
     useEffect(() => {
-        if (activeTab !== 'semantic') return undefined;
+        if (!show) return undefined;
         let cancelled = false;
         fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId)}/catalog-model`)
             .then((r) => (r.ok ? r.json() : null))
             .then((data) => { if (!cancelled) setCatalogModel(data); })
             .catch(() => { if (!cancelled) setCatalogModel(null); });
         return () => { cancelled = true; };
-    }, [activeTab, dataspaceId, vocabularyConnected]);
+    }, [show, activeTab, selectedProvider, dataspaceId, vocabularyConnected]);
 
-    const fieldOptions = catalogModel ? filterableFields(catalogModel.fields) : [];
+    const fieldOptions = catalogModel ? flattenFields(catalogModel.fields) : [];
     const selectedField = fieldOptions.find((o) => o.key === semanticFieldKey) || fieldOptions[0] || null;
     const filterLabel = (f) => fieldOptions.find((o) => o.key === f.path.join(' '))?.label || f.path.join(' › ');
     const unfilledFilters = semanticFieldFilters
@@ -468,7 +456,7 @@ const BrowseDataspacePopup = ({
                                                 </div>
                                                 {isExpanded && (
                                                     <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', marginBottom: '8px' }}>
-                                                        <DatasetDetail dataset={asset} dataspaceId={dataspaceId} />
+                                                        <DatasetDetail dataset={asset} dataspaceId={dataspaceId} model={catalogModel} />
                                                     </div>
                                                 )}
                                                 <button
@@ -796,7 +784,7 @@ const BrowseDataspacePopup = ({
                                             </div>
                                             {isExpanded && (
                                                 <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '10px', background: 'rgba(37,99,235,0.08)' }}>
-                                                    <DatasetDetail dataset={result} dataspaceId={dataspaceId} />
+                                                    <DatasetDetail dataset={result} dataspaceId={dataspaceId} model={catalogModel} />
                                                     <button onClick={() => {
                                                         const providerId = result.publisherNodeId || result.publisherBpn;
                                                         if (!providerId) return;
@@ -806,9 +794,6 @@ const BrowseDataspacePopup = ({
                                                             sourceId: result.datasetId,
                                                             name: result.title || result.datasetId,
                                                             description: result.description || '',
-                                                            keywords: result.keywords || [],
-                                                            themes: result.themes || [],
-                                                            spatial: result.spatial || [],
                                                         };
                                                         onStartNegotiation(asset, provider, { autoTransfer: true });
                                                     }} style={{ width: '100%', padding: '6px', marginTop: '10px', background: '#1d4ed8', border: '1px solid #2563eb', borderRadius: '5px', color: '#ffffff', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>

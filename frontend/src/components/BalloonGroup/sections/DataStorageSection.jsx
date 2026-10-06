@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { Package, Download, X, Pencil } from 'lucide-react';
+import { Package, Download, X, Pencil, Eye } from 'lucide-react';
 import PublishAssetDialog from '../../PublishAssetDialog';
+import AssetViewDialog from '../dialogs/AssetViewDialog';
 
-const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onEditAsset, isDemo = true, minimalView = false }) => {
+const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onEditAsset, dataspaceId, isDemo = true, minimalView = false, fill = false }) => {
     const [editingAsset, setEditingAsset] = useState(null);
+    const [viewingAsset, setViewingAsset] = useState(null);
 
     if (minimalView) {
         return null;
     }
 
     return (
-        <div style={{ borderTop: '1px solid var(--border-subtle)', marginTop: '0.75rem', paddingTop: '0.75rem' }}>
+        <div style={{ borderTop: '1px solid var(--border-subtle)', marginTop: '0.75rem', paddingTop: '0.75rem', ...(fill ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : {}) }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>
                     Data Storage
@@ -27,7 +29,7 @@ const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onE
             </div>
 
             {assets.length > 0 ? (
-                <div onWheel={(e) => e.stopPropagation()} style={{ minHeight: '60px', maxHeight: '120px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div onWheel={(e) => e.stopPropagation()} style={{ minHeight: '60px', ...(fill ? { flex: 1 } : { maxHeight: '120px' }), overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {assets.map((asset, i) => (
                         <div
                             key={asset.id || i}
@@ -45,6 +47,14 @@ const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onE
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setViewingAsset(asset); }}
+                                    style={{ background: 'rgba(100,116,139,0.12)', border: '1px solid rgba(100,116,139,0.45)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', fontSize: '0.65rem' }}
+                                >
+                                    <Eye size={10} style={{ marginRight: '2px' }} />
+                                    View
+                                </button>
+
                                 {asset.type === 'received' && (
                                     <button
                                         onClick={(e) => {
@@ -97,12 +107,17 @@ const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onE
                 </div>
             )}
 
+            {viewingAsset && (
+                <AssetViewDialog asset={viewingAsset} dataspaceId={dataspaceId} onClose={() => setViewingAsset(null)} />
+            )}
+
             <PublishAssetDialog
                 isOpen={Boolean(editingAsset)}
                 onClose={() => setEditingAsset(null)}
                 onPublish={() => { }}
                 mode="edit"
                 initialAsset={editingAsset}
+                dataspaceId={dataspaceId}
                 onSaveAsset={async (payload) => {
                     if (!editingAsset?.id) return;
                     await onEditAsset?.(editingAsset.id, payload);

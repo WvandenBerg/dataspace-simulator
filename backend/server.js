@@ -374,8 +374,10 @@ app.put('/api/assets/:id', async (req, res) => {
             : (payload.content != null ? JSON.stringify(payload.content) : String(existing.asset_content || '')),
         file_name: String(payload.fileName ?? existing.file_name ?? '').trim(),
         policy_id: payload.policyId === undefined ? (existing.policy_id || null) : (payload.policyId || null),
-        // Merged, not replaced: the edit form has no inputs for distributions or temporalCoverage.
-        dcat_fields: { ...(existing.dcat_fields || {}), ...(payload.dcatFields || {}) },
+        // A record is the whole entry. The old form's fields were partial, so those are merged.
+        dcat_fields: payload.dcatFields?.record
+            ? payload.dcatFields
+            : { ...(existing.dcat_fields || {}), ...(payload.dcatFields || {}) },
     };
 
     db.updateAsset(updated);
@@ -425,6 +427,7 @@ app.get('/api/catalog', (req, res) => {
         policyName: policyLabel(a.policy_id),
         fileName: a.file_name,
         dcatFields: a.dcat_fields,
+        record: assetToRecord({ title: a.name, description: a.description, dcatFields: a.dcat_fields || {} }),
     })));
 });
 
@@ -876,9 +879,12 @@ function assetToResponse(a) {
         description: a.description,
         content: a.asset_content || '',
         ownerNodeId: a.owner_node_id,
+        ownerName: db.getNode(a.owner_node_id)?.name || a.owner_node_id,
         fileName: a.file_name,
         policyId: a.policy_id,
+        policyName: policyLabel(a.policy_id),
         dcatFields: a.dcat_fields,
+        record: assetToRecord({ title: a.name, description: a.description, dcatFields: a.dcat_fields || {} }),
         publishedAt: a.published_at,
     };
 }

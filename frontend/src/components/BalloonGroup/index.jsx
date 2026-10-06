@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { FileText, MoreVertical } from 'lucide-react';
 import { useContractNegotiation } from './hooks/useContractNegotiation';
@@ -42,6 +42,9 @@ const BalloonGroup = ({
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [showBrowsePopup, setShowBrowsePopup] = useState(false);
+    const [cardSize, setCardSize] = useState(null);
+    const cardRef = useRef(null);
+    const resizeRef = useRef(null);
     const [showFilters, setShowFilters] = useState(false);
     const [searchResults, setSearchResults] = useState(null);
     const [filters, setFilters] = useState({
@@ -117,6 +120,28 @@ const BalloonGroup = ({
         hookHandleSearch(filters, setSearchResults);
     };
 
+    // The card is centred on its wire, so it grows both ways and the handle moves twice as far as the edge.
+    const resizeHandlers = {
+        onPointerDown: (e) => {
+            e.stopPropagation();
+            const box = cardRef.current;
+            resizeRef.current = { x: e.clientX, y: e.clientY, width: cardSize?.width ?? 300, height: parseFloat(getComputedStyle(box).height) };
+            e.currentTarget.setPointerCapture(e.pointerId);
+        },
+        onPointerMove: (e) => {
+            const start = resizeRef.current;
+            if (!start) return;
+            setCardSize({
+                width: Math.max(260, start.width + (2 * (e.clientX - start.x)) / viewScale),
+                height: Math.max(240, start.height + (2 * (e.clientY - start.y)) / viewScale),
+            });
+        },
+        onPointerUp: (e) => {
+            resizeRef.current = null;
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        },
+    };
+
     return (
         <Motion.div
             className="schematic-balloon-group"
@@ -128,7 +153,7 @@ const BalloonGroup = ({
                 y: balloonY,
                 translateX: '-50%',
                 translateY: '-50%',
-                width: minimalView ? 200 : 300,
+                width: minimalView ? 200 : (cardSize?.width ?? 300),
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1rem',
@@ -136,6 +161,7 @@ const BalloonGroup = ({
             }}
         >
             <div
+                ref={cardRef}
                 className="schematic-unified-box"
                 style={{
                     position: 'relative',
@@ -145,7 +171,8 @@ const BalloonGroup = ({
                     border: '2px solid var(--border-subtle)',
                     borderRadius: '12px',
                     padding: minimalView ? '0.75rem' : '1rem',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.25)'
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                    ...(cardSize && !minimalView ? { height: cardSize.height, display: 'flex', flexDirection: 'column' } : {})
                 }}
             >
                 {!minimalView && (
@@ -194,7 +221,7 @@ const BalloonGroup = ({
                             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>{bpn}</div>
                         </div>
 
-                        <div className="schematic-content">
+                        <div className="schematic-content" style={cardSize ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : undefined}>
                             {isDemo && !minimalView && (
                                 <div style={{ marginBottom: '0.5rem' }}>
                                     <button
@@ -239,10 +266,18 @@ const BalloonGroup = ({
                                 onPublish={() => onAction('publish_asset', null, currentNodeId)}
                                 onDeleteAsset={onDeleteAsset}
                                 onEditAsset={(assetId, payload) => onEditAsset(assetId, payload, currentNodeId)}
+                                dataspaceId={String(allNodes?.[currentNodeId]?.dataspaceId || 'demo')}
                                 isDemo={isDemo}
                                 minimalView={minimalView}
+                                fill={Boolean(cardSize)}
                             />
                         </div>
+                        <div
+                            {...resizeHandlers}
+                            onClick={(e) => e.stopPropagation()}
+                            title="Drag to resize"
+                            style={{ position: 'absolute', right: '3px', bottom: '3px', width: '14px', height: '14px', boxSizing: 'border-box', cursor: 'nwse-resize', borderRight: '2px solid var(--text-muted)', borderBottom: '2px solid var(--text-muted)', borderBottomRightRadius: '4px', opacity: 0.6, touchAction: 'none' }}
+                        />
                     </>
                 )}
 

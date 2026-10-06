@@ -37,6 +37,7 @@ const toCatalogAsset = (dataset) => ({
     policyName: dataset.policyName,
     publishedAt: dataset.publishedAt,
     dcatFields: dataset.dcatFields || {},
+    record: dataset.record,
 });
 
 export const useContractNegotiation = ({

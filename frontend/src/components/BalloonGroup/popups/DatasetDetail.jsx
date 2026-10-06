@@ -1,86 +1,19 @@
 import React, { useContext, useState } from 'react';
 import { AlertTriangle, ArrowUpRight, ChevronDown, ChevronRight } from 'lucide-react';
 import { OpenHubProfileContext } from '../../VocabularyHubContext';
+import { BASIC_PATHS, flattenFields, shortIri, valuesAt } from '../../catalogFields';
 
 const API_BASE = '/api';
-
-// dct:conformsTo is labelled "Reference system" because that is what
-// mobilityDCAT-AP means by it. The profile a payload follows lives on the
-// distribution's data standard instead.
-const CORE_FIELDS = [
-    ['dct:creator', 'Creator'],
-    ['dcat:keyword', 'Keywords'],
-    ['dcat:theme', 'Themes'],
-    ['dct:spatial', 'Region'],
-    ['dct:temporal', 'Period'],
-    ['dct:language', 'Language'],
-    ['dct:license', 'License'],
-    ['dct:format', 'Format'],
-    ['dct:accrualPeriodicity', 'Update frequency'],
-    ['dct:conformsTo', 'Reference system'],
-    ['dct:relation', 'Related'],
-    ['dcat:landingPage', 'Landing page'],
-    ['dcat:contactPoint', 'Contact'],
-];
-
-const MOBILITY_FIELDS = [
-    ['mobilitydcatap:mobilityTheme', 'Mobility theme'],
-    ['mobilitydcatap:transportMode', 'Transport mode'],
-    ['mobilitydcatap:networkCoverage', 'Network coverage'],
-    ['mobilitydcatap:georeferencingMethod', 'Georeferencing'],
-    ['mobilitydcatap:intendedInformationService', 'Information service'],
-];
-
-const asList = (value) => {
-    if (value === undefined || value === null || value === '') return [];
-    return (Array.isArray(value) ? value : [value]).map(String).filter(Boolean);
-};
-
-// A dataset reaches this view either from Fuseki via semantic search, which
-// returns predicate keys, or from /api/catalog, which returns the form the
-// publish dialog stored.
-const normalizeDataset = (raw) => {
-    if (!raw) return null;
-
-    const fields = {};
-    const add = (key, value) => {
-        const values = asList(value);
-        if (values.length > 0) fields[key] = [...(fields[key] || []), ...values];
-    };
-
-    if (raw.dcat) {
-        for (const [key, value] of Object.entries(raw.dcat)) add(key, value);
-    }
-
-    const stored = raw.dcatFields;
-    if (stored) {
-        add('dcat:keyword', stored.keywords);
-        add('dcat:theme', stored.themes);
-        add('dct:spatial', stored.spatial);
-        add('dct:temporal', stored.temporalCoverage);
-        for (const entry of stored.additionalDcat || []) add(entry?.key, entry?.value);
-    }
-
-    return {
-        title: raw.title || raw.name || raw.datasetId || raw.id || 'Untitled',
-        description: raw.description || '',
-        publisher: raw.publisherName || raw.ownerName || raw.publisherBpn || '',
-        policyName: raw.policyName || raw.policyId || '',
-        publishedAt: raw.publishedAt || '',
-        fields,
-        distributions: raw.distributions || stored?.distributions || [],
-    };
-};
 
 const labelStyle = { fontSize: '0.64rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
 const valueStyle = { fontSize: '0.72rem', color: 'var(--text-primary)', wordBreak: 'break-word' };
 const sectionStyle = { fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-secondary)', margin: '10px 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' };
 const uriStyle = { fontSize: '0.66rem', color: 'var(--color-primary)', fontFamily: 'monospace', wordBreak: 'break-all' };
 
-const Field = ({ label, values }) => (
+const Field = ({ label, children }) => (
     <div style={{ marginBottom: '6px' }}>
         <div style={labelStyle}>{label}</div>
-        <div style={valueStyle}>{values.join(', ')}</div>
+        {children}
     </div>
 );
 
@@ -91,13 +24,25 @@ const Section = ({ title, children }) => (
     </>
 );
 
-const renderFields = (fields, definitions) => definitions
-    .filter(([key]) => (fields[key] || []).length > 0)
-    .map(([key, label]) => <Field key={key} label={label} values={fields[key]} />);
+const FieldValues = ({ field, dataspaceId }) => {
+    if (field.isStandard) {
+        return field.values.map((v) => <SchemaLink key={v.iri || v.value} uri={v.iri || v.value} dataspaceId={dataspaceId} />);
+    }
+    const literals = field.values.filter((v) => !v.iri).map((v) => v.value);
+    const iris = field.values.filter((v) => v.iri).map((v) => v.iri);
+    return (
+        <>
+            {literals.length > 0 && <div style={valueStyle}>{literals.join(', ')}</div>}
+            {iris.map((iri) => (field.in || field.codeList
+                ? <div key={iri} style={valueStyle} title={iri}>{shortIri(iri)}</div>
+                : <div key={iri} style={uriStyle}>{iri}</div>))}
+        </>
+    );
+};
 
 const noteStyle = { fontSize: '0.66rem', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' };
 
-// mobilitydcatap:schema is where the spec asks a portal to point at its schema
+// The profile's data-standard field is where an entry points at a schema
 // registry, so this is the one place the catalogue meets the Vocabulary Hub.
 const SchemaLink = ({ uri, dataspaceId }) => {
     const openHubProfile = useContext(OpenHubProfileContext);
@@ -178,72 +123,52 @@ const SchemaLink = ({ uri, dataspaceId }) => {
     );
 };
 
-const DataStandard = ({ standard, dataspaceId }) => (
-    <div style={{ marginTop: '6px', paddingLeft: '8px', borderLeft: '2px solid var(--color-primary)' }}>
-        <div style={labelStyle}>Data standard</div>
-        <div style={{ ...valueStyle, fontWeight: 600 }}>
-            {standard.label || 'Unnamed'}{standard.version ? ` ${standard.version}` : ''}
-        </div>
-        {standard.conformsTo && <div style={uriStyle}>{standard.conformsTo}</div>}
-        {asList(standard.schema).length > 0 && (
-            <div style={{ marginTop: '4px' }}>
-                <div style={labelStyle}>Schema</div>
-                {asList(standard.schema).map((uri) => (
-                    <SchemaLink key={uri} uri={uri} dataspaceId={dataspaceId} />
-                ))}
-            </div>
-        )}
-    </div>
-);
+// Optional fields stay folded away, so a profile with a hundred of them does not bury the rest.
+const DatasetDetail = ({ dataset, dataspaceId, model }) => {
+    const [showOptional, setShowOptional] = useState(false);
+    if (!dataset) return null;
 
-const Distribution = ({ distribution, dataspaceId }) => {
-    const format = distribution.format || distribution.mediaType;
-    return (
-        <div style={{ padding: '8px', marginBottom: '6px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '6px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px' }}>
-                <div style={{ ...valueStyle, fontWeight: 600 }}>{distribution.title || 'Distribution'}</div>
-                {format && <span style={{ padding: '1px 5px', borderRadius: '4px', fontSize: '0.58rem', background: 'rgba(59,130,246,0.2)', color: '#93c5fd', whiteSpace: 'nowrap' }}>{format}</span>}
-            </div>
-            {distribution.accessUrl && <div style={uriStyle}>{distribution.accessUrl}</div>}
-            {distribution.dataStandard ? (
-                <DataStandard standard={distribution.dataStandard} dataspaceId={dataspaceId} />
-            ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '0.66rem', color: '#d97706' }}>
-                    <AlertTriangle size={11} /> No data standard declared
-                </div>
-            )}
-        </div>
-    );
-};
+    const standardKey = model?.dataStandard?.path.join(' ');
+    const entries = model
+        ? flattenFields(model.fields)
+            .filter((f) => !BASIC_PATHS.includes(f.path[0]))
+            .map((f) => ({ ...f, isStandard: f.key === standardKey, values: valuesAt(dataset.record, f.path) }))
+            .filter((f) => f.values.length > 0)
+        : [];
+    const shown = entries.filter((f) => f.status !== 'optional');
+    const optional = entries.filter((f) => f.status === 'optional');
 
-const DatasetDetail = ({ dataset, dataspaceId }) => {
-    const data = normalizeDataset(dataset);
-    if (!data) return null;
-
-    const core = renderFields(data.fields, CORE_FIELDS);
-    const mobility = renderFields(data.fields, MOBILITY_FIELDS);
+    const publisher = dataset.publisherName || dataset.ownerName || dataset.publisherBpn;
+    const policy = dataset.policyName || dataset.policyId;
+    const Chevron = showOptional ? ChevronDown : ChevronRight;
 
     return (
         <div>
-            {data.description && (
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>{data.description}</div>
+            {dataset.description && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>{dataset.description}</div>
             )}
 
-            {core.length > 0 && <Section title="Metadata">{core}</Section>}
-            {mobility.length > 0 && <Section title="Mobility">{mobility}</Section>}
-
-            <Section title={`Distributions (${data.distributions.length})`}>
-                {data.distributions.length === 0
-                    ? <div style={{ fontSize: '0.7rem', color: '#64748b' }}>None declared</div>
-                    : data.distributions.map((distribution, i) => (
-                        <Distribution key={distribution.accessUrl || i} distribution={distribution} dataspaceId={dataspaceId} />
-                    ))}
-            </Section>
+            {entries.length > 0 && (
+                <Section title="Metadata">
+                    {shown.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} dataspaceId={dataspaceId} /></Field>)}
+                    {optional.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setShowOptional(!showOptional)}
+                            style={{ padding: 0, marginBottom: '6px', background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.66rem', color: 'var(--color-primary)' }}
+                        >
+                            <Chevron size={11} />
+                            {showOptional ? 'Fewer fields' : `${optional.length} optional field${optional.length === 1 ? '' : 's'}`}
+                        </button>
+                    )}
+                    {showOptional && optional.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} dataspaceId={dataspaceId} /></Field>)}
+                </Section>
+            )}
 
             <Section title="Access">
-                {data.publisher && <Field label="Publisher" values={[data.publisher]} />}
-                {data.policyName && <Field label="Policy" values={[data.policyName]} />}
-                {data.publishedAt && <Field label="Published" values={[data.publishedAt.substring(0, 10)]} />}
+                {publisher && <Field label="Publisher"><div style={valueStyle}>{publisher}</div></Field>}
+                {policy && <Field label="Policy"><div style={valueStyle}>{policy}</div></Field>}
+                {dataset.publishedAt && <Field label="Published"><div style={valueStyle}>{dataset.publishedAt.substring(0, 10)}</div></Field>}
             </Section>
         </div>
     );

@@ -5,29 +5,38 @@ import {
     X, Upload, FileJson, FileText, CheckCircle, AlertCircle,
     Globe, Users, Factory, Briefcase, Plus, XCircle, Info
 } from 'lucide-react';
+import { BASIC_PATHS, STATUSES, flattenFields, shortIri, valuesAt } from './catalogFields';
 
 const API_BASE = '/api';
 
-/* ── DCAT fields ────────────────────────────────────────────────── */
-const DCAT_OPTIONS = [
-    { key: 'dcat:keyword', label: 'Keywords', placeholder: 'BIM, IFC…', multi: true },
-    { key: 'dcat:theme', label: 'Themes', placeholder: 'sustainability…', multi: true },
-    { key: 'dct:spatial', label: 'Spatial / Region', placeholder: 'DE, Munich…', multi: true },
-    { key: 'dct:temporal', label: 'Temporal', placeholder: '2026-01/2026-12', multi: false },
-    { key: 'dct:language', label: 'Language', placeholder: 'de, en', multi: true },
-    { key: 'dct:format', label: 'Format', placeholder: 'application/json', multi: false },
-    { key: 'dct:license', label: 'License', placeholder: 'CC-BY-4.0', multi: false },
-    { key: 'dct:creator', label: 'Creator', placeholder: 'Team DataOps', multi: true },
-    { key: 'dct:conformsTo', label: 'Conforms To', placeholder: 'DIN EN ISO 16739', multi: true },
-    { key: 'dcat:landingPage', label: 'Landing Page', placeholder: 'https://…', multi: false },
-    { key: 'dcat:contactPoint', label: 'Contact Point', placeholder: 'data@company.com', multi: false },
-    { key: 'dct:accrualPeriodicity', label: 'Update Frequency', placeholder: 'daily, weekly', multi: false },
-    { key: 'mobilitydcatap:mobilityTheme', label: 'Mobility Theme', placeholder: 'Traffic data…', multi: true },
-    { key: 'mobilitydcatap:transportMode', label: 'Transport Mode', placeholder: 'Road…', multi: true },
-    { key: 'mobilitydcatap:networkCoverage', label: 'Network Coverage', placeholder: 'Urban road network…', multi: false },
-    { key: 'mobilitydcatap:georeferencingMethod', label: 'Georeferencing Method', placeholder: 'WGS84 coordinates…', multi: false },
-    { key: 'mobilitydcatap:intendedInformationService', label: 'Intended Information Service', placeholder: 'Real-time traffic information…', multi: true },
-];
+/* ── catalog profile fields ─────────────────────────────────────── */
+const IRI_PATTERN = /^[a-z][a-z0-9+.-]*:[^\s<>"{}|\\^`]+$/i;
+
+const formFields = (model) => (model ? flattenFields(model.fields).filter((f) => !BASIC_PATHS.includes(f.path[0])) : []);
+const isMulti = (f) => !f.in && f.max !== 1;
+const asIri = (f, text) => f.kind === 'iri' || (f.in && IRI_PATTERN.test(text));
+const textOf = (f, values) => {
+    const texts = values.map((v) => v.iri || v.value);
+    return isMulti(f) ? texts.join(', ') : (texts[0] || '');
+};
+
+// One node per nested path, so two distributions come back as one.
+const buildRecord = (fields, entries) => {
+    const record = {};
+    for (const entry of entries) {
+        const f = fields.find((x) => x.key === entry.key);
+        if (!f) continue;
+        const texts = (isMulti(f) ? entry.text.split(',') : [entry.text]).map((t) => t.trim()).filter(Boolean);
+        if (texts.length === 0) continue;
+        let node = record;
+        for (const p of f.path.slice(0, -1)) {
+            if (!node[p]) node[p] = [{ fields: {} }];
+            node = node[p][0].fields;
+        }
+        node[f.path[f.path.length - 1]] = texts.map((t) => (asIri(f, t) ? { iri: t } : { value: t }));
+    }
+    return record;
+};
 
 /* ── fixed credential option sets ──────────────────────────────── */
 const INDUSTRY_OPTS = ['construction', 'manufacturing', 'logistics', 'energy', 'automotive'];
@@ -90,6 +99,7 @@ export default function PublishAssetDialog({
     onClose,
     onPublish,
     participantName,
+    dataspaceId,
     mode = 'create',
     initialAsset = null,
     onSaveAsset,
@@ -107,8 +117,13 @@ export default function PublishAssetDialog({
     // Available nodes for DID-group selection
     const [availableNodes, setAvailableNodes] = useState([]);
 
-    const [dcatFields, setDcatFields] = useState([]);
-    const [dcatDropdown, setDcatDropdown] = useState('');
+    const [model, setModel] = useState(null);
+    const [modelError, setModelError] = useState(null);
+    const [stored, setStored] = useState(null);
+    const [entries, setEntries] = useState([]);
+    // Top-level paths the user changed; the rest of a stored record is written back as it was.
+    const [touched, setTouched] = useState(new Set());
+    const [picker, setPicker] = useState('');
 
     const [publishing, setPublishing] = useState(false);
     const [error, setError] = useState(null);
@@ -137,15 +152,35 @@ export default function PublishAssetDialog({
             setDescription(initialAsset.description || initialAsset?.dcatFields?.description || '');
             setSelectedPolicy(initialAsset.policyId || 'sys-open');
             setSelectedValues([]);
-            setDcatFields(hydrateDcatFields(initialAsset.dcatFields || {}));
-            setDcatDropdown('');
         } else {
             setFile(null); setTitle(''); setDescription('');
             setSelectedPolicy('sys-open'); setSelectedValues([]);
-            setDcatFields([]); setDcatDropdown('');
         }
+        setEntries([]); setTouched(new Set()); setPicker('');
         setError(null); setDone(false); setPublishing(false);
     }, [isOpen, mode, initialAsset]);
+
+    // Mandatory fields start in the form; an edit also starts with every field the entry fills.
+    useEffect(() => {
+        if (!isOpen) return undefined;
+        let cancelled = false;
+        const assetId = mode === 'edit' ? initialAsset?.id : null;
+        const json = (r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)));
+        Promise.all([
+            fetch(`${API_BASE}/dataspaces/${encodeURIComponent(dataspaceId || 'demo')}/catalog-model`).then(json),
+            assetId ? fetch(`${API_BASE}/assets/${encodeURIComponent(assetId)}`).then(json).then((a) => a.record || {}) : null,
+        ]).then(([m, record]) => {
+            if (cancelled) return;
+            setModel(m); setStored(record); setModelError(null);
+            setEntries(formFields(m)
+                .filter((f) => f.status === 'mandatory' || valuesAt(record, f.path).length > 0)
+                .map((f) => ({ key: f.key, text: textOf(f, valuesAt(record, f.path)) })));
+        }).catch((err) => {
+            if (cancelled) return;
+            setModel(null); setStored(null); setModelError(err.message);
+        });
+        return () => { cancelled = true; };
+    }, [isOpen, mode, initialAsset, dataspaceId]);
 
     useEffect(() => {
         if (!isOpen || mode !== 'edit') return;
@@ -176,21 +211,34 @@ export default function PublishAssetDialog({
         setError(null);
     };
 
-    const addDcatField = key => {
-        if (!key || dcatFields.find(f => f.key === key)) return;
-        setDcatFields(prev => [...prev, { key, value: '' }]);
-        setDcatDropdown('');
+    const fields = formFields(model);
+
+    const touch = (key) => {
+        const path = fields.find((f) => f.key === key)?.path[0];
+        if (path) setTouched((prev) => new Set(prev).add(path));
+    };
+    const setEntryText = (key, text) => {
+        setEntries((prev) => prev.map((e) => (e.key === key ? { ...e, text } : e)));
+        touch(key);
+    };
+    const addEntry = (key) => {
+        if (!key || entries.some((e) => e.key === key)) return;
+        setEntries((prev) => [...prev, { key, text: '' }]);
+        setPicker('');
+    };
+    const removeEntry = (key) => {
+        setEntries((prev) => prev.filter((e) => e.key !== key));
+        touch(key);
     };
 
     const buildDcatPayload = () => {
-        const split = v => v.split(',').map(s => s.trim()).filter(Boolean);
-        const kw = dcatFields.find(f => f.key === 'dcat:keyword')?.value || '';
-        const th = dcatFields.find(f => f.key === 'dcat:theme')?.value || '';
-        const sp = dcatFields.find(f => f.key === 'dct:spatial')?.value || '';
-        const add = dcatFields
-            .filter(f => !['dcat:keyword', 'dcat:theme', 'dct:spatial'].includes(f.key) && f.value.trim())
-            .map(f => ({ key: f.key, value: f.value.trim() }));
-        return { title: title.trim(), description: description.trim(), keywords: split(kw), themes: split(th), spatial: split(sp), additionalDcat: add };
+        const fromForm = buildRecord(fields, entries);
+        if (mode !== 'edit') return { record: fromForm };
+        // Without the stored record the form cannot tell what it would overwrite, so it sends nothing.
+        if (!stored) return undefined;
+        const record = Object.fromEntries(Object.entries(stored).filter(([p]) => !BASIC_PATHS.includes(p) && !touched.has(p)));
+        for (const [p, values] of Object.entries(fromForm)) if (touched.has(p)) record[p] = values;
+        return { record };
     };
 
     const handlePublish = async () => {
@@ -239,6 +287,7 @@ export default function PublishAssetDialog({
             }
             const payload = {
                 name: title.trim(),
+                description: description.trim(),
                 fileName: mode === 'edit' ? (initialAsset?.fileName || '') : file.name,
                 content: parsedContent,
                 policyId,
@@ -261,8 +310,8 @@ export default function PublishAssetDialog({
 
     if (!isOpen) return null;
 
-    const usedKeys = new Set(dcatFields.map(f => f.key));
-    const availableOptsDcat = DCAT_OPTIONS.filter(o => !usedKeys.has(o.key));
+    const usedKeys = new Set(entries.map(e => e.key));
+    const available = fields.filter(f => !usedKeys.has(f.key));
     const activePol = POLICIES.find(p => p.id === selectedPolicy);
 
     // Build the options list for the active policy constraint
@@ -412,58 +461,77 @@ export default function PublishAssetDialog({
                             </AnimatePresence>
                         </div>
 
-                        {/* DCAT Metadata */}
+                        {/* Catalog metadata */}
                         <div style={{ marginBottom: '16px' }}>
-                            <label style={lbl}>DCAT Metadata</label>
-                            {dcatFields.length > 0 && (
+                            <label style={lbl}>Catalog Metadata</label>
+                            {model && <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', margin: '-2px 0 8px' }}>Fields from {model.title}</div>}
+                            {modelError && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px', color: '#d97706', fontSize: '0.75rem' }}>
+                                    <AlertCircle size={12} /> Catalog profile unavailable ({modelError}){mode === 'edit' ? ', so the metadata stays as it is' : ''}
+                                </div>
+                            )}
+                            {entries.length > 0 && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '10px' }}>
-                                    {dcatFields.map(f => {
-                                        const opt = DCAT_OPTIONS.find(o => o.key === f.key);
-                                        const placeholder = opt?.multi ? `${opt?.placeholder || ''} (comma-separated)` : opt?.placeholder;
+                                    {entries.map(e => {
+                                        const f = fields.find(x => x.key === e.key);
+                                        if (!f) return null;
+                                        const notIri = f.kind === 'iri' && (isMulti(f) ? e.text.split(',') : [e.text])
+                                            .map(t => t.trim()).some(t => t && !IRI_PATTERN.test(t));
+                                        const placeholder = [f.kind === 'iri' ? 'https://…' : f.datatype, isMulti(f) ? 'comma-separated' : null].filter(Boolean).join(', ');
                                         return (
-                                            <div key={f.key}>
+                                            <div key={e.key}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                        <label style={{ color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>
-                                                            {opt?.label || f.key}
-                                                        </label>
-                                                    </div>
-                                                    <button type="button" onClick={() => setDcatFields(prev => prev.filter(x => x.key !== f.key))}
-                                                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 2px' }}>
-                                                        <XCircle size={13} />
-                                                    </button>
+                                                    <label title={f.description || f.curie} style={{ color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>
+                                                        {f.label}{f.status === 'mandatory' ? ' *' : ''}
+                                                    </label>
+                                                    {f.status !== 'mandatory' && (
+                                                        <button type="button" onClick={() => removeEntry(e.key)}
+                                                            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 2px' }}>
+                                                            <XCircle size={13} />
+                                                        </button>
+                                                    )}
                                                 </div>
-                                                <input
-                                                    type="text"
-                                                    value={f.value}
-                                                    onChange={e => setDcatFields(prev => prev.map(x => x.key === f.key ? { ...x, value: e.target.value } : x))}
-                                                    placeholder={placeholder}
-                                                    style={inp}
-                                                    spellCheck={false}
-                                                />
+                                                {f.in ? (
+                                                    <select value={e.text} onChange={ev => setEntryText(e.key, ev.target.value)} style={inp}>
+                                                        <option value="">Choose…</option>
+                                                        {f.in.map(v => <option key={v} value={v}>{shortIri(v)}</option>)}
+                                                    </select>
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        value={e.text}
+                                                        onChange={ev => setEntryText(e.key, ev.target.value)}
+                                                        placeholder={placeholder}
+                                                        style={inp}
+                                                        spellCheck={false}
+                                                    />
+                                                )}
+                                                {notIri && <div style={{ color: '#d97706', fontSize: '0.72rem', marginTop: '3px' }}>Needs a full IRI, such as https://…; other text is dropped.</div>}
                                             </div>
                                         );
                                     })}
                                 </div>
                             )}
-                            {availableOptsDcat.length > 0 && (
+                            {available.length > 0 && (
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <select
-                                        value={dcatDropdown}
-                                        onChange={(e) => setDcatDropdown(e.target.value)}
+                                        value={picker}
+                                        onChange={(e) => setPicker(e.target.value)}
                                         style={{ ...inp, flex: 1 }}
                                     >
                                         <option value="">Select metadata field...</option>
-                                        {availableOptsDcat.map((o) => (
-                                            <option key={o.key} value={o.key}>{o.label}</option>
-                                        ))}
+                                        {STATUSES.map(s => {
+                                            const group = available.filter(f => f.status === s);
+                                            return group.length > 0 && (
+                                                <optgroup key={s} label={s[0].toUpperCase() + s.slice(1)}>
+                                                    {group.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
+                                                </optgroup>
+                                            );
+                                        })}
                                     </select>
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            if (!dcatDropdown) return;
-                                            addDcatField(dcatDropdown);
-                                        }}
+                                        onClick={() => addEntry(picker)}
                                         style={{ padding: '0 12px', borderRadius: '7px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.83rem' }}
                                     >
                                         <Plus size={14} /> Add
@@ -496,16 +564,4 @@ export default function PublishAssetDialog({
 
     if (typeof document === 'undefined') return null;
     return createPortal(modal, document.body);
-}
-
-function hydrateDcatFields(dcat = {}) {
-    const rows = [];
-    if (Array.isArray(dcat.keywords) && dcat.keywords.length > 0) rows.push({ key: 'dcat:keyword', value: dcat.keywords.join(', ') });
-    if (Array.isArray(dcat.themes) && dcat.themes.length > 0) rows.push({ key: 'dcat:theme', value: dcat.themes.join(', ') });
-    if (Array.isArray(dcat.spatial) && dcat.spatial.length > 0) rows.push({ key: 'dct:spatial', value: dcat.spatial.join(', ') });
-    for (const entry of (Array.isArray(dcat.additionalDcat) ? dcat.additionalDcat : [])) {
-        if (!entry?.key) continue;
-        rows.push({ key: entry.key, value: String(entry.value || '') });
-    }
-    return rows;
 }
