@@ -68,6 +68,16 @@ async function dropGraph(graphIri) {
     await executeUpdate(`DROP SILENT GRAPH <${graphIri}>`);
 }
 
+// The named graphs merged into one, as Turtle.
+async function graphsAsTurtle(graphIris) {
+    const response = await axios.get(QUERY_ENDPOINT, withAuth({
+        params: { query: `CONSTRUCT { ?s ?p ?o } ${graphIris.map((g) => `FROM <${g}>`).join(' ')} WHERE { ?s ?p ?o }` },
+        headers: { Accept: 'text/turtle' },
+        responseType: 'text',
+    }));
+    return response.data;
+}
+
 // ---------------------------------------------------------------------------
 // IRI helpers
 // ---------------------------------------------------------------------------
@@ -237,12 +247,12 @@ function termToValue(term) {
     };
 }
 
-// The record of every dataset in a dataspace, keyed by dataset id. It holds the
-// dataset's triples, those of the nodes minted under its IRI, and those of nodes
-// it links to directly, such as the publisher several datasets share.
-async function readRecords(sessionCode, datasetIds = null) {
+// Every stored triple of the datasets in a dataspace: the dataset's own, those of
+// the nodes minted under its IRI, and those of nodes it links to directly, such as
+// the publisher several datasets share. Each row says which dataset it belongs to.
+async function entryTriples(sessionCode, datasetIds = null) {
     const only = datasetIds ? `FILTER(STR(?id) IN (${datasetIds.map((id) => `"${escapeLiteral(id)}"`).join(', ')}))` : '';
-    const rows = await executeSelect(`
+    return executeSelect(`
 SELECT DISTINCT ?id ?ds ?s ?p ?o
 WHERE {
     GRAPH ?g {
@@ -254,6 +264,11 @@ WHERE {
         FILTER(?s = ?ds || STRSTARTS(STR(?s), CONCAT(STR(?ds), "#")) || EXISTS { ?ds ?link ?s })
     }
 }`);
+}
+
+// The record of every dataset in a dataspace, keyed by dataset id.
+async function readRecords(sessionCode, datasetIds = null) {
+    const rows = await entryTriples(sessionCode, datasetIds);
 
     const subjects = new Map();
     const roots = new Map();
@@ -392,6 +407,8 @@ module.exports = {
     deleteSemanticDatasetsForParticipant,
     semanticSearch,
     readRecords,
+    entryTriples,
+    graphsAsTurtle,
     executeSelect,
     executeUpdate,
     replaceGraph,

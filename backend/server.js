@@ -18,6 +18,7 @@ const db = require('./db');
 const scenarios = require('./scenarios');
 const vocabhub = require('./vocabhub');
 const catalogProfiles = require('./catalogprofiles');
+const validator = require('./validator');
 const { assetToRecord, valuesAt } = require('./record');
 const { evaluatePolicyAgainstClaims, filterAssetsByClaims } = require('./policy');
 const {
@@ -549,6 +550,17 @@ app.get('/api/dataspaces/:id/catalog-model', async (req, res) => {
         res.json({ ...model, title: title || model.profileId, total: records.length, fields: catalogProfiles.withCoverage(model.fields, records) });
     } catch (err) {
         res.status(502).json({ error: `Catalog model unavailable: ${err.message}` });
+    }
+});
+
+// Every entry of this dataspace checked against the catalog profile by the SHACL validator.
+app.get('/api/dataspaces/:id/validation', async (req, res) => {
+    const dataspaceId = resolveDataspaceId(req.params.id);
+    try {
+        res.json(await validator.validateCatalog(dataspaceId, hubEnabled(dataspaceId)));
+    } catch (err) {
+        const detail = err.response?.data?.detail || err.message;
+        res.status(502).json({ error: `Validator unavailable: ${detail}` });
     }
 });
 
