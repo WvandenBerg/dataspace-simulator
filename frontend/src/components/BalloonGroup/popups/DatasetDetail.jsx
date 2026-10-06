@@ -120,7 +120,9 @@ const SchemaLink = ({ uri, dataspaceId }) => {
     );
 };
 
+// Optional fields stay folded away, so a profile with a hundred of them does not bury the rest.
 const DatasetDetail = ({ dataset, dataspaceId, model }) => {
+    const [showOptional, setShowOptional] = useState(false);
     if (!dataset) return null;
 
     const standard = model?.dataStandard;
@@ -131,10 +133,13 @@ const DatasetDetail = ({ dataset, dataspaceId, model }) => {
             .map((f) => ({ ...f, values: valuesAt(dataset.record, f.path) }))
             .filter((f) => f.values.length > 0)
         : [];
+    const shown = entries.filter((f) => f.status !== 'optional');
+    const optional = entries.filter((f) => f.status === 'optional');
     const schemas = standard ? valuesAt(dataset.record, standard.path).map((v) => v.iri || v.value) : [];
 
     const publisher = dataset.publisherName || dataset.ownerName || dataset.publisherBpn;
     const policy = dataset.policyName || dataset.policyId;
+    const Chevron = showOptional ? ChevronDown : ChevronRight;
 
     return (
         <div>
@@ -144,7 +149,18 @@ const DatasetDetail = ({ dataset, dataspaceId, model }) => {
 
             {entries.length > 0 && (
                 <Section title="Metadata">
-                    {entries.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} /></Field>)}
+                    {shown.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} /></Field>)}
+                    {optional.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setShowOptional(!showOptional)}
+                            style={{ padding: 0, marginBottom: '6px', background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.66rem', color: 'var(--color-primary)' }}
+                        >
+                            <Chevron size={11} />
+                            {showOptional ? 'Fewer fields' : `${optional.length} optional field${optional.length === 1 ? '' : 's'}`}
+                        </button>
+                    )}
+                    {showOptional && optional.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} /></Field>)}
                 </Section>
             )}
 
