@@ -143,7 +143,7 @@ async function indexAsset(asset) {
 
     await upsertSemanticDataset({
         datasetId: asset.asset_id,
-        record: assetToRecord({ title: asset.name, description: asset.description, dcatFields: asset.dcat_fields || {} }),
+        record: recordOf(asset),
         policyName: policyLabel(asset.policy_id),
         publisherBpn: asset.owner_node_id,
         publisherName: ownerName,
@@ -428,7 +428,7 @@ app.get('/api/catalog', (req, res) => {
         policyName: policyLabel(a.policy_id),
         fileName: a.file_name,
         dcatFields: a.dcat_fields,
-        record: assetToRecord({ title: a.name, description: a.description, dcatFields: a.dcat_fields || {} }),
+        record: recordOf(a),
     })));
 });
 
@@ -448,6 +448,10 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
 
     const dataspaceId = resolveDataspaceId(req.body?.dataspaceId);
     const publishedAt = new Date().toISOString();
+    // Before indexing, which tags the free-text fields with it.
+    if (scenario.metadataLanguage && !db.getDataspaceSettings(dataspaceId).metadata?.language) {
+        db.patchDataspaceSettings(dataspaceId, { metadata: { language: scenario.metadataLanguage } });
+    }
 
     scenario.participants.forEach((participant, index) => {
         db.upsertNode(scenarios.toNodeRow(participant, {
@@ -547,7 +551,8 @@ app.get('/api/dataspaces/:id/catalog-model', async (req, res) => {
             ? (await vocabhub.listCatalogProfiles(dataspaceId)).find((p) => p.id === model.profileId)?.title
             : model.title;
         const records = [...(await readRecords(dataspaceId)).values()];
-        res.json({ ...model, title: title || model.profileId, total: records.length, fields: catalogProfiles.withCoverage(model.fields, records) });
+        const language = db.getDataspaceSettings(dataspaceId).metadata?.language || null;
+        res.json({ ...model, title: title || model.profileId, language, total: records.length, fields: catalogProfiles.withCoverage(model.fields, records) });
     } catch (err) {
         res.status(502).json({ error: `Catalog model unavailable: ${err.message}` });
     }
@@ -896,9 +901,15 @@ function assetToResponse(a) {
         policyId: a.policy_id,
         policyName: policyLabel(a.policy_id),
         dcatFields: a.dcat_fields,
-        record: assetToRecord({ title: a.name, description: a.description, dcatFields: a.dcat_fields || {} }),
+        record: recordOf(a),
         publishedAt: a.published_at,
     };
+}
+
+// A dataspace's metadata language is the one its free-text fields are written in.
+function recordOf(a) {
+    const language = db.getDataspaceSettings(String(a.dataspace_id || 'demo')).metadata?.language || null;
+    return assetToRecord({ title: a.name, description: a.description, dcatFields: a.dcat_fields || {}, language });
 }
 
 // ============================================================

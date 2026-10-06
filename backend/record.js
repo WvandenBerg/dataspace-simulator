@@ -98,10 +98,11 @@ function distributionNode(dist) {
 
 // What the publish form stored before profiles drove it. A field the form
 // filled per profile, under dcatFields.record, replaces the legacy one.
-function assetToRecord({ title, description, dcatFields = {} }) {
+function assetToRecord({ title, description, dcatFields = {}, language = null }) {
+    const tagged = (values) => literals(values).map((v) => (language ? { ...v, lang: language } : v));
     const record = {};
-    put(record, P.title, literals(title));
-    put(record, P.description, literals(description));
+    put(record, P.title, tagged(title));
+    put(record, P.description, tagged(description));
     put(record, P.keyword, literals(list(dcatFields.keywords)));
     put(record, P.theme, literals(list(dcatFields.themes)));
     put(record, P.spatial, literals(list(dcatFields.spatial)));

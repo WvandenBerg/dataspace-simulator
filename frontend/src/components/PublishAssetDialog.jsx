@@ -22,11 +22,11 @@ const textOf = (f, values) => {
 
 // One node per nested path, so two distributions come back as one.
 const LANG_STRING = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString';
-const literalOf = (f, text) => (f.datatypeIri && f.datatypeIri !== LANG_STRING
+const literalOf = (f, text, language) => (f.datatypeIri && f.datatypeIri !== LANG_STRING
     ? { value: text, datatype: f.datatypeIri }
-    : { value: text });
+    : { value: text, ...(language ? { lang: language } : {}) });
 
-const buildRecord = (fields, entries) => {
+const buildRecord = (fields, entries, language) => {
     const record = {};
     for (const entry of entries) {
         const f = fields.find((x) => x.key === entry.key);
@@ -39,7 +39,7 @@ const buildRecord = (fields, entries) => {
             if (!node[p]) node[p] = [{ ...(type ? { type } : {}), fields: {} }];
             node = node[p][0].fields;
         });
-        node[f.path[f.path.length - 1]] = texts.map((t) => (asIri(f, t) ? { iri: t } : literalOf(f, t)));
+        node[f.path[f.path.length - 1]] = texts.map((t) => (asIri(f, t) ? { iri: t } : literalOf(f, t, language)));
     }
     return record;
 };
@@ -238,7 +238,7 @@ export default function PublishAssetDialog({
     };
 
     const buildDcatPayload = () => {
-        const fromForm = buildRecord(fields, entries);
+        const fromForm = buildRecord(fields, entries, model?.language);
         if (mode !== 'edit') return { record: fromForm };
         // Without the stored record the form cannot tell what it would overwrite, so it sends nothing.
         if (!stored) return undefined;
