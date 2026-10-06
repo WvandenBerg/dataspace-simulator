@@ -239,6 +239,7 @@ const BalloonGroup = ({
                                 onPublish={() => onAction('publish_asset', null, currentNodeId)}
                                 onDeleteAsset={onDeleteAsset}
                                 onEditAsset={(assetId, payload) => onEditAsset(assetId, payload, currentNodeId)}
+                                dataspaceId={String(allNodes?.[currentNodeId]?.dataspaceId || 'demo')}
                                 isDemo={isDemo}
                                 minimalView={minimalView}
                             />

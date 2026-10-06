@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Package, Download, X, Pencil } from 'lucide-react';
+import { Package, Download, X, Pencil, Eye } from 'lucide-react';
 import PublishAssetDialog from '../../PublishAssetDialog';
+import AssetViewDialog from '../dialogs/AssetViewDialog';
 
-const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onEditAsset, isDemo = true, minimalView = false }) => {
+const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onEditAsset, dataspaceId, isDemo = true, minimalView = false }) => {
     const [editingAsset, setEditingAsset] = useState(null);
+    const [viewingAsset, setViewingAsset] = useState(null);
 
     if (minimalView) {
         return null;
@@ -45,6 +47,14 @@ const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onE
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setViewingAsset(asset); }}
+                                    style={{ background: 'rgba(100,116,139,0.12)', border: '1px solid rgba(100,116,139,0.45)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', fontSize: '0.65rem' }}
+                                >
+                                    <Eye size={10} style={{ marginRight: '2px' }} />
+                                    View
+                                </button>
+
                                 {asset.type === 'received' && (
                                     <button
                                         onClick={(e) => {
@@ -95,6 +105,10 @@ const DataStorageSection = ({ assets, isConnected, onPublish, onDeleteAsset, onE
                         <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-secondary)', opacity: 0.5 }} />
                     ))}
                 </div>
+            )}
+
+            {viewingAsset && (
+                <AssetViewDialog asset={viewingAsset} dataspaceId={dataspaceId} onClose={() => setViewingAsset(null)} />
             )}
 
             <PublishAssetDialog

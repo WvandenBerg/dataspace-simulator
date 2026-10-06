@@ -877,9 +877,12 @@ function assetToResponse(a) {
         description: a.description,
         content: a.asset_content || '',
         ownerNodeId: a.owner_node_id,
+        ownerName: db.getNode(a.owner_node_id)?.name || a.owner_node_id,
         fileName: a.file_name,
         policyId: a.policy_id,
+        policyName: policyLabel(a.policy_id),
         dcatFields: a.dcat_fields,
+        record: assetToRecord({ title: a.name, description: a.description, dcatFields: a.dcat_fields || {} }),
         publishedAt: a.published_at,
     };
 }
