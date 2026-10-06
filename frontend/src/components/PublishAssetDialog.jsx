@@ -365,6 +365,9 @@ export default function PublishAssetDialog({
             <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onMouseDown={onClose}
+                // A portal still bubbles React events to the canvas, which zooms on wheel and click.
+                onWheel={e => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
                 style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}
             >
                 <motion.div
