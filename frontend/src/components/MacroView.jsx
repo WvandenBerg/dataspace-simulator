@@ -259,6 +259,7 @@ const MacroView = forwardRef(({
             ...prev,
             [nodeId]: [...(prev[nodeId] || []), { ...asset, ownerNodeId: nodeId }]
         }));
+        validator.run();
     };
 
     // Delete asset — calls backend then updates local state
@@ -272,6 +273,7 @@ const MacroView = forwardRef(({
             ...prev,
             [nodeId]: (prev[nodeId] || []).filter(a => a.id !== assetId && a['@id'] !== assetId)
         }));
+        validator.run();
     };
 
     const handleEditAsset = async (assetId, payload, nodeId) => {
@@ -301,6 +303,7 @@ const MacroView = forwardRef(({
                     type: updated.policyId || 'open',
                 } : a)
             }));
+            validator.run();
         } catch (err) {
             console.error('[MacroView] Edit asset failed:', err.message || err);
         }
@@ -447,6 +450,8 @@ const MacroView = forwardRef(({
                         onDrag={vocabHub.onDrag}
                         onDragEnd={vocabHub.onDragEnd}
                         onClick={() => openHubDialog()}
+                        validation={validator.isActive ? validator : null}
+                        onValidatorClick={() => openHubDialog()}
                     />
                 )}
 
