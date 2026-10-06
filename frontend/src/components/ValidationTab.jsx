@@ -30,9 +30,9 @@ const fieldLabels = (fields, prefix = [], labels = [], out = new Map()) => {
     return out;
 };
 
-const labelOf = (labels, path) => (path
+const labelOf = (labels, path) => (path.length > 0
     ? labels.get(path.join(' ')) || path.map(shortIri).join(' \u203a ')
-    : 'Other constraints');
+    : 'The entry as a whole');
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const entriesText = (n) => (n === 1 ? '1 entry' : `${n} entries`);
@@ -61,18 +61,24 @@ const Fold = ({ title, children }) => {
 const FindingGroup = ({ group, labels, titles, onView }) => {
     const [open, setOpen] = useState(false);
     const Chevron = open ? ChevronDown : ChevronRight;
+    // A finding about the entry as a whole has no field to name, so its message names it.
+    const wholeEntry = group.path.length === 0;
     return (
         <div>
             <div onClick={() => setOpen(!open)} style={rowStyle}>
                 <Chevron size={12} color="var(--text-muted)" style={{ flexShrink: 0 }} />
                 <Dot color={SEVERITY_COLORS[group.severity]} />
-                <span style={{ flex: 1, minWidth: 0, fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>{labelOf(labels, group.path)}</span>
+                <span style={{ flex: 1, minWidth: 0, fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>{wholeEntry ? group.message : labelOf(labels, group.path)}</span>
                 <span style={{ ...mutedStyle, whiteSpace: 'nowrap' }}>{entriesText(group.entries.size)}</span>
             </div>
             {open && (
                 <div style={{ padding: '6px 0 8px 34px' }}>
-                    <div style={labelStyle}>Message</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: '2px 0 8px' }}>{group.message}</div>
+                    {!wholeEntry && (
+                        <>
+                            <div style={labelStyle}>Message</div>
+                            <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: '2px 0 8px' }}>{group.message}</div>
+                        </>
+                    )}
                     <div style={labelStyle}>{group.entries.size === 1 ? 'Entry' : 'Entries'}</div>
                     {[...group.entries].map((id) => (
                         <div key={id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 0' }}>
@@ -90,7 +96,7 @@ const byField = (entries) => {
     const groups = new Map();
     for (const entry of entries) {
         for (const f of entry.findings) {
-            const key = `${f.severity}|${f.path?.join(' ') ?? ''}|${f.message}`;
+            const key = `${f.severity}|${f.path.join(' ')}|${f.message}`;
             if (!groups.has(key)) groups.set(key, { ...f, entries: new Set() });
             groups.get(key).entries.add(entry.datasetId);
         }
@@ -203,13 +209,13 @@ const ValidationTab = ({ dataspaceId, validation }) => {
                     <div style={sectionStyle}>Violations</div>
                     {violations.length === 0 && <div style={{ ...mutedStyle, padding: '4px 0' }}>None. Every entry has what the profile requires.</div>}
                     {violations.map((g) => (
-                        <FindingGroup key={`${g.path?.join(' ')}|${g.message}`} group={g} labels={labels} titles={titles} onView={setViewing} />
+                        <FindingGroup key={`${g.path.join(' ')}|${g.message}`} group={g} labels={labels} titles={titles} onView={setViewing} />
                     ))}
 
                     {others.length > 0 && (
                         <Fold title={`Warnings (${others.length})`}>
                             {others.map((g) => (
-                                <FindingGroup key={`${g.severity}|${g.path?.join(' ')}|${g.message}`} group={g} labels={labels} titles={titles} onView={setViewing} />
+                                <FindingGroup key={`${g.severity}|${g.path.join(' ')}|${g.message}`} group={g} labels={labels} titles={titles} onView={setViewing} />
                             ))}
                         </Fold>
                     )}

@@ -131,10 +131,12 @@ async function validateCatalog(dataspaceId, hubOn) {
         const findings = results
             .filter((r) => reached.has(r.focus))
             .map((r) => ({
-                path: r.property ? [...reached.get(r.focus), r.property] : null,
+                // Without a property, a finding concerns its focus node as a whole: an empty path is the entry itself.
+                path: r.property ? [...reached.get(r.focus), r.property] : reached.get(r.focus),
                 severity: r.severity,
                 message: r.message,
-                value: r.value,
+                // A node shape reports the node itself as its value, which says nothing new.
+                value: r.value === r.focus ? null : r.value,
             }));
         const status = findings.some((f) => f.severity === 'violation') ? 'violations'
             : findings.length > 0 ? 'warnings' : 'conforms';
