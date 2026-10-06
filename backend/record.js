@@ -159,4 +159,15 @@ function valuesAt(record, path) {
     return nodes.flatMap((n) => n[path[path.length - 1]] || []).map((v) => v.iri ?? v.value).filter(Boolean);
 }
 
-module.exports = { PREFIXES, RDF_TYPE, P, curie, expand, assetToRecord, valuesAt };
+// Scenario files write property and class names as CURIEs, to stay readable.
+function expandRecord(raw) {
+    return Object.fromEntries(Object.entries(raw || {}).map(([path, values]) => [expand(path), values.map((v) => ({
+        ...v,
+        ...(v.iri ? { iri: expand(v.iri) } : {}),
+        ...(v.type ? { type: expand(v.type) } : {}),
+        ...(v.datatype ? { datatype: expand(v.datatype) } : {}),
+        ...(v.fields ? { fields: expandRecord(v.fields) } : {}),
+    }))]));
+}
+
+module.exports = { PREFIXES, RDF_TYPE, P, curie, expand, expandRecord, assetToRecord, valuesAt };

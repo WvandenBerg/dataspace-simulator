@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { expandRecord } = require('./record');
 
 const SCENARIO_DIR = path.join(__dirname, 'scenarios');
 const DEFAULT_SCENARIO_ID = 'construction-demo';
@@ -125,7 +126,9 @@ function toAssetRow(asset, { dataspaceId, publishedAt }) {
         file_name: asset.fileName || '',
         asset_content: JSON.stringify(asset.content ?? {}, null, 2),
         policy_id: asset.policyId || 'sys-open',
-        dcat_fields: asset.dcatFields || {},
+        dcat_fields: asset.dcatFields?.record
+            ? { ...asset.dcatFields, record: expandRecord(asset.dcatFields.record) }
+            : (asset.dcatFields || {}),
         published_at: publishedAt,
     };
 }

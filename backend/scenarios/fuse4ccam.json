@@ -1,9 +1,29 @@
 {
     "id": "fuse4ccam",
     "name": "FUSE4CCAM",
-    "description": "Nine CCAM data providers from the FUSE4CCAM pilot sites, describing their datasets in mobilityDCAT-AP 1.1.0. Each distribution declares the data standard its payload follows, and points at the Vocabulary Hub for the schema. Partners, sites and use cases are real; controlled-vocabulary term slugs and one deliberately broken record are illustrative.",
+    "description": "Nine CCAM data providers from the FUSE4CCAM pilot sites, describing their datasets in mobilityDCAT-AP 3.0.0 (draft). Each distribution declares the data standard its payload follows, and points at the Vocabulary Hub for the schema. Partners, sites, use cases and controlled-vocabulary terms are real; most CCAM data standards are missing from the mobility-data-standard vocabulary, so they are given as 'other' with a description. One record is deliberately broken.",
     "catalogExport": "catalog-exports/fuse4ccam.ttl",
+    "metadataLanguage": "en",
     "catalogProfiles": [{
+        "profileId": "urn:vocabhub:profile:mobilitydcat-ap-3.0.0",
+        "title": "mobilityDCAT-AP 3.0.0 (draft)",
+        "version": "3.0.0",
+        "description": "The stable draft of mobilityDCAT-AP 3.0.0, extending DCAT-AP 3.0.1, whose shapes it imports and which are included here. Its release as a NAPCORE Recommendation is being voted on.",
+        "files": [
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_shapes.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_ranges.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_mdr-vocabularies.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_deprecated-uris.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_shapes.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_range.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_deprecateduris.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/vocabulary-subset.ttl"
+        ],
+        "dataStandardPath": [
+            "http://www.w3.org/ns/dcat#distribution",
+            "http://purl.org/dc/terms/conformsTo"
+        ]
+    }, {
         "profileId": "urn:vocabhub:profile:mobilitydcat-ap-1.1.0",
         "files": [
             "catalog-profiles/mobilitydcat-ap-1.1.0/mobilitydcat-ap_1.1.0_shacl_shapes.ttl",
@@ -145,33 +165,42 @@
             "fileName": "helmond-resim-scenarios.json",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "Re-simulation scenario set, Helmond corridor",
-                "description": "Logical scenarios derived from field operational test recordings on the Helmond C-ITS corridor, for re-simulation of automated driving functions.",
-                "keywords": ["scenario", "re-simulation", "FOT", "cut-in"],
-                "themes": ["Automated driving", "Scenario-based assessment"],
-                "spatial": ["Helmond, Netherlands"],
-                "temporalCoverage": "2027-01/2027-12",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "mobilitydcatap:networkCoverage", "value": "Urban and motorway corridor" },
-                    { "key": "dct:accrualPeriodicity", "value": "Quarterly" },
-                    { "key": "dct:license", "value": "CC-BY-4.0" }
-                ],
-                "distributions": [
-                    {
-                        "title": "Scenario set, OpenSCENARIO DSL",
-                        "accessUrl": "https://data.sim.local/tno/helmond-resim-scenarios.osc",
-                        "mediaType": "application/x-openscenario-dsl",
-                        "format": "OSC",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-openscenario-dsl",
-                            "label": "ASAM OpenSCENARIO DSL",
-                            "version": "2.0",
-                            "schema": ["urn:vocabhub:profile:asam-openscenario-dsl-2.0"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "scenario", "lang": "en"}, {"value": "re-simulation", "lang": "en"}, {"value": "FOT", "lang": "en"}, {"value": "cut-in", "lang": "en"}, {"value": "automated driving", "lang": "en"}, {"value": "scenario-based assessment", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}, {"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/motorways"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/QUARTERLY"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-01-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2027-12-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Scenario set, OpenSCENARIO DSL", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/tno/helmond-resim-scenarios.osc"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/TXT"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ASAM OpenSCENARIO DSL", "lang": "en"}],
+                                    "dcat:version": [{"value": "2.0"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:asam-openscenario-dsl-2.0"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "scenarioSet": "helmond-resim-2027",
@@ -189,31 +218,40 @@
             "fileName": "waymo-motion-subset.json",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "Waymo Open Motion subset, interaction cases",
-                "description": "Interaction-heavy trajectory subset held in Waymo Open Motion format, used as a comparison baseline for re-simulation studies.",
-                "keywords": ["trajectories", "motion prediction", "interaction"],
-                "themes": ["Automated driving"],
-                "spatial": ["United States"],
-                "temporalCoverage": "2026-01/2026-12",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "dct:accrualPeriodicity", "value": "Irregular" }
-                ],
-                "distributions": [
-                    {
-                        "title": "Trajectory subset, Waymo Open Motion",
-                        "accessUrl": "https://data.sim.local/tno/waymo-motion-subset.tfrecord",
-                        "mediaType": "application/octet-stream",
-                        "format": "TFRECORD",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/waymo-open-motion",
-                            "label": "Waymo Open Motion",
-                            "version": "1.2",
-                            "schema": ["urn:vocabhub:profile:waymo-open-motion-1.2"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "trajectories", "lang": "en"}, {"value": "motion prediction", "lang": "en"}, {"value": "interaction", "lang": "en"}, {"value": "automated driving", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/USA"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2026-01-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2026-12-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Trajectory subset, Waymo Open Motion", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/tno/waymo-motion-subset.tfrecord"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "Waymo Open Motion Dataset", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.2"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:waymo-open-motion-1.2"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "segments": 2100,
@@ -229,33 +267,42 @@
             "fileName": "milan-nuscenes.json",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "Annotated urban object dataset, Milan",
-                "description": "Multi-sensor urban recordings with 3D object annotations, published in the nuScenes data model.",
-                "keywords": ["perception", "annotation", "lidar", "urban"],
-                "themes": ["Automated driving", "Perception"],
-                "spatial": ["Milan, Italy"],
-                "temporalCoverage": "2027-03/2027-09",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "mobilitydcatap:georeferencingMethod", "value": "WGS84 coordinates" },
-                    { "key": "dct:accrualPeriodicity", "value": "Monthly" },
-                    { "key": "dct:license", "value": "CC-BY-NC-4.0" }
-                ],
-                "distributions": [
-                    {
-                        "title": "Annotated scenes, nuScenes",
-                        "accessUrl": "https://data.sim.local/cefriel/milan-nuscenes.json",
-                        "mediaType": "application/json",
-                        "format": "JSON",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/nuscenes",
-                            "label": "nuScenes",
-                            "version": "1.0",
-                            "schema": ["urn:vocabhub:profile:nuscenes-1.0"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "perception", "lang": "en"}, {"value": "annotation", "lang": "en"}, {"value": "lidar", "lang": "en"}, {"value": "urban", "lang": "en"}, {"value": "automated driving", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/MONTHLY"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/ITA"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2027-09-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Annotated scenes, nuScenes", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/cefriel/milan-nuscenes.json"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/JSON"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "nuScenes", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.0"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:nuscenes-1.0"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BYNC_4_0"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "scenes": 340,
@@ -271,32 +318,40 @@
             "fileName": "idiada-scenarios.xosc",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "Proving-ground driving scenario catalogue",
-                "description": "Concrete driving scenarios executed on the IDIADA proving ground, catalogued for reuse in homologation and simulation.",
-                "keywords": ["scenario", "proving ground", "homologation"],
-                "themes": ["Automated driving", "Scenario-based assessment"],
-                "spatial": ["Tarragona, Spain"],
-                "temporalCoverage": "2027-01/2029-09",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "dct:accrualPeriodicity", "value": "Monthly" },
-                    { "key": "dct:license", "value": "Proprietary" }
-                ],
-                "distributions": [
-                    {
-                        "title": "Scenario catalogue, OpenSCENARIO XML",
-                        "accessUrl": "https://data.sim.local/idiada/scenarios.xosc",
-                        "mediaType": "application/xml",
-                        "format": "XOSC",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-openscenario-xml",
-                            "label": "ASAM OpenSCENARIO XML",
-                            "version": "1.2",
-                            "schema": ["urn:vocabhub:profile:asam-openscenario-xml-1.2"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "scenario", "lang": "en"}, {"value": "proving ground", "lang": "en"}, {"value": "homologation", "lang": "en"}, {"value": "automated driving", "lang": "en"}, {"value": "scenario-based assessment", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/MONTHLY"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/ESP"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-01-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-09-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Scenario catalogue, OpenSCENARIO XML", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/idiada/scenarios.xosc"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/XML"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-fee-required"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ASAM OpenSCENARIO XML", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.2"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:asam-openscenario-xml-1.2"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "scenarioLevel": "concrete",
@@ -312,33 +367,42 @@
             "fileName": "basque-openlabel.json",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "BasqueCCAM perception annotation set",
-                "description": "Annotated perception recordings from the Gipuzkoa cross-border corridor, published in ASAM OpenLABEL.",
-                "keywords": ["perception", "annotation", "cross-border", "corridor"],
-                "themes": ["Automated driving", "Perception"],
-                "spatial": ["Gipuzkoa, Spain"],
-                "temporalCoverage": "2027-06/2029-06",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "mobilitydcatap:networkCoverage", "value": "Cross-border motorway corridor" },
-                    { "key": "dct:accrualPeriodicity", "value": "Monthly" },
-                    { "key": "dct:license", "value": "CC-BY-4.0" }
-                ],
-                "distributions": [
-                    {
-                        "title": "Annotations, ASAM OpenLABEL",
-                        "accessUrl": "https://data.sim.local/vicomtech/basque-openlabel.json",
-                        "mediaType": "application/json",
-                        "format": "JSON",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-openlabel",
-                            "label": "ASAM OpenLABEL",
-                            "version": "1.0",
-                            "schema": ["urn:vocabhub:profile:asam-openlabel-1.0"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "perception", "lang": "en"}, {"value": "annotation", "lang": "en"}, {"value": "cross-border", "lang": "en"}, {"value": "corridor", "lang": "en"}, {"value": "automated driving", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/motorways"}, {"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/ten-network"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/MONTHLY"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/ESP"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-06-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-06-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Annotations, ASAM OpenLABEL", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/vicomtech/basque-openlabel.json"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/JSON"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ASAM OpenLABEL", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.0"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:asam-openlabel-1.0"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "openlabel": { "schema_version": "1.0.0" },
@@ -354,32 +418,41 @@
             "fileName": "chalmers-kitti.zip",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "Near-miss annotation set, KITTI format",
-                "description": "Annotated near-miss and conflict situations extracted from naturalistic driving recordings, published in the KITTI object format.",
-                "keywords": ["perception", "annotation", "near-miss", "safety"],
-                "themes": ["Perception", "Traffic safety"],
-                "spatial": ["Gothenburg, Sweden"],
-                "temporalCoverage": "2026-09/2028-09",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "dct:accrualPeriodicity", "value": "Irregular" },
-                    { "key": "dct:license", "value": "CC-BY-NC-4.0" }
-                ],
-                "distributions": [
-                    {
-                        "title": "Labels, KITTI object format",
-                        "accessUrl": "https://data.sim.local/chalmers/kitti-labels.zip",
-                        "mediaType": "application/zip",
-                        "format": "TXT",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/kitti",
-                            "label": "KITTI object format",
-                            "version": "1.0",
-                            "schema": ["urn:vocabhub:profile:kitti-1.0"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "perception", "lang": "en"}, {"value": "annotation", "lang": "en"}, {"value": "near-miss", "lang": "en"}, {"value": "safety", "lang": "en"}, {"value": "traffic safety", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/accidents-and-incidents"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/SWE"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2026-09-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2028-09-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Labels, KITTI object format", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/chalmers/kitti-labels.zip"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/ZIP"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "KITTI object format", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.0"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:kitti-1.0"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BYNC_4_0"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "frames": 18400,
@@ -395,32 +468,42 @@
             "fileName": "avl-odd-motorway.json",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "ODD description, motorway pilot",
-                "description": "Operational Design Domain description for a motorway automated driving pilot, structured along ISO 34503.",
-                "keywords": ["ODD", "operational design domain", "motorway", "ISO 34503"],
-                "themes": ["Automated driving", "In-service monitoring"],
-                "spatial": ["Graz, Austria"],
-                "temporalCoverage": "2027-01/2029-09",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Road conditions" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "mobilitydcatap:intendedInformationService", "value": "Safety assessment" },
-                    { "key": "dct:accrualPeriodicity", "value": "Annual" }
-                ],
-                "distributions": [
-                    {
-                        "title": "ODD description, ISO 34503",
-                        "accessUrl": "https://data.sim.local/avl/odd-motorway.json",
-                        "mediaType": "application/json",
-                        "format": "JSON",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/iso-34503",
-                            "label": "ISO 34503 ODD taxonomy",
-                            "version": "2023",
-                            "schema": ["urn:vocabhub:profile:iso-34503-2023"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "ODD", "lang": "en"}, {"value": "operational design domain", "lang": "en"}, {"value": "motorway", "lang": "en"}, {"value": "ISO 34503", "lang": "en"}, {"value": "automated driving", "lang": "en"}, {"value": "in-service monitoring", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/motorways"}],
+                    "mobilitydcatap:intendedInformationService": [{"iri": "https://w3id.org/mobilitydcat-ap/intended-information-service/other"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/ANNUAL"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/AUT"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-01-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-09-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "ODD description, ISO 34503", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/avl/odd-motorway.json"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/JSON"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ISO 34503", "lang": "en"}],
+                                    "dcat:version": [{"value": "2023"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:iso-34503-2023"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "automationLevel": "SAE L3",
@@ -437,34 +520,43 @@
             "fileName": "hamburg-tavf.xodr",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "HD map extract, TAVF test track",
-                "description": "High-definition road network extract for the Hamburg test track for automated and connected driving, served from the Urban Data Platform.",
-                "keywords": ["HD map", "road network", "test track", "TAVF"],
-                "themes": ["Infrastructure", "Automated driving"],
-                "spatial": ["Hamburg, Germany"],
-                "temporalCoverage": "2027-01/2029-09",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Infrastructure and logistics" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "mobilitydcatap:georeferencingMethod", "value": "ETRS89 / UTM zone 32N" },
-                    { "key": "mobilitydcatap:networkCoverage", "value": "Urban test track" },
-                    { "key": "dct:accrualPeriodicity", "value": "Quarterly" },
-                    { "key": "dct:license", "value": "DL-DE-BY-2.0" }
-                ],
-                "distributions": [
-                    {
-                        "title": "Road network, ASAM OpenDRIVE",
-                        "accessUrl": "https://data.sim.local/hamburg/tavf.xodr",
-                        "mediaType": "application/x-opendrive",
-                        "format": "XODR",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/asam-opendrive",
-                            "label": "ASAM OpenDRIVE",
-                            "version": "1.7",
-                            "schema": ["urn:vocabhub:profile:asam-opendrive-1.7"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "HD map", "lang": "en"}, {"value": "road network", "lang": "en"}, {"value": "test track", "lang": "en"}, {"value": "TAVF", "lang": "en"}, {"value": "infrastructure", "lang": "en"}, {"value": "automated driving", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/network-geometry-and-lane-character"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/other"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/QUARTERLY"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/DEU"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-01-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-09-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Road network, ASAM OpenDRIVE", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/hamburg/tavf.xodr"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/XML"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ASAM OpenDRIVE", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.7"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:asam-opendrive-1.7"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/DLDE_BY_2_0"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "roads": 214,
@@ -481,34 +573,43 @@
             "fileName": "helmond-spatmap.xml",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "C-ITS signal phase and timing feed",
-                "description": "Live signal phase and timing plus intersection topology for the Helmond C-ITS corridor, published through the DITM data space.",
-                "keywords": ["C-ITS", "SPAT", "MAP", "traffic light", "real-time"],
-                "themes": ["Traffic management", "Infrastructure"],
-                "spatial": ["Helmond, Netherlands"],
-                "temporalCoverage": "2027-01/2029-09",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "mobilitydcatap:intendedInformationService", "value": "Real-time traffic information" },
-                    { "key": "mobilitydcatap:networkCoverage", "value": "Urban road network" },
-                    { "key": "dct:accrualPeriodicity", "value": "Continuous" },
-                    { "key": "dct:license", "value": "CC-BY-4.0" }
-                ],
-                "distributions": [
-                    {
-                        "title": "SPAT/MAP feed, DATEX II",
-                        "accessUrl": "https://data.sim.local/helmond/spatmap",
-                        "mediaType": "application/xml",
-                        "format": "XML",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/datex-ii",
-                            "label": "DATEX II",
-                            "version": "3.3",
-                            "schema": ["urn:vocabhub:profile:datex-ii-3.3"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "C-ITS", "lang": "en"}, {"value": "SPAT", "lang": "en"}, {"value": "MAP", "lang": "en"}, {"value": "traffic light", "lang": "en"}, {"value": "real-time", "lang": "en"}, {"value": "traffic management", "lang": "en"}, {"value": "infrastructure", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/dynamic-traffic-signs-and-regulations"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "mobilitydcatap:intendedInformationService": [{"iri": "https://w3id.org/mobilitydcat-ap/intended-information-service/dynamic-information-service"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-01-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-09-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "SPAT/MAP feed, DATEX II", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/helmond/spatmap"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/XML"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/datex-II"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "DATEX II", "lang": "en"}],
+                                    "dcat:version": [{"value": "3.3"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:datex-ii-3.3"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "intersections": 24,
@@ -524,33 +625,41 @@
             "fileName": "cdg-shuttle-fot.json",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "Paris CDG autonomous shuttle FOT dataset",
-                "description": "Field operational test telemetry from autonomous shuttles serving Paris Charles-de-Gaulle Airport, shared through the EONA-X ecosystem.",
-                "keywords": ["FOT", "shuttle", "telemetry", "airport"],
-                "themes": ["Automated driving", "Multimodal transport"],
-                "spatial": ["Paris Charles-de-Gaulle, France"],
-                "temporalCoverage": "2027-04/2029-03",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:mobilityTheme", "value": "Traffic data" },
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "mobilitydcatap:networkCoverage", "value": "Airport access roads" },
-                    { "key": "dct:accrualPeriodicity", "value": "Daily" },
-                    { "key": "dct:license", "value": "Proprietary" }
-                ],
-                "distributions": [
-                    {
-                        "title": "Vehicle telemetry, SENSORIS",
-                        "accessUrl": "https://data.sim.local/eonax/cdg-shuttle-fot.pb",
-                        "mediaType": "application/x-protobuf",
-                        "format": "PROTOBUF",
-                        "dataStandard": {
-                            "conformsTo": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/sensoris",
-                            "label": "SENSORIS",
-                            "version": "1.2",
-                            "schema": ["urn:vocabhub:profile:sensoris-1.2"]
-                        }
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "FOT", "lang": "en"}, {"value": "shuttle", "lang": "en"}, {"value": "telemetry", "lang": "en"}, {"value": "airport", "lang": "en"}, {"value": "automated driving", "lang": "en"}, {"value": "multimodal transport", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/shuttle-bus"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/other"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/DAILY"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/FRA"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-04-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Vehicle telemetry, SENSORIS", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/eonax/cdg-shuttle-fot.pb"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-fee-required"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "SENSORIS", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.2"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:sensoris-1.2"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "operator": "Beti",
@@ -567,24 +676,34 @@
             "fileName": "helmond-fcd.csv",
             "policyId": "sys-open",
             "dcatFields": {
-                "title": "Floating car data, mixed traffic",
-                "description": "Aggregated floating car data for mixed automated and conventional traffic. Deliberately incomplete: its distribution declares no mobility data standard, which fails mobilityDCAT-AP validation and leaves the Vocabulary Hub nothing to resolve.",
-                "keywords": ["floating car data", "mixed traffic", "probe vehicles"],
-                "themes": ["Traffic management"],
-                "spatial": ["Helmond, Netherlands"],
-                "temporalCoverage": "2027-01/2029-09",
-                "additionalDcat": [
-                    { "key": "mobilitydcatap:transportMode", "value": "Road" },
-                    { "key": "dct:license", "value": "CC-BY-4.0" }
-                ],
-                "distributions": [
-                    {
-                        "title": "Aggregated probe data",
-                        "accessUrl": "https://data.sim.local/helmond/fcd.csv",
-                        "mediaType": "text/csv",
-                        "format": "CSV"
-                    }
-                ]
+                "record": {
+                    "dcat:keyword": [{"value": "floating car data", "lang": "en"}, {"value": "mixed traffic", "lang": "en"}, {"value": "probe vehicles", "lang": "en"}, {"value": "traffic management", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/real-time-traffic-data"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-01-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-09-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Aggregated probe data", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/helmond/fcd.csv"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/CSV"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}]
+                        } }
+                    ]
+                }
             },
             "content": {
                 "segments": 512,
