@@ -425,6 +425,7 @@ app.get('/api/catalog', (req, res) => {
         policyName: policyLabel(a.policy_id),
         fileName: a.file_name,
         dcatFields: a.dcat_fields,
+        record: assetToRecord({ title: a.name, description: a.description, dcatFields: a.dcat_fields || {} }),
     })));
 });
 
