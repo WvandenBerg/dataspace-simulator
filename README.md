@@ -142,8 +142,8 @@ catalog falls back to the simulator's default profile. Each profile also names t
 which an entry gives its data standard; it defaults to `dct:conformsTo` and can be changed per
 profile.
 
-`demo-files/ccam-dcat-ap-draft` holds an illustrative CCAM-DCAT-AP: mobilityDCAT-AP 1.1.0 plus
-one recommended field, the SAE J3016 automation level. Upload all five files to the FUSE4CCAM
+`demo-files/ccam-dcat-ap-draft` holds an illustrative CCAM-DCAT-AP: mobilityDCAT-AP 3.0.0 plus
+one mandatory field, the SAE J3016 automation level. Upload all nine files to the FUSE4CCAM
 dataspace's hub, set the data standard field to the one mobilityDCAT-AP uses, and use the
 profile for the catalog. The search then offers automation level, filled by none of the
 existing entries until someone publishes one with it.
