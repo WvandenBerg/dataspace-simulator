@@ -1309,6 +1309,11 @@ body {
   opacity: 0.55;
 }
 
+/* Lines the nested icon up with its parent's label: row padding + icon + gap. */
+.services-panel-row.is-nested {
+  padding-left: calc(4px + 14px + 8px);
+}
+
 .services-panel-icon {
   flex: none;
   color: var(--text-muted);

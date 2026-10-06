@@ -517,6 +517,7 @@ function settingsPatchFrom(body, dataspaceId) {
         }
         if (Object.keys(vocabHub).length > 0) patch.vocabHub = vocabHub;
     }
+    if (typeof body?.validator?.enabled === 'boolean') patch.validator = { enabled: body.validator.enabled };
     // null goes back to the default profile.
     const profileId = body?.catalog?.profileId;
     if (profileId === null || isCatalogProfile(dataspaceId, profileId)) patch.catalog = { profileId };
@@ -536,7 +537,7 @@ app.patch('/api/dataspaces/:id/settings', (req, res) => {
     const dataspaceId = resolveDataspaceId(req.params.id);
     const patch = settingsPatchFrom(req.body, dataspaceId);
     if (!patch) {
-        return res.status(400).json({ error: 'Expected { vocabHub: { enabled?, x?, y? } } or { catalog: { profileId } } naming a catalog profile in this hub, or null' });
+        return res.status(400).json({ error: 'Expected { vocabHub: { enabled?, x?, y? } }, { validator: { enabled } } or { catalog: { profileId } } naming a catalog profile in this hub, or null' });
     }
     res.json(db.patchDataspaceSettings(dataspaceId, patch));
 });
@@ -561,8 +562,12 @@ app.get('/api/dataspaces/:id/catalog-model', async (req, res) => {
 // Every entry of this dataspace checked against the catalog profile by the SHACL validator.
 app.get('/api/dataspaces/:id/validation', async (req, res) => {
     const dataspaceId = resolveDataspaceId(req.params.id);
+    if (!hubEnabled(dataspaceId)) return res.status(409).json({ error: NO_HUB });
+    if (db.getDataspaceSettings(dataspaceId).validator?.enabled !== true) {
+        return res.status(409).json({ error: 'This dataspace runs no metadata validator' });
+    }
     try {
-        res.json(await validator.validateCatalog(dataspaceId, hubEnabled(dataspaceId)));
+        res.json(await validator.validateCatalog(dataspaceId, true));
     } catch (err) {
         const detail = err.response?.data?.detail || err.message;
         res.status(502).json({ error: `Validator unavailable: ${detail}` });

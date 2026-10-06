@@ -14,6 +14,7 @@ import { OpenHubProfileContext } from './VocabularyHubContext';
 import { useViewState } from './hooks/useViewState';
 import { useDragNodes } from './hooks/useDragNodes';
 import { useVocabularyHub } from './hooks/useVocabularyHub';
+import { useMetadataValidator } from './hooks/useMetadataValidator';
 import './Components.css';
 
 const DATASPACE_RADIUS = 550;
@@ -185,6 +186,7 @@ const MacroView = forwardRef(({
 
     const participantPositions = React.useMemo(() => Object.values(nodes), [nodes]);
     const vocabHub = useVocabularyHub(dataspaceId, ringRadius, participantPositions);
+    const validator = useMetadataValidator(dataspaceId, vocabHub.isEnabled);
     const hubPositions = vocabHub.isEnabled && vocabHub.position ? [vocabHub.position] : [];
     const [hubDialogOpen, setHubDialogOpen] = useState(false);
     const [hubFocusProfileId, setHubFocusProfileId] = useState(null);
@@ -585,6 +587,8 @@ const MacroView = forwardRef(({
                     vocabHub.setEnabled(next);
                     if (!next) setHubDialogOpen(false);
                 }}
+                validatorEnabled={validator.isEnabled}
+                onValidatorChange={validator.setEnabled}
             />
 
             {hubDialogOpen && (
