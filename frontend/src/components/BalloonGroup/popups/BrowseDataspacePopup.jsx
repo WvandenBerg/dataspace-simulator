@@ -3,21 +3,9 @@ import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { Search, X, GripHorizontal, ArrowLeft, Package, Settings2, Download, MapPin, Building, Eye, ChevronUp, ChevronDown, AlertCircle, ArrowRight } from 'lucide-react';
 import { DOMAIN_OPTIONS } from '../constants';
 import DatasetDetail from './DatasetDetail';
+import { STATUSES, flattenFields, shortIri } from '../../catalogFields';
 
 const API_BASE = '/api';
-
-// Every field of the catalog's profile, nested ones under their parent's label.
-// A nested field is only as required as the weakest field above it.
-const STATUSES = ['mandatory', 'recommended', 'optional'];
-const filterableFields = (fields, prefix = [], labels = [], weakest = 0) => fields.flatMap((f) => {
-    const path = [...prefix, f.path];
-    const label = [...labels, f.label];
-    const rank = Math.max(weakest, STATUSES.indexOf(f.status));
-    const own = f.kind === 'node' ? [] : [{ key: path.join(' '), path, label: label.join(' \u203a '), filled: f.filled, in: f.in, status: STATUSES[rank] }];
-    return [...own, ...filterableFields(f.fields, path, label, rank)];
-});
-
-const shortIri = (iri) => String(iri).split(/[#/]/).filter(Boolean).pop() || iri;
 
 const BrowseDataspacePopup = ({
     show,
@@ -110,7 +98,7 @@ const BrowseDataspacePopup = ({
         return () => { cancelled = true; };
     }, [activeTab, dataspaceId, vocabularyConnected]);
 
-    const fieldOptions = catalogModel ? filterableFields(catalogModel.fields) : [];
+    const fieldOptions = catalogModel ? flattenFields(catalogModel.fields) : [];
     const selectedField = fieldOptions.find((o) => o.key === semanticFieldKey) || fieldOptions[0] || null;
     const filterLabel = (f) => fieldOptions.find((o) => o.key === f.path.join(' '))?.label || f.path.join(' › ');
     const unfilledFilters = semanticFieldFilters
