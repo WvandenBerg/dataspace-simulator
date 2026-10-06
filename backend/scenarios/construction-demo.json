@@ -2,7 +2,7 @@
     "id": "construction-demo",
     "name": "Construction demo",
     "description": "Three German construction firms exchanging product passports, BIM models and steel certificates. The simulator's original demo.",
-    "catalogProfile": {
+    "catalogProfiles": [{
         "profileId": "urn:vocabhub:profile:simulator-default",
         "title": "Simulator default",
         "version": "1",
@@ -13,7 +13,7 @@
             "https://w3id.org/mobilitydcat-ap#mobilityDataStandard",
             "https://w3id.org/mobilitydcat-ap#schema"
         ]
-    },
+    }],
     "participants": [
         {
             "id": "nordbeton",

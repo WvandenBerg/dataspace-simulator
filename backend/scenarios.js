@@ -41,19 +41,24 @@ function validationProblems(scenario) {
         }
     }
 
-    if (scenario.catalogProfile !== undefined) {
-        const files = scenario.catalogProfile?.files;
-        if (typeof scenario.catalogProfile?.profileId !== 'string' || !Array.isArray(files) || files.length === 0) {
-            problems.push('"catalogProfile" needs a "profileId" and a non-empty "files" list');
-        } else {
-            for (const rel of files) {
-                const file = scenarioFile(rel);
-                if (!file || !fs.existsSync(file)) problems.push(`catalogProfile file "${rel}" does not resolve to a file inside ${SCENARIO_DIR}`);
-            }
+    if (scenario.catalogProfiles !== undefined) {
+        if (!Array.isArray(scenario.catalogProfiles) || scenario.catalogProfiles.length === 0) {
+            problems.push('"catalogProfiles" must be a non-empty list; the first is the one the catalog uses');
         }
-        const standard = scenario.catalogProfile?.dataStandardPath;
-        if (standard !== undefined && !(Array.isArray(standard) && standard.length > 0 && standard.every((p) => typeof p === 'string'))) {
-            problems.push('"catalogProfile.dataStandardPath" must be a non-empty list of property IRIs');
+        for (const [i, spec] of (Array.isArray(scenario.catalogProfiles) ? scenario.catalogProfiles : []).entries()) {
+            const files = spec?.files;
+            if (typeof spec?.profileId !== 'string' || !Array.isArray(files) || files.length === 0) {
+                problems.push(`catalogProfiles[${i}] needs a "profileId" and a non-empty "files" list`);
+            } else {
+                for (const rel of files) {
+                    const file = scenarioFile(rel);
+                    if (!file || !fs.existsSync(file)) problems.push(`catalogProfiles[${i}] file "${rel}" does not resolve to a file inside ${SCENARIO_DIR}`);
+                }
+            }
+            const standard = spec?.dataStandardPath;
+            if (standard !== undefined && !(Array.isArray(standard) && standard.length > 0 && standard.every((p) => typeof p === 'string'))) {
+                problems.push(`catalogProfiles[${i}].dataStandardPath must be a non-empty list of property IRIs`);
+            }
         }
     }
     return problems;

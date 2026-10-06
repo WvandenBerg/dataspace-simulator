@@ -209,21 +209,23 @@ async function removeProfile(dataspaceId, profileId) {
 
 // Deterministic artifact ids keep a reloaded scenario from piling up copies. A
 // data-standard field chosen in the hub survives the reload; the scenario's only seeds it.
-async function installScenarioProfile(dataspaceId, scenario) {
-    const spec = scenario.catalogProfile;
-    if (!spec) return null;
-    const existing = db.getHubProfile(dataspaceId, spec.profileId);
-    await removeProfile(dataspaceId, spec.profileId);
-    return addProfile(dataspaceId, {
-        profileId: spec.profileId,
-        title: spec.title,
-        version: spec.version,
-        description: spec.description,
-        source: 'scenario',
-        files: spec.files.map((rel) => ({ name: path.basename(rel), content: fs.readFileSync(scenarios.scenarioFile(rel), 'utf8') })),
-        artifactIds: spec.files.map((_, i) => `${scenario.id}-${i}`),
-        dataStandardPath: existing?.data_standard_path != null ? JSON.parse(existing.data_standard_path) : (spec.dataStandardPath ?? null),
-    });
+async function installScenarioProfiles(dataspaceId, scenario) {
+    const installed = [];
+    for (const [k, spec] of (scenario.catalogProfiles || []).entries()) {
+        const existing = db.getHubProfile(dataspaceId, spec.profileId);
+        await removeProfile(dataspaceId, spec.profileId);
+        installed.push(await addProfile(dataspaceId, {
+            profileId: spec.profileId,
+            title: spec.title,
+            version: spec.version,
+            description: spec.description,
+            source: 'scenario',
+            files: spec.files.map((rel) => ({ name: path.basename(rel), content: fs.readFileSync(scenarios.scenarioFile(rel), 'utf8') })),
+            artifactIds: spec.files.map((_, i) => `${scenario.id}-${k}-${i}`),
+            dataStandardPath: existing?.data_standard_path != null ? JSON.parse(existing.data_standard_path) : (spec.dataStandardPath ?? null),
+        }));
+    }
+    return installed;
 }
 
 function artifactsOf(dataspaceId, profileId) {
@@ -446,7 +448,7 @@ async function modelFromGraphs(profileId, graphs, dataStandardPath = null) {
 
 // Without a hub, or before one is chosen, a dataspace falls back to the profile
 // the default scenario ships, loaded once into graphs of its own.
-const DEFAULT_PROFILE = scenarios.getScenario(scenarios.DEFAULT_SCENARIO_ID).catalogProfile;
+const DEFAULT_PROFILE = scenarios.getScenario(scenarios.DEFAULT_SCENARIO_ID).catalogProfiles[0];
 const defaultGraph = (i) => `urn:graph:catalog-profile:default:${i}`;
 let defaultLoaded = null;
 
@@ -532,7 +534,7 @@ module.exports = {
     uploadsGraph,
     addProfile,
     removeProfile,
-    installScenarioProfile,
+    installScenarioProfiles,
     listFileProfiles,
     fieldModel,
     catalogModel,
