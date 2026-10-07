@@ -2,13 +2,14 @@
 
 ## 1) What this project is
 
-A standalone, local dataspace simulator for research and teaching. Three containers:
+A standalone, local dataspace simulator for research and teaching. Four containers:
 
 | Service | Role | Host port |
 |---|---|---|
 | `sim-frontend` | React + Framer Motion UI | 4000 |
 | `sim-backend` | Node/Express API, policy engine, state machine, SQLite | 4001 |
 | `sim-fuseki` | Apache Jena Fuseki, RDF/DCAT store queried with SPARQL | 4030 |
+| `sim-validator` | Semantic Treehouse's SHACL validator (pyshacl), published image | 4040 |
 
 The semantic layer is real: metadata genuinely becomes RDF, is stored in named graphs
 partitioned by publisher and dataspace, and is queried with SPARQL. It is not mocked.
@@ -82,6 +83,18 @@ distributions unless one of their fields is edited.
 only knows `dct:conformsTo` as the fallback, so a profile that names its standard elsewhere
 finds nothing in the data-standard filter until that field is chosen in the hub.
 
+**The validator sees only the data graph.** pyshacl's ontology graph takes class and
+property definitions, not statements about concepts, so `validator.js` puts the profile's
+vocabulary files and the hub's types of referenced resources into the data graph. The hub
+types are filtered to the classes the shapes expect at the referring property: the hub also
+types its profiles as `dcat:Dataset`, which would otherwise be validated as entries. A shape
+that wraps its paths in `sh:or` reports no path; such findings concern their focus node.
+
+**Loading a scenario leaves existing entries alone.** A dataspace created before a scenario's
+entries changed keeps the old entries. The startup hub refresh still installs the scenario's
+new profiles, and a dataspace that never chose one gets the first, so old entries end up
+checked against a new profile. Create a fresh dataspace to see a scenario as it now is.
+
 ## 5) Conventions
 
 **Language.** Write new code, comments and identifiers in English. Much of the existing
@@ -137,6 +150,7 @@ curl -s localhost:4001/api/health
 curl -s "localhost:4001/api/catalog?consumerNodeId=<id>"
 curl -s -X POST localhost:4001/api/semantic/search \
   -H 'Content-Type: application/json' -d '{"searchText":"concrete"}'
+curl -s localhost:4001/api/dataspaces/<id>/validation   # 409 unless hub and validator are on
 ```
 
 Rebuild a single service with
