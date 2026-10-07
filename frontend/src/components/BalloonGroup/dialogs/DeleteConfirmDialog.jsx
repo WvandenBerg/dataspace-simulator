@@ -1,11 +1,11 @@
 import React from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 
 const DeleteConfirmDialog = ({ show, name, onConfirm, onCancel }) => {
     if (!show) return null;
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -23,7 +23,7 @@ const DeleteConfirmDialog = ({ show, name, onConfirm, onCancel }) => {
                 zIndex: 1000
             }}
         >
-            <motion.div
+            <Motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -68,8 +68,8 @@ const DeleteConfirmDialog = ({ show, name, onConfirm, onCancel }) => {
                         Delete
                     </button>
                 </div>
-            </motion.div>
-        </motion.div>
+            </Motion.div>
+        </Motion.div>
     );
 };
 
