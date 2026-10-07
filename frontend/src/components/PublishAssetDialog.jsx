@@ -6,6 +6,7 @@ import {
     Globe, Users, Factory, Briefcase, Plus, XCircle, Info
 } from 'lucide-react';
 import { BASIC_PATHS, STATUSES, flattenFields, shortIri, valuesAt } from './catalogFields';
+import { INDUSTRIES, ORG_ROLES, credentialOptions } from './credentials';
 
 const API_BASE = '/api';
 
@@ -43,10 +44,6 @@ const buildRecord = (fields, entries, language) => {
     }
     return record;
 };
-
-/* ── fixed credential option sets ──────────────────────────────── */
-const INDUSTRY_OPTS = ['construction', 'manufacturing', 'logistics', 'energy', 'automotive'];
-const ROLE_OPTS = ['customer', 'contractor', 'supplier', 'manufacturer'];
 
 /* ── policy definitions ─────────────────────────────────────────── */
 const POLICIES = [
@@ -135,9 +132,9 @@ export default function PublishAssetDialog({
     const [error, setError] = useState(null);
     const [done, setDone] = useState(false);
 
-    // Fetch nodes when DID Group policy is selected
+    // Participants, for the DID group's choices and the credential values the dataspace uses
     useEffect(() => {
-        if (selectedPolicy === 'sys-did-group') {
+        if (['sys-did-group', 'sys-industry', 'sys-role'].includes(selectedPolicy)) {
             fetch(`${API_BASE}/nodes`)
                 .then(r => r.json())
                 .then(nodes => setAvailableNodes(Array.isArray(nodes) ? nodes : []))
@@ -323,8 +320,9 @@ export default function PublishAssetDialog({
     // Build the options list for the active policy constraint
     const getConstraintOptions = () => {
         if (!activePol?.constraint) return [];
-        if (activePol.constraint.type === 'industry') return INDUSTRY_OPTS;
-        if (activePol.constraint.type === 'role') return ROLE_OPTS;
+        const inDataspace = availableNodes.filter(n => (n.metadata?.dataspaceId || 'demo') === dataspaceId);
+        if (activePol.constraint.type === 'industry') return credentialOptions(INDUSTRIES, inDataspace, 'industry');
+        if (activePol.constraint.type === 'role') return credentialOptions(ORG_ROLES, inDataspace, 'orgRole');
         if (activePol.constraint.type === 'did') {
             // DID nodes: show name + bpn (DID)
             return availableNodes.map(n => n.bpn || n.id).filter(Boolean);

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Building2 } from 'lucide-react';
 import './Components.css';
+import CredentialValues from './CredentialValues';
+import { INDUSTRIES, ORG_ROLES, credentialOptions, toList } from './credentials';
 
 // Auto-generate a DID from a participant name
 function generateDid(name) {
@@ -8,16 +10,6 @@ function generateDid(name) {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 28);
     const suffix = Math.random().toString(36).slice(2, 5);
     return `did:web:${slug}-${suffix}.sim.local`;
-}
-
-// Match DOMAIN_OPTIONS from participant app (constants.js)
-const INDUSTRY_OPTIONS = ['Construction', 'Manufacturing', 'Logistics', 'Energy', 'Automotive'];
-const ROLE_OPTIONS = ['customer', 'contractor', 'supplier', 'manufacturer'];
-
-function toList(value) {
-    if (!value) return [];
-    if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
-    return String(value).split(',').map((v) => v.trim()).filter(Boolean);
 }
 
 const toPreset = (p) => ({
@@ -81,6 +73,7 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
 
     const existingDids = Object.values(existingNodes).map(n => n.bpn || n.did);
     const groups = presetGroups(scenarios, existingDids);
+    const participants = Object.values(existingNodes);
 
     if (!isOpen) return null;
 
@@ -105,13 +98,6 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
     const labelStyle = {
         display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem',
         marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em'
-    };
-    const toggleItem = (values, setValues, value) => {
-        if (values.includes(value)) {
-            setValues(values.filter((v) => v !== value));
-            return;
-        }
-        setValues([...values, value]);
     };
     const previewPos = hoverPreview
         ? {
@@ -248,36 +234,11 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                             <div>
                                 <label style={labelStyle}>Industry</label>
-                                <div style={{ display: 'grid', gap: '4px' }}>
-                                    {INDUSTRY_OPTIONS.map((o) => {
-                                        const value = o.toLowerCase();
-                                        return (
-                                            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.8rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={industry.includes(value)}
-                                                    onChange={() => toggleItem(industry, setIndustry, value)}
-                                                />
-                                                {o}
-                                            </label>
-                                        );
-                                    })}
-                                </div>
+                                <CredentialValues options={credentialOptions(INDUSTRIES, participants, 'industry')} selected={industry} onChange={setIndustry} />
                             </div>
                             <div>
                                 <label style={labelStyle}>Org. Role</label>
-                                <div style={{ display: 'grid', gap: '4px' }}>
-                                    {ROLE_OPTIONS.map((o) => (
-                                        <label key={o} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.8rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={orgRole.includes(o)}
-                                                onChange={() => toggleItem(orgRole, setOrgRole, o)}
-                                            />
-                                            {o}
-                                        </label>
-                                    ))}
-                                </div>
+                                <CredentialValues options={credentialOptions(ORG_ROLES, participants, 'orgRole')} selected={orgRole} onChange={setOrgRole} />
                             </div>
                         </div>
                     </div>
