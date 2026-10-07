@@ -334,6 +334,7 @@ const BalloonGroup = ({
                 name={name}
                 bpn={bpn}
                 participantData={participantData}
+                allNodes={allNodes}
                 onSave={handleSaveEdit}
                 onCancel={() => setShowEditDialog(false)}
             />

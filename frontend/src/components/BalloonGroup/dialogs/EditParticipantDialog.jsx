@@ -1,20 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
+import CredentialValues from '../../CredentialValues';
+import { INDUSTRIES, ORG_ROLES, credentialOptions, toList } from '../../credentials';
 
-const INDUSTRY_OPTIONS = ['construction', 'manufacturing', 'logistics', 'energy', 'automotive'];
-const ROLE_OPTIONS = ['customer', 'contractor', 'supplier', 'manufacturer'];
-
-function toList(value) {
-    if (!value) return [];
-    if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
-    return String(value)
-        .split(',')
-        .map((v) => v.trim())
-        .filter(Boolean);
-}
-
-const EditParticipantDialog = ({ show, participantData, name, bpn, onSave, onCancel }) => {
+const EditParticipantDialog = ({ show, participantData, name, bpn, allNodes = {}, onSave, onCancel }) => {
     const [industryValues, setIndustryValues] = useState([]);
     const [orgRoleValues, setOrgRoleValues] = useState([]);
     const [industryOpen, setIndustryOpen] = useState(false);
@@ -27,14 +18,6 @@ const EditParticipantDialog = ({ show, participantData, name, bpn, onSave, onCan
         setIndustryOpen(false);
         setOrgRoleOpen(false);
     }, [show, participantData]);
-
-    const toggleValue = (current, setCurrent, value) => {
-        if (current.includes(value)) {
-            setCurrent(current.filter((v) => v !== value));
-            return;
-        }
-        setCurrent([...current, value]);
-    };
 
     const formatSummary = (values) => {
         if (values.length === 0) return 'Select values';
@@ -50,7 +33,8 @@ const EditParticipantDialog = ({ show, participantData, name, bpn, onSave, onCan
 
     if (!show) return null;
 
-    return (
+    // Portalled out of the canvas, whose zoom would otherwise shrink it into the card.
+    return createPortal(
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -67,7 +51,7 @@ const EditParticipantDialog = ({ show, participantData, name, bpn, onSave, onCan
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                zIndex: 1000,
+                zIndex: 2100,
             }}
         >
             <motion.div
@@ -131,18 +115,8 @@ const EditParticipantDialog = ({ show, participantData, name, bpn, onSave, onCan
                                 {formatSummary(industryValues)}
                             </button>
                             {industryOpen && (
-                                <div data-cred-dropdown="true" onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 20, border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '8px', background: 'var(--bg-card)', display: 'grid', gap: '6px', maxHeight: '170px', overflowY: 'auto', boxShadow: '0 10px 24px rgba(0,0,0,0.35)' }}>
-                                    {INDUSTRY_OPTIONS.map((option) => (
-                                        <label key={option} style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--text-primary)', fontSize: '0.86rem', cursor: 'pointer' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={industryValues.includes(option)}
-                                                onChange={() => toggleValue(industryValues, setIndustryValues, option)}
-                                                onPointerDown={(e) => e.stopPropagation()}
-                                            />
-                                            {option}
-                                        </label>
-                                    ))}
+                                <div data-cred-dropdown="true" onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 20, border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '8px', background: 'var(--bg-card)', maxHeight: '220px', overflowY: 'auto', boxShadow: '0 10px 24px rgba(0,0,0,0.35)' }}>
+                                    <CredentialValues options={credentialOptions(INDUSTRIES, Object.values(allNodes), 'industry')} selected={industryValues} onChange={setIndustryValues} />
                                 </div>
                             )}
                         </div>
@@ -164,18 +138,8 @@ const EditParticipantDialog = ({ show, participantData, name, bpn, onSave, onCan
                                 {formatSummary(orgRoleValues)}
                             </button>
                             {orgRoleOpen && (
-                                <div data-cred-dropdown="true" onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 20, border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '8px', background: 'var(--bg-card)', display: 'grid', gap: '6px', maxHeight: '170px', overflowY: 'auto', boxShadow: '0 10px 24px rgba(0,0,0,0.35)' }}>
-                                    {ROLE_OPTIONS.map((option) => (
-                                        <label key={option} style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--text-primary)', fontSize: '0.86rem', cursor: 'pointer' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={orgRoleValues.includes(option)}
-                                                onChange={() => toggleValue(orgRoleValues, setOrgRoleValues, option)}
-                                                onPointerDown={(e) => e.stopPropagation()}
-                                            />
-                                            {option}
-                                        </label>
-                                    ))}
+                                <div data-cred-dropdown="true" onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 20, border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '8px', background: 'var(--bg-card)', maxHeight: '220px', overflowY: 'auto', boxShadow: '0 10px 24px rgba(0,0,0,0.35)' }}>
+                                    <CredentialValues options={credentialOptions(ORG_ROLES, Object.values(allNodes), 'orgRole')} selected={orgRoleValues} onChange={setOrgRoleValues} />
                                 </div>
                             )}
                         </div>
@@ -197,7 +161,8 @@ const EditParticipantDialog = ({ show, participantData, name, bpn, onSave, onCan
                     </button>
                 </div>
             </motion.div>
-        </motion.div>
+        </motion.div>,
+        document.body,
     );
 };
 

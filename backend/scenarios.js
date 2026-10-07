@@ -91,6 +91,7 @@ function listScenarios() {
         description: s.description || '',
         participantCount: s.participants.length,
         assetCount: s.assets.length,
+        participants: s.participants,
     }));
 }
 

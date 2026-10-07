@@ -136,7 +136,7 @@ chore: translate German comments to English
 ## 7) Checks before committing
 
 ```bash
-cd frontend && npx eslint src        # 60 problems is the known baseline — do not add to it
+cd frontend && npx eslint src        # 59 problems is the known baseline — do not add to it
 cd frontend && npx vite build        # must succeed
 ```
 

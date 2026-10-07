@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Building2 } from 'lucide-react';
 import './Components.css';
-import { PRESET_PARTICIPANTS } from './MacroView';
+import CredentialValues from './CredentialValues';
+import { INDUSTRIES, ORG_ROLES, credentialOptions, toList } from './credentials';
 
 // Auto-generate a DID from a participant name
 function generateDid(name) {
@@ -11,15 +12,26 @@ function generateDid(name) {
     return `did:web:${slug}-${suffix}.sim.local`;
 }
 
-// Match DOMAIN_OPTIONS from participant app (constants.js)
-const INDUSTRY_OPTIONS = ['Construction', 'Manufacturing', 'Logistics', 'Energy', 'Automotive'];
-const ROLE_OPTIONS = ['customer', 'contractor', 'supplier', 'manufacturer'];
+const toPreset = (p) => ({
+    name: p.name,
+    bpn: p.bpn,
+    location: p.location,
+    domain: p.domain,
+    roles: p.roles,
+    ontologies: p.ontologies,
+    dataCategories: p.dataCategories,
+    formats: p.formats,
+    tags: p.tags,
+    metadata: { ...(p.credentials || {}) },
+});
 
-function toList(value) {
-    if (!value) return [];
-    if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
-    return String(value).split(',').map((v) => v.trim()).filter(Boolean);
-}
+// The scenarios this dataspace already draws participants from, or every scenario if none.
+const presetGroups = (scenarios, existingDids) => {
+    const drawnOn = scenarios.filter((s) => s.participants.some((p) => existingDids.includes(p.bpn)));
+    return (drawnOn.length > 0 ? drawnOn : scenarios)
+        .map((s) => ({ name: s.name, presets: s.participants.filter((p) => !existingDids.includes(p.bpn)).map(toPreset) }))
+        .filter((g) => g.presets.length > 0);
+};
 
 
 const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData = null, existingNodes = {} }) => {
@@ -29,6 +41,17 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
     const [orgRole, setOrgRole] = useState([]);
     const [showPresets, setShowPresets] = useState(true);
     const [hoverPreview, setHoverPreview] = useState(null);
+    const [scenarios, setScenarios] = useState([]);
+
+    useEffect(() => {
+        if (!isOpen || editMode) return undefined;
+        let cancelled = false;
+        fetch('/api/scenarios')
+            .then((r) => (r.ok ? r.json() : []))
+            .then((data) => { if (!cancelled) setScenarios(Array.isArray(data) ? data : []); })
+            .catch(() => { if (!cancelled) setScenarios([]); });
+        return () => { cancelled = true; };
+    }, [isOpen, editMode]);
 
     useEffect(() => {
         if (isOpen) {
@@ -49,9 +72,8 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
     }, [name, editMode]);
 
     const existingDids = Object.values(existingNodes).map(n => n.bpn || n.did);
-    const availablePresets = Object.entries(PRESET_PARTICIPANTS).filter(
-        ([, p]) => !existingDids.includes(p.bpn)
-    );
+    const groups = presetGroups(scenarios, existingDids);
+    const participants = Object.values(existingNodes);
 
     if (!isOpen) return null;
 
@@ -77,13 +99,6 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
         display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem',
         marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em'
     };
-    const toggleItem = (values, setValues, value) => {
-        if (values.includes(value)) {
-            setValues(values.filter((v) => v !== value));
-            return;
-        }
-        setValues([...values, value]);
-    };
     const previewPos = hoverPreview
         ? {
             left: `${Math.min(hoverPreview.x + 14, window.innerWidth - 300)}px`,
@@ -104,7 +119,7 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
 
                 <form onSubmit={handleSubmit} style={{ overflow: 'auto', flex: 1, paddingRight: '2px' }}>
                     {/* Quick Select Presets */}
-                    {!editMode && availablePresets.length > 0 && (
+                    {!editMode && groups.length > 0 && (
                         <div style={{ marginBottom: '20px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                                 <span style={{ fontSize: '0.72rem', color: '#22c55e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quick Select</span>
@@ -115,35 +130,40 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
                             </div>
                             {showPresets && (
                                 <>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '10px' }}>
-                                        {availablePresets.map(([key, preset]) => (
-                                            <button key={key} type="button"
-                                                onClick={() => { onConfirm(preset); setName(''); setDid(''); setIndustry([]); setOrgRole([]); }}
-                                                onMouseEnter={(e) => setHoverPreview({ preset, x: e.clientX, y: e.clientY })}
-                                                onMouseMove={(e) => setHoverPreview((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : prev)}
-                                                onMouseLeave={() => setHoverPreview(null)}
-                                                style={{
-                                                    padding: '10px 12px',
-                                                    background: 'rgba(34,197,94,0.12)',
-                                                    border: '1px solid rgba(34,197,94,0.35)',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    textAlign: 'left',
-                                                    transition: 'background 120ms ease'
-                                                }}
-                                                onMouseOver={e => e.currentTarget.style.background = 'rgba(34,197,94,0.22)'}
-                                                onMouseOut={e => e.currentTarget.style.background = 'rgba(34,197,94,0.12)'}
-                                            >
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Building2 size={15} color="#22c55e" />
-                                                    <div>
-                                                        <div style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-primary)' }}>{preset.name}</div>
-                                                        <div style={{ fontSize: '0.68rem', color: '#64748b' }}>{preset.location}</div>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
+                                    {groups.map((group) => (
+                                        <div key={group.name} style={{ marginBottom: '10px' }}>
+                                            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: '6px' }}>{group.name}</div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                                                {group.presets.map((preset) => (
+                                                    <button key={preset.bpn} type="button"
+                                                        onClick={() => { onConfirm(preset); setName(''); setDid(''); setIndustry([]); setOrgRole([]); }}
+                                                        onMouseEnter={(e) => setHoverPreview({ preset, x: e.clientX, y: e.clientY })}
+                                                        onMouseMove={(e) => setHoverPreview((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : prev)}
+                                                        onMouseLeave={() => setHoverPreview(null)}
+                                                        style={{
+                                                            padding: '10px 12px',
+                                                            background: 'rgba(34,197,94,0.12)',
+                                                            border: '1px solid rgba(34,197,94,0.35)',
+                                                            borderRadius: '8px',
+                                                            cursor: 'pointer',
+                                                            textAlign: 'left',
+                                                            transition: 'background 120ms ease'
+                                                        }}
+                                                        onMouseOver={e => e.currentTarget.style.background = 'rgba(34,197,94,0.22)'}
+                                                        onMouseOut={e => e.currentTarget.style.background = 'rgba(34,197,94,0.12)'}
+                                                    >
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <Building2 size={15} color="#22c55e" />
+                                                            <div>
+                                                                <div style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-primary)' }}>{preset.name}</div>
+                                                                <div style={{ fontSize: '0.68rem', color: '#64748b' }}>{preset.location}</div>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
 
                                     {hoverPreview?.preset && previewPos && (
                                         <div
@@ -187,7 +207,7 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
                     <div style={{ marginBottom: '12px' }}>
                         <label style={labelStyle}>Participant Name *</label>
                         <input type="text" value={name} autoFocus onChange={e => setName(e.target.value)}
-                            placeholder="e.g. Bergstein Bau GmbH" style={inputStyle} />
+                            style={inputStyle} />
                     </div>
 
                     {/* DID */}
@@ -209,41 +229,16 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
                     {/* Credentials — evaluated by the policy engine */}
                     <div style={{ padding: '12px', background: 'var(--bg-surface)', borderRadius: '10px', border: '1px solid var(--border-subtle)', marginBottom: '18px' }}>
                         <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
-                            Credentials <span style={{ color: '#475569', fontWeight: 400 }}>— used for policy evaluation</span>
+                            Credentials <span style={{ color: '#475569', fontWeight: 400 }}>— optional, used for policy evaluation</span>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                             <div>
                                 <label style={labelStyle}>Industry</label>
-                                <div style={{ display: 'grid', gap: '4px' }}>
-                                    {INDUSTRY_OPTIONS.map((o) => {
-                                        const value = o.toLowerCase();
-                                        return (
-                                            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.8rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={industry.includes(value)}
-                                                    onChange={() => toggleItem(industry, setIndustry, value)}
-                                                />
-                                                {o}
-                                            </label>
-                                        );
-                                    })}
-                                </div>
+                                <CredentialValues options={credentialOptions(INDUSTRIES, participants, 'industry')} selected={industry} onChange={setIndustry} />
                             </div>
                             <div>
                                 <label style={labelStyle}>Org. Role</label>
-                                <div style={{ display: 'grid', gap: '4px' }}>
-                                    {ROLE_OPTIONS.map((o) => (
-                                        <label key={o} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.8rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={orgRole.includes(o)}
-                                                onChange={() => toggleItem(orgRole, setOrgRole, o)}
-                                            />
-                                            {o}
-                                        </label>
-                                    ))}
-                                </div>
+                                <CredentialValues options={credentialOptions(ORG_ROLES, participants, 'orgRole')} selected={orgRole} onChange={setOrgRole} />
                             </div>
                         </div>
                     </div>
@@ -252,8 +247,8 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
                     <div className="dialog-actions" style={{ paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
                         <button type="button" onClick={handleClose} className="dialog-btn cancel">Cancel</button>
                         <button type="submit" className="dialog-btn confirm"
-                            disabled={!name.trim() || !did.trim() || industry.length === 0 || orgRole.length === 0}
-                            style={{ opacity: (!name.trim() || !did.trim() || industry.length === 0 || orgRole.length === 0) ? 0.5 : 1 }}>
+                            disabled={!name.trim() || !did.trim()}
+                            style={{ opacity: (!name.trim() || !did.trim()) ? 0.5 : 1 }}>
                             {editMode ? 'Save' : 'Add'}
                         </button>
                     </div>
