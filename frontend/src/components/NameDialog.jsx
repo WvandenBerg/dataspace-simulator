@@ -243,7 +243,7 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
                     {/* Credentials — evaluated by the policy engine */}
                     <div style={{ padding: '12px', background: 'var(--bg-surface)', borderRadius: '10px', border: '1px solid var(--border-subtle)', marginBottom: '18px' }}>
                         <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
-                            Credentials <span style={{ color: '#475569', fontWeight: 400 }}>— used for policy evaluation</span>
+                            Credentials <span style={{ color: '#475569', fontWeight: 400 }}>— optional, used for policy evaluation</span>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                             <div>
@@ -286,8 +286,8 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
                     <div className="dialog-actions" style={{ paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
                         <button type="button" onClick={handleClose} className="dialog-btn cancel">Cancel</button>
                         <button type="submit" className="dialog-btn confirm"
-                            disabled={!name.trim() || !did.trim() || industry.length === 0 || orgRole.length === 0}
-                            style={{ opacity: (!name.trim() || !did.trim() || industry.length === 0 || orgRole.length === 0) ? 0.5 : 1 }}>
+                            disabled={!name.trim() || !did.trim()}
+                            style={{ opacity: (!name.trim() || !did.trim()) ? 0.5 : 1 }}>
                             {editMode ? 'Save' : 'Add'}
                         </button>
                     </div>
