@@ -67,12 +67,12 @@ async function loadScenarioIntoHub(dataspaceId, scenario) {
     const tripleCount = file
         ? await replaceGraph(scenarioGraph(dataspaceId), fs.readFileSync(file, 'utf8'))
         : 0;
-    const profile = await catalogProfiles.installScenarioProfile(dataspaceId, scenario);
-    // Only a dataspace that never chose gets the scenario's profile; null is a choice too.
-    if (profile && db.getDataspaceSettings(dataspaceId).catalog?.profileId === undefined) {
-        db.patchDataspaceSettings(dataspaceId, { catalog: { profileId: profile.profileId } });
+    const profiles = await catalogProfiles.installScenarioProfiles(dataspaceId, scenario);
+    // Only a dataspace that never chose gets the scenario's first profile; null is a choice too.
+    if (profiles.length > 0 && db.getDataspaceSettings(dataspaceId).catalog?.profileId === undefined) {
+        db.patchDataspaceSettings(dataspaceId, { catalog: { profileId: profiles[0].profileId } });
     }
-    return { tripleCount, profileFields: profile?.fields ?? 0 };
+    return { tripleCount, profileFields: profiles[0]?.fields ?? 0 };
 }
 
 // Startup refresh, so an edited fixture takes effect on restart. A dataspace
@@ -87,7 +87,7 @@ async function refreshScenarioHubs() {
         for (const summary of scenarios.listScenarios()) {
             const scenario = scenarios.getScenario(summary.id);
             const holds = scenario.assets.some((a) => assetIds.has(scenarios.scopedId(dataspaceId, a.assetId)));
-            if (!holds || (!scenarios.catalogExportFile(scenario) && !scenario.catalogProfile)) continue;
+            if (!holds || (!scenarios.catalogExportFile(scenario) && !scenario.catalogProfiles)) continue;
             const { tripleCount, profileFields } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));
             loaded.push({ dataspaceId, scenarioId: scenario.id, tripleCount, profileFields });
         }
@@ -210,11 +210,22 @@ async function listCatalogProfiles(dataspaceId) {
         .map((p) => ({ ...(described.get(p.id) || toProfile({})), id: p.id, source: p.source, files: p.files }));
 }
 
+// What the hub says each of these resources is, such as a profile being a dcterms:Standard.
+async function typesOf(dataspaceId, iris) {
+    if (iris.length === 0) return [];
+    const rows = await executeSelect(hubQuery(dataspaceId, {
+        select: 'DISTINCT ?s ?type',
+        where: `VALUES ?s { ${iris.map((i) => `<${escapeIri(i)}>`).join(' ')} } ?s a ?type .`,
+    }));
+    return rows.map((r) => [val(r, 's'), val(r, 'type')]);
+}
+
 module.exports = {
     loadScenarioIntoHub,
     refreshScenarioHubs,
     listProfiles,
     listCatalogProfiles,
+    typesOf,
     getProfile,
     shapesFor,
     listAlignments,

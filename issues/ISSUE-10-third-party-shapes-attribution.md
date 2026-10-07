@@ -14,6 +14,18 @@ The repo now ships third-party SHACL files as scenario fixtures, under
 | `mobilitydcat-ap_1.1.0_shacl_mdr-vocabularies.shape.ttl` | same | CC BY 4.0 |
 | `dcat-ap_2.0.1_shacl_shapes.ttl` | SEMIC / DIGIT, DCAT-AP 2.0.1 | CC BY 4.0 |
 
+and under `backend/scenarios/catalog-profiles/mobilitydcat-ap-3.0.0/`, with copies in
+`demo-files/ccam-dcat-ap-draft/`:
+
+| file | from | licence |
+| --- | --- | --- |
+| `mobilitydcat-ap_3.0.0_shapes.ttl` | NAPCORE, mobilityDCAT-AP 3.0.0 draft | CC BY 4.0 |
+| `mobilitydcat-ap_3.0.0_ranges.ttl` | same | not declared in the file |
+| `mobilitydcat-ap_3.0.0_mdr-vocabularies.ttl` | same | CC BY 4.0 |
+| `mobilitydcat-ap_3.0.0_deprecated-uris.ttl` | same | not declared in the file |
+| `dcat-ap_3.0.1_shapes.ttl`, `_range.ttl`, `_deprecateduris.ttl` | SEMIC, DCAT-AP 3.0.1 | not declared in the files |
+| `vocabulary-subset.ttl` | generated from mobilityDCAT-AP vocabularies and EU Vocabularies tables | CC BY 4.0, noted in its header |
+
 The licence is declared inside each file (`dct:license`), and the files are copied
 verbatim, so the notice travels with them. That is probably enough for CC BY, but
 nothing at repo level says these files are not ours, where they came from, or that

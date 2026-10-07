@@ -2,13 +2,13 @@
 #
 # Not a FUSE4CCAM deliverable and not a proposal. WP1 and WP2 design
 # CCAM-DCAT-AP; this file only shows what adding one field on top of
-# mobilityDCAT-AP 1.1.0 does to a catalog that already exists. The
+# mobilityDCAT-AP 3.0.0 does to a catalog that already exists. The
 # namespace is example.org on purpose.
 #
-# Upload this file together with the four mobilityDCAT-AP files in the
-# same folder, then set the profile's data standard field to
-# "dataset distribution > mobility data standard > schema", as the
-# mobilityDCAT-AP profile has it.
+# Upload this file together with the other files in the same folder,
+# then set the profile's data standard field to
+# "dataset distribution > Conforms to", as the mobilityDCAT-AP 3.0.0
+# profile has it.
 
 @prefix ccam: <https://example.org/ccam-dcat-ap#> .
 @prefix dcat: <http://www.w3.org/ns/dcat#> .
@@ -22,7 +22,7 @@
 <https://example.org/ccam-dcat-ap>
     a owl:Ontology ;
     dct:title "CCAM-DCAT-AP, illustrative draft"@en ;
-    rdfs:comment "Adds the SAE J3016 automation level to mobilityDCAT-AP 1.1.0. For simulator demos only."@en .
+    rdfs:comment "Adds the SAE J3016 automation level to mobilityDCAT-AP 3.0.0. For simulator demos only."@en .
 
 ccam:automationLevel
     a rdf:Property ;
@@ -40,8 +40,7 @@ ccam:level3 a skos:Concept ; skos:inScheme ccam:AutomationLevels ; skos:prefLabe
 ccam:level4 a skos:Concept ; skos:inScheme ccam:AutomationLevels ; skos:prefLabel "Level 4: high driving automation"@en .
 ccam:level5 a skos:Concept ; skos:inScheme ccam:AutomationLevels ; skos:prefLabel "Level 5: full driving automation"@en .
 
-# Recommended rather than mandatory: a catalog that predates the field
-# should show up as lagging behind, not as broken.
+# Mandatory, so that a catalog which predates the field fails validation.
 ccam:DatasetShape
     a sh:NodeShape ;
     sh:targetClass dcat:Dataset ;
@@ -52,5 +51,5 @@ ccam:DatasetShape
         sh:nodeKind sh:IRI ;
         sh:in ( ccam:level0 ccam:level1 ccam:level2 ccam:level3 ccam:level4 ccam:level5 ) ;
         sh:minCount 1 ;
-        sh:severity sh:Warning ;
+        sh:message "Automation level is mandatory and must be one of the SAE J3016 levels 0 to 5"@en ;
     ] .

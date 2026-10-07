@@ -31,7 +31,7 @@ const AssetViewDialog = ({ asset, dataspaceId, onClose }) => {
             // A portal still bubbles React events to the canvas, which zooms on wheel and click.
             onWheel={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2200 }}
         >
             <div
                 onMouseDown={(e) => e.stopPropagation()}

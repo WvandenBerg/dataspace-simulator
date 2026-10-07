@@ -5,13 +5,14 @@ This document describes the technical design and runtime behavior of the standal
 
 ## 1) System overview
 
-The simulator consists of three containers:
+The simulator consists of four containers:
 
 | Service | Tech | Responsibility | Port |
 |---|---|---|---|
 | `sim-frontend` | React + Framer Motion | UI, interaction, visual workflow rendering | 3000 |
 | `sim-backend` | Node.js + Express | API, persistence orchestration, policy checks, state machine | 3001 |
 | `sim-fuseki` | Apache Jena Fuseki | RDF graph storage, SPARQL queries | 3030 |
+| `sim-validator` | Python, pyshacl | SHACL validation of catalog entries (Semantic Treehouse's json-ld-validator) | 8000 |
 
 High-level data flow:
 1. Frontend triggers backend APIs.
@@ -56,6 +57,16 @@ Responsibilities:
 - upsert/delete datasets in Fuseki
 - execute semantic search query with filter composition
 - support optional Fuseki Basic Auth via env vars
+
+### `backend/validator.js`
+
+Checks a dataspace's catalog against its catalog profile.
+
+Responsibilities:
+- build the data graph: the entries' triples, the profile's vocabulary files, and the hub's
+  types of resources the entries point at
+- send it with the profile's shapes to `sim-validator`
+- map each finding back to its entry and to a field path from the dataset
 
 ### `backend/policy.js`
 
@@ -160,6 +171,13 @@ Request body fields:
 - `GET /negotiate/:id`
 - `POST /transfer`
 
+### Dataspace settings and validation
+- `GET /dataspaces/:id/settings`
+- `PATCH /dataspaces/:id/settings` with `{ vocabHub }`, `{ validator: { enabled } }` or
+  `{ catalog: { profileId } }`
+- `GET /dataspaces/:id/validation`: every entry checked against the catalog profile, with
+  findings per entry. Answers 409 unless both the Vocabulary Hub and the validator are on.
+
 ## 5) Persistence model
 
 ## 5.1 SQLite
@@ -254,6 +272,7 @@ Relevant environment variables:
 - `FUSEKI_DATASET`
 - `FUSEKI_USERNAME`
 - `FUSEKI_PASSWORD`
+- `VALIDATOR_URL`
 - `AUTO_ACCEPT_NEGOTIATIONS`
 
 ## 11) Known limitations

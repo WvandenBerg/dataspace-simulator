@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Lock } from 'lucide-react';
+import { Compass, ListChecks, Lock } from 'lucide-react';
 
 import './Components.css';
 
@@ -10,7 +10,7 @@ import './Components.css';
  * saying so is worth more here than a switch nobody may flip. The vocabulary
  * service is the optional one, because the textbook dataspace does not have it.
  */
-const DataspaceServicesPanel = ({ vocabularyEnabled, onVocabularyChange }) => {
+const DataspaceServicesPanel = ({ vocabularyEnabled, onVocabularyChange, validatorEnabled, onValidatorChange }) => {
     // Keep clicks from reaching the container's pan handler
     const swallowPointerDown = (e) => {
         e.preventDefault();
@@ -40,6 +40,22 @@ const DataspaceServicesPanel = ({ vocabularyEnabled, onVocabularyChange }) => {
                     className="services-panel-switch"
                     checked={vocabularyEnabled}
                     onChange={(e) => onVocabularyChange(e.target.checked)}
+                />
+            </label>
+
+            {/* Nested under the hub, because it checks the catalog against the profile the hub holds. */}
+            <label
+                className={`services-panel-row is-nested${vocabularyEnabled ? '' : ' is-locked'}`}
+                title={vocabularyEnabled ? undefined : 'Runs on the Vocabulary Service'}
+            >
+                <ListChecks size={14} className="services-panel-icon" />
+                <span className="services-panel-label">Metadata Validator</span>
+                <input
+                    type="checkbox"
+                    className="services-panel-switch"
+                    checked={vocabularyEnabled && validatorEnabled}
+                    disabled={!vocabularyEnabled}
+                    onChange={(e) => onValidatorChange(e.target.checked)}
                 />
             </label>
         </div>

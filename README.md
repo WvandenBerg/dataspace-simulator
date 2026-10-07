@@ -21,6 +21,7 @@ What it includes:
 - Interactive UI for participants, catalogs, semantic search, negotiation, and transfer
 - Policy engine that evaluates access constraints against participant claims
 - RDF/DCAT metadata indexing in Apache Fuseki with SPARQL querying
+- SHACL validation of catalog entries against the catalog's profile
 - Persistent local state via SQLite and Docker volumes
 
 What it does not include:
@@ -41,6 +42,7 @@ Open:
 - Simulator UI: `http://localhost:4000`
 - Backend API: `http://localhost:4001`
 - Fuseki UI: `http://localhost:4030`
+- SHACL validator API: `http://localhost:4040/docs`
 
 To reset to a clean first-run state (and re-apply demo seed data):
 
@@ -56,6 +58,7 @@ docker compose up -d --build
 | `sim-frontend` | React-based interactive simulator UI | 3000 |
 | `sim-backend` | Node.js API, policy checks, state machine, persistence | 3001 |
 | `sim-fuseki` | RDF store and SPARQL endpoint for semantic metadata | 3030 |
+| `sim-validator` | Semantic Treehouse's SHACL validator (pyshacl), a published image | 8000 |
 
 Persistence:
 - SQLite database inside backend container (`/data/simulator.db`), including dataspace
@@ -142,11 +145,54 @@ catalog falls back to the simulator's default profile. Each profile also names t
 which an entry gives its data standard; it defaults to `dct:conformsTo` and can be changed per
 profile.
 
-`demo-files/ccam-dcat-ap-draft` holds an illustrative CCAM-DCAT-AP: mobilityDCAT-AP 1.1.0 plus
-one recommended field, the SAE J3016 automation level. Upload all five files to the FUSE4CCAM
+`demo-files/ccam-dcat-ap-draft` holds an illustrative CCAM-DCAT-AP: mobilityDCAT-AP 3.0.0 plus
+one mandatory field, the SAE J3016 automation level. Upload all nine files to the FUSE4CCAM
 dataspace's hub, set the data standard field to the one mobilityDCAT-AP uses, and use the
 profile for the catalog. The search then offers automation level, filled by none of the
-existing entries until someone publishes one with it.
+existing entries until someone publishes one with it, and the Metadata Validator counts
+every existing entry as failing until then.
+
+### 8) Metadata Validator
+
+The Metadata Validator is a service of the Vocabulary Hub: switch it on under the Vocabulary
+Service in the Dataspace services panel. It checks every catalog entry against the shapes of
+the catalog's profile with real SHACL validation, and only reports; it never blocks a publish.
+
+It is drawn as a small disc on the hub's rim, showing how many entries have no violations.
+The disc opens the hub dialog's Validation tab, which lists the violations by field, with
+warnings and every entry folded below. Each entry view shows a badge with the entry's
+findings. The validator runs again after a publish, edit or delete, and after the catalog
+changes profile.
+
+Entries refer to code-list concepts by IRI, and the shapes check those concepts' schemes and
+classes. A profile therefore carries the concepts its entries use as a vocabulary file, which
+the validator adds to the data it checks, together with what the hub knows about resources
+the entries point at, such as the profile a distribution conforms to.
+
+## Scenarios
+
+A scenario in `backend/scenarios/` populates a new dataspace with participants and entries.
+Besides those it can declare:
+- `catalogProfiles`: profiles it installs in the hub. The first becomes the catalog's
+  profile in a dataspace that has not chosen one. Each has its files, and optionally the
+  data-standard field (`dataStandardPath`).
+- `metadataLanguage`: the language tag the title, description and other free text of
+  entries are written in, e.g. `en`.
+- `catalogExport`: a Semantic Treehouse catalogue export with profiles and alignments.
+
+Entries can give their metadata as a record (`dcatFields.record`), with CURIEs as keys.
+
+FUSE4CCAM describes its entries in mobilityDCAT-AP 3.0.0 (draft), and also ships 1.1.0. The
+3.0.0 profile's `vocabulary-subset.ttl` holds the code-list concepts its entries use. It is
+generated, so regenerate it after changing the entries:
+
+```bash
+DIR=backend/scenarios/catalog-profiles/mobilitydcat-ap-3.0.0
+IMG=$(docker compose config --images | grep shacl-validator)
+docker run --rm -v "$PWD":/w --entrypoint sh $IMG -c \
+  "cd /app && poetry run python /w/scripts/vocabulary-subset.py /w/backend/scenarios/fuse4ccam.json /w/$DIR/*shapes.ttl /w/$DIR/*range*.ttl" \
+  > $DIR/vocabulary-subset.ttl
+```
 
 ## Semantic implementation details
 
@@ -210,6 +256,7 @@ simulator/
     state-machine.js     Negotiation and transfer lifecycle
     vocabhub.js          Vocabulary Hub: profiles and alignments per dataspace
     catalogprofiles.js   Catalog profile files and the fields their shapes define
+    validator.js         Checks a catalog against its profile with the SHACL validator
     scenarios.js         Scenario loading
     scenarios/           Scenario presets, with catalog-exports/ and catalog-profiles/
   frontend/
@@ -217,6 +264,7 @@ simulator/
       components/        visualization and interaction components
       pages/             application pages
   demo-files/            Files to upload during a demo, e.g. the CCAM-DCAT-AP draft
+  scripts/               Generates a profile's vocabulary file from a scenario
   docker-compose.yml
   README.md
   PRESENTATION.md

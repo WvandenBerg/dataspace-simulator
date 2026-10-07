@@ -10,10 +10,11 @@ import ZoomControls from './ZoomControls';
 import DataspaceServicesPanel from './DataspaceServicesPanel';
 import VocabularyHubNode from './VocabularyHubNode';
 import VocabularyHubDialog from './VocabularyHubDialog';
-import { OpenHubProfileContext } from './VocabularyHubContext';
+import { OpenHubProfileContext, ValidationReportContext } from './VocabularyHubContext';
 import { useViewState } from './hooks/useViewState';
 import { useDragNodes } from './hooks/useDragNodes';
 import { useVocabularyHub } from './hooks/useVocabularyHub';
+import { useMetadataValidator } from './hooks/useMetadataValidator';
 import './Components.css';
 
 const DATASPACE_RADIUS = 550;
@@ -185,11 +186,14 @@ const MacroView = forwardRef(({
 
     const participantPositions = React.useMemo(() => Object.values(nodes), [nodes]);
     const vocabHub = useVocabularyHub(dataspaceId, ringRadius, participantPositions);
+    const validator = useMetadataValidator(dataspaceId, vocabHub.isEnabled);
     const hubPositions = vocabHub.isEnabled && vocabHub.position ? [vocabHub.position] : [];
     const [hubDialogOpen, setHubDialogOpen] = useState(false);
     const [hubFocusProfileId, setHubFocusProfileId] = useState(null);
-    const openHubDialog = (profileId = null) => {
+    const [hubDialogTab, setHubDialogTab] = useState('profiles');
+    const openHubDialog = (profileId = null, tab = 'profiles') => {
         setHubFocusProfileId(profileId);
+        setHubDialogTab(tab);
         setHubDialogOpen(true);
     };
 
@@ -257,6 +261,7 @@ const MacroView = forwardRef(({
             ...prev,
             [nodeId]: [...(prev[nodeId] || []), { ...asset, ownerNodeId: nodeId }]
         }));
+        validator.run();
     };
 
     // Delete asset — calls backend then updates local state
@@ -270,6 +275,7 @@ const MacroView = forwardRef(({
             ...prev,
             [nodeId]: (prev[nodeId] || []).filter(a => a.id !== assetId && a['@id'] !== assetId)
         }));
+        validator.run();
     };
 
     const handleEditAsset = async (assetId, payload, nodeId) => {
@@ -299,6 +305,7 @@ const MacroView = forwardRef(({
                     type: updated.policyId || 'open',
                 } : a)
             }));
+            validator.run();
         } catch (err) {
             console.error('[MacroView] Edit asset failed:', err.message || err);
         }
@@ -394,6 +401,7 @@ const MacroView = forwardRef(({
 
     return (
         <OpenHubProfileContext.Provider value={vocabHub.isConnected ? openHubDialog : null}>
+        <ValidationReportContext.Provider value={validator.isActive ? validator.report : null}>
         <div
             className="macro-view-container"
             ref={containerRef}
@@ -445,6 +453,8 @@ const MacroView = forwardRef(({
                         onDrag={vocabHub.onDrag}
                         onDragEnd={vocabHub.onDragEnd}
                         onClick={() => openHubDialog()}
+                        validation={validator.isActive ? validator : null}
+                        onValidatorClick={() => openHubDialog(null, 'validation')}
                     />
                 )}
 
@@ -585,6 +595,8 @@ const MacroView = forwardRef(({
                     vocabHub.setEnabled(next);
                     if (!next) setHubDialogOpen(false);
                 }}
+                validatorEnabled={validator.isEnabled}
+                onValidatorChange={validator.setEnabled}
             />
 
             {hubDialogOpen && (
@@ -592,10 +604,14 @@ const MacroView = forwardRef(({
                     dataspaceId={dataspaceId}
                     isConnected={vocabHub.isConnected}
                     focusProfileId={hubFocusProfileId}
+                    initialTab={hubDialogTab === 'validation' && !validator.isActive ? 'profiles' : hubDialogTab}
+                    validation={validator.isActive ? validator : null}
+                    onCatalogChange={validator.run}
                     onClose={() => setHubDialogOpen(false)}
                 />
             )}
         </div>
+        </ValidationReportContext.Provider>
         </OpenHubProfileContext.Provider>
     );
 });
