@@ -197,6 +197,17 @@ const MacroView = forwardRef(({
         setHubDialogOpen(true);
     };
 
+    // Measured, not read from the ref while rendering: on the first render the ref is still empty,
+    // and in an iframe nothing else re-renders soon enough to correct the centre.
+    const [containerSize, setContainerSize] = useState(null);
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return undefined;
+        const observer = new ResizeObserver(() => setContainerSize({ width: el.clientWidth, height: el.clientHeight }));
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
     useEffect(() => {
         return () => {
             hostedAppearanceTimersRef.current.forEach((timer) => clearTimeout(timer));
@@ -354,8 +365,8 @@ const MacroView = forwardRef(({
     const finalX = viewState.x;
     const finalY = viewState.y;
     const finalScale = viewState.scale;
-    const canvasCenterX = containerRef.current ? containerRef.current.clientWidth / 2 : window.innerWidth / 2;
-    const canvasCenterY = containerRef.current ? containerRef.current.clientHeight / 2 : window.innerHeight / 2;
+    const canvasCenterX = (containerSize?.width ?? 0) / 2;
+    const canvasCenterY = (containerSize?.height ?? 0) / 2;
     const canvasX = finalX + canvasCenterX;
     const canvasY = finalY + canvasCenterY;
 
@@ -410,6 +421,8 @@ const MacroView = forwardRef(({
             onPointerDown={handlePanStart}
             style={{ cursor: 'default' }}
         >
+            {/* Only once measured, so the ring never paints off-centre and then slides into place. */}
+            {containerSize && (
             <motion.div
                 className="macro-canvas"
                 initial={false}
@@ -575,6 +588,7 @@ const MacroView = forwardRef(({
                         ));
                 })()}
             </motion.div>
+            )}
 
             {/* Zoom Out Button - nur bei hohem Zoom-Level anzeigen */}
             <ZoomOutButton
