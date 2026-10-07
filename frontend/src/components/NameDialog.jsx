@@ -207,7 +207,7 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
                     <div style={{ marginBottom: '12px' }}>
                         <label style={labelStyle}>Participant Name *</label>
                         <input type="text" value={name} autoFocus onChange={e => setName(e.target.value)}
-                            placeholder="e.g. Bergstein Bau GmbH" style={inputStyle} />
+                            style={inputStyle} />
                     </div>
 
                     {/* DID */}
