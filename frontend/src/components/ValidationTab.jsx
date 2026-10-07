@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowUpRight, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
 import AssetViewDialog from './BalloonGroup/dialogs/AssetViewDialog';
-import { shortIri } from './catalogFields';
+import { fieldLabels, findingLabel as labelOf } from './catalogFields';
 
 const API_BASE = '/api';
 
@@ -18,21 +18,6 @@ const STATUS_COLORS = { conforms: '#16a34a', warnings: '#d97706', violations: '#
 const Dot = ({ color }) => (
     <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: color, flexShrink: 0 }} />
 );
-
-// Every field of the profile, nodes included, since a finding can concern a node itself.
-const fieldLabels = (fields, prefix = [], labels = [], out = new Map()) => {
-    for (const f of fields) {
-        const path = [...prefix, f.path];
-        const label = [...labels, f.label];
-        out.set(path.join(' '), label.join(' \u203a '));
-        fieldLabels(f.fields || [], path, label, out);
-    }
-    return out;
-};
-
-const labelOf = (labels, path) => (path.length > 0
-    ? labels.get(path.join(' ')) || path.map(shortIri).join(' \u203a ')
-    : 'The entry as a whole');
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const entriesText = (n) => (n === 1 ? '1 entry' : `${n} entries`);

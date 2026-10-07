@@ -13,6 +13,21 @@ export const flattenFields = (fields, prefix = [], labels = [], weakest = 0, nod
 
 export const shortIri = (iri) => String(iri).split(/[#/]/).filter(Boolean).pop() || iri;
 
+// Every field of the profile, nodes included, since a validation finding can concern a node itself.
+export const fieldLabels = (fields, prefix = [], labels = [], out = new Map()) => {
+    for (const f of fields) {
+        const path = [...prefix, f.path];
+        const label = [...labels, f.label];
+        out.set(path.join(' '), label.join(' \u203a '));
+        fieldLabels(f.fields || [], path, label, out);
+    }
+    return out;
+};
+
+export const findingLabel = (labels, path) => (path.length > 0
+    ? labels.get(path.join(' ')) || path.map(shortIri).join(' \u203a ')
+    : 'The entry as a whole');
+
 // Title, description and publisher have their own place in every view, so the profile's copies are skipped.
 export const BASIC_PATHS = [
     'http://purl.org/dc/terms/title',

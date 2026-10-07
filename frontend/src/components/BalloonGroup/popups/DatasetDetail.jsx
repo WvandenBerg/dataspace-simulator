@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { AlertTriangle, ArrowUpRight, ChevronDown, ChevronRight } from 'lucide-react';
-import { OpenHubProfileContext } from '../../VocabularyHubContext';
-import { BASIC_PATHS, flattenFields, shortIri, valuesAt } from '../../catalogFields';
+import { OpenHubProfileContext, ValidationReportContext } from '../../VocabularyHubContext';
+import { BASIC_PATHS, fieldLabels, findingLabel, flattenFields, shortIri, valuesAt } from '../../catalogFields';
 
 const API_BASE = '/api';
 
@@ -123,6 +123,59 @@ const SchemaLink = ({ uri, dataspaceId }) => {
     );
 };
 
+const SEVERITY_COLORS = { violation: '#dc2626', warning: '#d97706', info: '#64748b' };
+const SEVERITY_RANK = { violation: 0, warning: 1, info: 2 };
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+// How the entry fared in the metadata validator's latest run, if it runs.
+const ValidationBadge = ({ datasetId, model }) => {
+    const report = useContext(ValidationReportContext);
+    const [open, setOpen] = useState(false);
+    const entry = report?.entries.find((e) => e.datasetId === datasetId);
+    if (!entry) return null;
+
+    const count = (s) => entry.findings.filter((f) => f.severity === s).length;
+    const violations = count('violation');
+    const warnings = count('warning');
+    const color = violations > 0 ? SEVERITY_COLORS.violation : warnings > 0 ? SEVERITY_COLORS.warning : '#16a34a';
+    const text = violations > 0
+        ? [plural(violations, 'violation'), warnings > 0 && plural(warnings, 'warning')].filter(Boolean).join(', ')
+        : warnings > 0 ? `No violations, ${plural(warnings, 'warning')}` : 'Passes validation';
+    const labels = model ? fieldLabels(model.fields) : new Map();
+    const Chevron = open ? ChevronDown : ChevronRight;
+
+    return (
+        <div style={{ marginBottom: '8px' }}>
+            <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+                disabled={entry.findings.length === 0}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '2px 8px', borderRadius: '999px', border: `1px solid ${color}`, background: 'transparent', color, fontSize: '0.66rem', fontWeight: 600, cursor: entry.findings.length > 0 ? 'pointer' : 'default' }}
+            >
+                {entry.findings.length > 0 && <Chevron size={11} />}
+                {text}
+            </button>
+            {open && (
+                // Framed like the hub's answer below, so it reads as the validator speaking rather than more metadata.
+                <div style={{ marginTop: '6px', padding: '6px 8px', background: `${color}0f`, border: `1px solid ${color}59`, borderLeft: `3px solid ${color}`, borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <div style={{ ...labelStyle, color }}>From the Metadata Validator</div>
+                    {[...entry.findings]
+                        .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity])
+                        .map((f, i) => (
+                            <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'baseline' }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: SEVERITY_COLORS[f.severity], flexShrink: 0 }} />
+                                <div style={{ minWidth: 0 }}>
+                                    {f.path.length > 0 && <div style={{ ...valueStyle, fontWeight: 600 }}>{findingLabel(labels, f.path)}</div>}
+                                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{f.message}</div>
+                                </div>
+                            </div>
+                        ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 // Optional fields stay folded away, so a profile with a hundred of them does not bury the rest.
 const DatasetDetail = ({ dataset, dataspaceId, model }) => {
     const [showOptional, setShowOptional] = useState(false);
@@ -144,6 +197,8 @@ const DatasetDetail = ({ dataset, dataspaceId, model }) => {
 
     return (
         <div>
+            <ValidationBadge datasetId={dataset.datasetId || dataset.id || dataset['@id']} model={model} />
+
             {dataset.description && (
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>{dataset.description}</div>
             )}

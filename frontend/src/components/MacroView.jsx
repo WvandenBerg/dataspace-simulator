@@ -10,7 +10,7 @@ import ZoomControls from './ZoomControls';
 import DataspaceServicesPanel from './DataspaceServicesPanel';
 import VocabularyHubNode from './VocabularyHubNode';
 import VocabularyHubDialog from './VocabularyHubDialog';
-import { OpenHubProfileContext } from './VocabularyHubContext';
+import { OpenHubProfileContext, ValidationReportContext } from './VocabularyHubContext';
 import { useViewState } from './hooks/useViewState';
 import { useDragNodes } from './hooks/useDragNodes';
 import { useVocabularyHub } from './hooks/useVocabularyHub';
@@ -401,6 +401,7 @@ const MacroView = forwardRef(({
 
     return (
         <OpenHubProfileContext.Provider value={vocabHub.isConnected ? openHubDialog : null}>
+        <ValidationReportContext.Provider value={validator.isActive ? validator.report : null}>
         <div
             className="macro-view-container"
             ref={containerRef}
@@ -610,6 +611,7 @@ const MacroView = forwardRef(({
                 />
             )}
         </div>
+        </ValidationReportContext.Provider>
         </OpenHubProfileContext.Provider>
     );
 });
