@@ -21,7 +21,7 @@ const DATASPACE_RADIUS = 550;
 const CONNECTOR_OFFSET = 60;
 
 // Preset participants for the demo dataspace
-export const PRESET_PARTICIPANTS = {
+const PRESET_PARTICIPANTS = {
     bergstein: {
         name: 'Bergstein Bau GmbH',
         bpn: 'did:web:bergstein-bau.sim.local',

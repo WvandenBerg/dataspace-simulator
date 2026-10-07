@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Building2 } from 'lucide-react';
 import './Components.css';
-import { PRESET_PARTICIPANTS } from './MacroView';
 
 // Auto-generate a DID from a participant name
 function generateDid(name) {
@@ -21,6 +20,27 @@ function toList(value) {
     return String(value).split(',').map((v) => v.trim()).filter(Boolean);
 }
 
+const toPreset = (p) => ({
+    name: p.name,
+    bpn: p.bpn,
+    location: p.location,
+    domain: p.domain,
+    roles: p.roles,
+    ontologies: p.ontologies,
+    dataCategories: p.dataCategories,
+    formats: p.formats,
+    tags: p.tags,
+    metadata: { ...(p.credentials || {}) },
+});
+
+// The scenarios this dataspace already draws participants from, or every scenario if none.
+const presetGroups = (scenarios, existingDids) => {
+    const drawnOn = scenarios.filter((s) => s.participants.some((p) => existingDids.includes(p.bpn)));
+    return (drawnOn.length > 0 ? drawnOn : scenarios)
+        .map((s) => ({ name: s.name, presets: s.participants.filter((p) => !existingDids.includes(p.bpn)).map(toPreset) }))
+        .filter((g) => g.presets.length > 0);
+};
+
 
 const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData = null, existingNodes = {} }) => {
     const [name, setName] = useState('');
@@ -29,6 +49,17 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
     const [orgRole, setOrgRole] = useState([]);
     const [showPresets, setShowPresets] = useState(true);
     const [hoverPreview, setHoverPreview] = useState(null);
+    const [scenarios, setScenarios] = useState([]);
+
+    useEffect(() => {
+        if (!isOpen || editMode) return undefined;
+        let cancelled = false;
+        fetch('/api/scenarios')
+            .then((r) => (r.ok ? r.json() : []))
+            .then((data) => { if (!cancelled) setScenarios(Array.isArray(data) ? data : []); })
+            .catch(() => { if (!cancelled) setScenarios([]); });
+        return () => { cancelled = true; };
+    }, [isOpen, editMode]);
 
     useEffect(() => {
         if (isOpen) {
@@ -49,9 +80,7 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
     }, [name, editMode]);
 
     const existingDids = Object.values(existingNodes).map(n => n.bpn || n.did);
-    const availablePresets = Object.entries(PRESET_PARTICIPANTS).filter(
-        ([, p]) => !existingDids.includes(p.bpn)
-    );
+    const groups = presetGroups(scenarios, existingDids);
 
     if (!isOpen) return null;
 
@@ -104,7 +133,7 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
 
                 <form onSubmit={handleSubmit} style={{ overflow: 'auto', flex: 1, paddingRight: '2px' }}>
                     {/* Quick Select Presets */}
-                    {!editMode && availablePresets.length > 0 && (
+                    {!editMode && groups.length > 0 && (
                         <div style={{ marginBottom: '20px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                                 <span style={{ fontSize: '0.72rem', color: '#22c55e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quick Select</span>
@@ -115,35 +144,40 @@ const NameDialog = ({ isOpen, onClose, onConfirm, editMode = false, initialData 
                             </div>
                             {showPresets && (
                                 <>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '10px' }}>
-                                        {availablePresets.map(([key, preset]) => (
-                                            <button key={key} type="button"
-                                                onClick={() => { onConfirm(preset); setName(''); setDid(''); setIndustry([]); setOrgRole([]); }}
-                                                onMouseEnter={(e) => setHoverPreview({ preset, x: e.clientX, y: e.clientY })}
-                                                onMouseMove={(e) => setHoverPreview((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : prev)}
-                                                onMouseLeave={() => setHoverPreview(null)}
-                                                style={{
-                                                    padding: '10px 12px',
-                                                    background: 'rgba(34,197,94,0.12)',
-                                                    border: '1px solid rgba(34,197,94,0.35)',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    textAlign: 'left',
-                                                    transition: 'background 120ms ease'
-                                                }}
-                                                onMouseOver={e => e.currentTarget.style.background = 'rgba(34,197,94,0.22)'}
-                                                onMouseOut={e => e.currentTarget.style.background = 'rgba(34,197,94,0.12)'}
-                                            >
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Building2 size={15} color="#22c55e" />
-                                                    <div>
-                                                        <div style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-primary)' }}>{preset.name}</div>
-                                                        <div style={{ fontSize: '0.68rem', color: '#64748b' }}>{preset.location}</div>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
+                                    {groups.map((group) => (
+                                        <div key={group.name} style={{ marginBottom: '10px' }}>
+                                            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: '6px' }}>{group.name}</div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                                                {group.presets.map((preset) => (
+                                                    <button key={preset.bpn} type="button"
+                                                        onClick={() => { onConfirm(preset); setName(''); setDid(''); setIndustry([]); setOrgRole([]); }}
+                                                        onMouseEnter={(e) => setHoverPreview({ preset, x: e.clientX, y: e.clientY })}
+                                                        onMouseMove={(e) => setHoverPreview((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : prev)}
+                                                        onMouseLeave={() => setHoverPreview(null)}
+                                                        style={{
+                                                            padding: '10px 12px',
+                                                            background: 'rgba(34,197,94,0.12)',
+                                                            border: '1px solid rgba(34,197,94,0.35)',
+                                                            borderRadius: '8px',
+                                                            cursor: 'pointer',
+                                                            textAlign: 'left',
+                                                            transition: 'background 120ms ease'
+                                                        }}
+                                                        onMouseOver={e => e.currentTarget.style.background = 'rgba(34,197,94,0.22)'}
+                                                        onMouseOut={e => e.currentTarget.style.background = 'rgba(34,197,94,0.12)'}
+                                                    >
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <Building2 size={15} color="#22c55e" />
+                                                            <div>
+                                                                <div style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-primary)' }}>{preset.name}</div>
+                                                                <div style={{ fontSize: '0.68rem', color: '#64748b' }}>{preset.location}</div>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
 
                                     {hoverPreview?.preset && previewPos && (
                                         <div
