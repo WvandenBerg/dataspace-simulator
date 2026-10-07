@@ -1,15 +1,20 @@
 import React from 'react';
-import { AnimatePresence, motion as Motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import { motion as Motion } from 'framer-motion';
 
+// Portalled out of the canvas, whose zoom would otherwise shrink it into the card.
 const DeleteConfirmDialog = ({ show, name, onConfirm, onCancel }) => {
     if (!show) return null;
 
-    return (
+    return createPortal(
         <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            // A portal still bubbles React events to the canvas, which zooms on wheel and click.
             onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onWheel={(e) => e.stopPropagation()}
             style={{
                 position: 'fixed',
                 top: 0,
@@ -20,7 +25,7 @@ const DeleteConfirmDialog = ({ show, name, onConfirm, onCancel }) => {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                zIndex: 1000
+                zIndex: 2100
             }}
         >
             <Motion.div
@@ -69,7 +74,8 @@ const DeleteConfirmDialog = ({ show, name, onConfirm, onCancel }) => {
                     </button>
                 </div>
             </Motion.div>
-        </Motion.div>
+        </Motion.div>,
+        document.body,
     );
 };
 

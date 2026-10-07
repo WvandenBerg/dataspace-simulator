@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import CredentialValues from '../../CredentialValues';
@@ -32,7 +33,8 @@ const EditParticipantDialog = ({ show, participantData, name, bpn, allNodes = {}
 
     if (!show) return null;
 
-    return (
+    // Portalled out of the canvas, whose zoom would otherwise shrink it into the card.
+    return createPortal(
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -49,7 +51,7 @@ const EditParticipantDialog = ({ show, participantData, name, bpn, allNodes = {}
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                zIndex: 1000,
+                zIndex: 2100,
             }}
         >
             <motion.div
@@ -159,7 +161,8 @@ const EditParticipantDialog = ({ show, participantData, name, bpn, allNodes = {}
                     </button>
                 </div>
             </motion.div>
-        </motion.div>
+        </motion.div>,
+        document.body,
     );
 };
 
