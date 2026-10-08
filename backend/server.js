@@ -150,6 +150,9 @@ function datasetFor(asset) {
     };
 }
 
+// Each request is a write transaction, and the store keeps every old version until compacted.
+const REINDEX_BATCH = 50;
+
 async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 1500 } = {}) {
     const indexed = new Set();
 
@@ -166,14 +169,14 @@ async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 150
             return;
         }
 
-        for (const asset of pending) {
+        for (let i = 0; i < pending.length; i += REINDEX_BATCH) {
             // A dataspace deleted while this runs would otherwise get its graphs back.
-            if (!db.getAsset(asset.asset_id)) continue;
+            const batch = pending.slice(i, i + REINDEX_BATCH).filter((a) => db.getAsset(a.asset_id));
             try {
-                await indexAsset(asset);
-                indexed.add(asset.asset_id);
+                await upsertSemanticDatasets(batch.map(datasetFor));
+                batch.forEach((a) => indexed.add(a.asset_id));
                 // Deleted while it was being written.
-                if (!db.getAsset(asset.asset_id)) {
+                for (const asset of batch.filter((a) => !db.getAsset(a.asset_id))) {
                     const dataspaceId = assetDataspaceId(asset);
                     await (db.getDataspace(dataspaceId) ? deleteSemanticDataset(asset.asset_id) : dropDataspaceGraphs(dataspaceId));
                 }
