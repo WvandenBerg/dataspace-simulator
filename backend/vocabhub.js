@@ -12,6 +12,7 @@
  * being loaded again.
  */
 
+const crypto = require('crypto');
 const fs = require('fs');
 const db = require('./db');
 const scenarios = require('./scenarios');
@@ -72,7 +73,27 @@ async function loadScenarioIntoHub(dataspaceId, scenario) {
     if (profiles.length > 0 && db.getDataspaceSettings(dataspaceId).catalog?.profileId === undefined) {
         db.patchDataspaceSettings(dataspaceId, { catalog: { profileId: profiles[0].profileId } });
     }
+    db.patchDataspaceSettings(dataspaceId, { scenarioHub: { fingerprint: hubFingerprint(scenario) } });
     return { tripleCount, profileFields: profiles[0]?.fields ?? 0 };
+}
+
+// What the hub holds of a scenario, so a restart reloads only what was edited.
+function hubFingerprint(scenario) {
+    const hash = crypto.createHash('sha256');
+    const file = scenarios.catalogExportFile(scenario);
+    hash.update(file ? fs.readFileSync(file) : '');
+    for (const spec of scenario.catalogProfiles || []) {
+        hash.update(JSON.stringify(spec));
+        for (const rel of spec.files) hash.update(fs.readFileSync(scenarios.scenarioFile(rel)));
+    }
+    return hash.digest('hex');
+}
+
+async function hubIsCurrent(dataspaceId, scenario) {
+    if (db.getDataspaceSettings(dataspaceId).scenarioHub?.fingerprint !== hubFingerprint(scenario)) return false;
+    // The store may have been emptied while SQLite kept its settings.
+    const graphs = hubGraphs(dataspaceId).map((g) => `{ GRAPH <${g}> { ?s ?p ?o } }`).join(' UNION ');
+    return (await executeSelect(`SELECT ?s WHERE { ${graphs} } LIMIT 1`)).length > 0;
 }
 
 // Startup refresh, so an edited fixture takes effect on restart.
@@ -83,6 +104,7 @@ async function refreshScenarioHubs() {
     for (const { dataspace_id: dataspaceId, scenario_id: scenarioId } of db.getAllDataspaces()) {
         const scenario = scenarioId ? scenarios.getScenario(scenarioId) : null;
         if (!scenario || (!scenarios.catalogExportFile(scenario) && !scenario.catalogProfiles)) continue;
+        if (await withRetry(() => hubIsCurrent(dataspaceId, scenario))) continue;
         // The refresh takes minutes; one deleted meanwhile would otherwise get its hub back.
         if (!db.getDataspace(dataspaceId)) continue;
         const { tripleCount, profileFields } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));

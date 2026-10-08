@@ -1093,6 +1093,7 @@ server.listen(PORT, () => {
             for (const { dataspaceId, scenarioId, tripleCount, profileFields } of loaded) {
                 console.log(`[Hub] ${dataspaceId}: ${tripleCount} triple(s), ${profileFields} catalog field(s) from scenario ${scenarioId}.`);
             }
+            console.log(`[Hub] Scenario hubs refreshed (${loaded.length} reloaded, the rest unchanged).`);
         })
         .catch((err) => {
             console.error(`[Hub] VOCABULARY HUBS NOT REFRESHED: ${err.message}`);
