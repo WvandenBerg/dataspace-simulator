@@ -143,11 +143,14 @@ function recordTriples(subjectIri, record, mint) {
 // Removes a dataset's own nodes; datasetPattern must bind ?ds. Nodes used to be
 // minted as urn:distribution:<id>:<n> and urn:datastandard:<id>:<n>, which a
 // store from before this change still holds until each dataset is re-indexed.
+// Following the dataset's links keeps this from testing every triple in the store.
 function ownedNodesDelete(datasetPattern) {
     return `DELETE { GRAPH ?g { ?n ?p ?o } }
 WHERE {
     GRAPH ?g {
         ${datasetPattern}
+        ?ds <http://purl.org/dc/terms/identifier> ?anyId .
+        ?ds (!<urn:none>)+ ?n .
         ?n ?p ?o .
         BIND(STRAFTER(STR(?ds), "urn:dataset:") AS ?id)
         FILTER(STRSTARTS(STR(?n), CONCAT(STR(?ds), "#"))
