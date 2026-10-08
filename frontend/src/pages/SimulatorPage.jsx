@@ -279,6 +279,21 @@ function SimulatorPage() {
         }
     };
 
+    const handleRenameDataspace = async (id, name) => {
+        try {
+            const res = await fetch(`${API_BASE}/dataspaces/${encodeURIComponent(id)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+        } catch (err) {
+            addLog(`Dataspace could not be renamed: ${err.message}`);
+        }
+        await refreshDataspaces();
+    };
+
     const handleDeleteDataspace = async (id) => {
         const name = dataspaces.find((d) => d.id === id)?.name || id;
         try {
@@ -330,6 +345,7 @@ function SimulatorPage() {
                     activeDataspaceId={activeDataspaceId}
                     onSelect={handleSelectDataspace}
                     onCreate={handleCreateDataspace}
+                    onRename={handleRenameDataspace}
                     onDelete={handleDeleteDataspace}
                     collapsed={sidebarCollapsed}
                     onToggle={() => setSidebarCollapsed((v) => !v)}

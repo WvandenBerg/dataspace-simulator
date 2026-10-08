@@ -554,6 +554,13 @@ body {
   font-size: 0.78rem;
 }
 
+.dataspace-item-rename {
+  flex: 1;
+  width: auto;
+  margin: 3px;
+  padding: 5px 6px;
+}
+
 .dataspace-item-menu {
   position: relative;
   align-self: stretch;

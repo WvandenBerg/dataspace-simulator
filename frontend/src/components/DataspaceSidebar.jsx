@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, ChevronLeft, Plus, Database, MoreVertical, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Database, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import DeleteConfirmDialog from './BalloonGroup/dialogs/DeleteConfirmDialog';
 
 export default function DataspaceSidebar({
@@ -7,6 +7,7 @@ export default function DataspaceSidebar({
     activeDataspaceId,
     onSelect,
     onCreate,
+    onRename,
     onDelete,
     collapsed,
     onToggle,
@@ -17,6 +18,8 @@ export default function DataspaceSidebar({
     const [creating, setCreating] = useState(false);
     const [menu, setMenu] = useState(null);
     const [confirm, setConfirm] = useState(null);
+    const [renaming, setRenaming] = useState(null);
+    const cancelRenameRef = useRef(false);
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -64,6 +67,20 @@ export default function DataspaceSidebar({
         }
     };
 
+    const startRename = (space) => {
+        setMenu(null);
+        setRenaming({ id: space.id, draft: space.name });
+    };
+
+    // Enter and Escape both blur, so saving happens in one place only.
+    const finishRename = (space) => {
+        const name = renaming.draft.trim();
+        const cancelled = cancelRenameRef.current;
+        cancelRenameRef.current = false;
+        setRenaming(null);
+        if (!cancelled && name && name !== space.name) onRename(space.id, name);
+    };
+
     const askDelete = (space) => {
         setMenu(null);
         setConfirm({
@@ -92,10 +109,25 @@ export default function DataspaceSidebar({
                             const isActive = space.id === activeDataspaceId;
                             return (
                                 <div key={space.id} className={`dataspace-item ${isActive ? 'active' : ''}`}>
-                                    <button className="dataspace-item-main" onClick={() => onSelect(space.id)}>
-                                        <Database size={13} />
-                                        <span className="dataspace-item-name">{space.name}</span>
-                                    </button>
+                                    {renaming?.id === space.id ? (
+                                        <input
+                                            className="dataspace-create-input dataspace-item-rename"
+                                            value={renaming.draft}
+                                            onChange={(e) => setRenaming({ ...renaming, draft: e.target.value })}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Escape') cancelRenameRef.current = true;
+                                                if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur();
+                                            }}
+                                            onBlur={() => finishRename(space)}
+                                            maxLength={100}
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <button className="dataspace-item-main" onClick={() => onSelect(space.id)}>
+                                            <Database size={13} />
+                                            <span className="dataspace-item-name">{space.name}</span>
+                                        </button>
+                                    )}
                                     <div className="dataspace-item-menu" ref={menu?.id === space.id ? menuRef : null}>
                                         <button
                                             className="dataspace-item-menu-btn"
@@ -106,6 +138,9 @@ export default function DataspaceSidebar({
                                         </button>
                                         {menu?.id === space.id && (
                                             <div className="dataspace-menu" style={{ top: menu.top, right: menu.right }}>
+                                                <button className="dataspace-menu-item" onClick={() => startRename(space)}>
+                                                    <Pencil size={13} /> Rename
+                                                </button>
                                                 <button className="dataspace-menu-item danger" onClick={() => askDelete(space)}>
                                                     <Trash2 size={13} /> Delete
                                                 </button>
