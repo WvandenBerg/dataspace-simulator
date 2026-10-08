@@ -623,6 +623,7 @@ async function clearDataspace(dataspaceId, options) {
     await dropDataspaceGraphs(dataspaceId);
     const nodeIds = db.getAllNodes().filter((n) => nodeDataspaceId(n) === dataspaceId).map((n) => n.node_id);
     db.clearDataspace(dataspaceId, nodeIds, options);
+    catalogProfiles.forgetModels(dataspaceId);
 }
 
 async function dropDataspaceGraphs(dataspaceId) {
