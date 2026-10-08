@@ -508,7 +508,22 @@ body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.dataspace-group {
+  display: flex;
+  flex-direction: column;
   gap: 7px;
+}
+
+.dataspace-group-title {
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 0 2px;
 }
 
 .dataspace-item {

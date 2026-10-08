@@ -55,6 +55,24 @@ export default function DataspaceSidebar({
         [scenarios, scenarioId]
     );
 
+    // Scenarios alphabetically, dataspaces without one last.
+    const groups = useMemo(() => {
+        const byKey = new Map();
+        for (const space of dataspaces) {
+            const key = space.scenarioId || '';
+            if (!byKey.has(key)) {
+                byKey.set(key, {
+                    key,
+                    title: space.scenario?.name || (key ? `Unknown scenario (${key})` : 'No scenario'),
+                    description: space.scenario?.description || '',
+                    spaces: [],
+                });
+            }
+            byKey.get(key).spaces.push(space);
+        }
+        return [...byKey.values()].sort((a, b) => (a.key === '') - (b.key === '') || a.title.localeCompare(b.title));
+    }, [dataspaces]);
+
     const submitCreate = async () => {
         const trimmed = draftName.trim();
         if (!trimmed || creating) return;
@@ -91,6 +109,49 @@ export default function DataspaceSidebar({
         });
     };
 
+    const renderItem = (space) => (
+        <div key={space.id} className={`dataspace-item ${space.id === activeDataspaceId ? 'active' : ''}`}>
+            {renaming?.id === space.id ? (
+                <input
+                    className="dataspace-create-input dataspace-item-rename"
+                    value={renaming.draft}
+                    onChange={(e) => setRenaming({ ...renaming, draft: e.target.value })}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') cancelRenameRef.current = true;
+                        if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur();
+                    }}
+                    onBlur={() => finishRename(space)}
+                    maxLength={100}
+                    autoFocus
+                />
+            ) : (
+                <button className="dataspace-item-main" onClick={() => onSelect(space.id)}>
+                    <Database size={13} />
+                    <span className="dataspace-item-name">{space.name}</span>
+                </button>
+            )}
+            <div className="dataspace-item-menu" ref={menu?.id === space.id ? menuRef : null}>
+                <button
+                    className="dataspace-item-menu-btn"
+                    onClick={(e) => toggleMenu(e, space.id)}
+                    title="Dataspace actions"
+                >
+                    <MoreVertical size={14} />
+                </button>
+                {menu?.id === space.id && (
+                    <div className="dataspace-menu" style={{ top: menu.top, right: menu.right }}>
+                        <button className="dataspace-menu-item" onClick={() => startRename(space)}>
+                            <Pencil size={13} /> Rename
+                        </button>
+                        <button className="dataspace-menu-item danger" onClick={() => askDelete(space)}>
+                            <Trash2 size={13} /> Delete
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
     return (
         <div className={`dataspace-sidebar ${collapsed ? 'collapsed' : ''}`}>
             <button className="dataspace-sidebar-toggle" onClick={onToggle} title={collapsed ? 'Open sidebar' : 'Close sidebar'}>
@@ -105,51 +166,12 @@ export default function DataspaceSidebar({
                     </div>
 
                     <div className="dataspace-list" onScroll={() => setMenu(null)}>
-                        {dataspaces.map((space) => {
-                            const isActive = space.id === activeDataspaceId;
-                            return (
-                                <div key={space.id} className={`dataspace-item ${isActive ? 'active' : ''}`}>
-                                    {renaming?.id === space.id ? (
-                                        <input
-                                            className="dataspace-create-input dataspace-item-rename"
-                                            value={renaming.draft}
-                                            onChange={(e) => setRenaming({ ...renaming, draft: e.target.value })}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Escape') cancelRenameRef.current = true;
-                                                if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur();
-                                            }}
-                                            onBlur={() => finishRename(space)}
-                                            maxLength={100}
-                                            autoFocus
-                                        />
-                                    ) : (
-                                        <button className="dataspace-item-main" onClick={() => onSelect(space.id)}>
-                                            <Database size={13} />
-                                            <span className="dataspace-item-name">{space.name}</span>
-                                        </button>
-                                    )}
-                                    <div className="dataspace-item-menu" ref={menu?.id === space.id ? menuRef : null}>
-                                        <button
-                                            className="dataspace-item-menu-btn"
-                                            onClick={(e) => toggleMenu(e, space.id)}
-                                            title="Dataspace actions"
-                                        >
-                                            <MoreVertical size={14} />
-                                        </button>
-                                        {menu?.id === space.id && (
-                                            <div className="dataspace-menu" style={{ top: menu.top, right: menu.right }}>
-                                                <button className="dataspace-menu-item" onClick={() => startRename(space)}>
-                                                    <Pencil size={13} /> Rename
-                                                </button>
-                                                <button className="dataspace-menu-item danger" onClick={() => askDelete(space)}>
-                                                    <Trash2 size={13} /> Delete
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        {groups.map((group) => (
+                            <div key={group.key} className="dataspace-group">
+                                <div className="dataspace-group-title" title={group.description}>{group.title}</div>
+                                {group.spaces.map(renderItem)}
+                            </div>
+                        ))}
                     </div>
 
                     <div className="dataspace-create">
