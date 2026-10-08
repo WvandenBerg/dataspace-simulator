@@ -258,6 +258,27 @@ const _renameDataspace = db.prepare(`UPDATE dataspaces SET name = ? WHERE datasp
 const _getConfiguredDataspaceIds = db.prepare(`
   SELECT dataspace_id FROM dataspace_settings UNION SELECT dataspace_id FROM hub_profiles
 `);
+const _deleteDataspace = db.prepare(`DELETE FROM dataspaces WHERE dataspace_id = ?`);
+const _clearByNode = [
+  'DELETE FROM negotiations WHERE consumer_node_id = @id OR provider_node_id = @id',
+  'DELETE FROM transfers WHERE consumer_node_id = @id OR provider_node_id = @id',
+  'DELETE FROM received_data WHERE receiver_node_id = @id OR provider_node_id = @id',
+  'DELETE FROM assets WHERE owner_node_id = @id',
+  'DELETE FROM nodes WHERE node_id = @id',
+].map((sql) => db.prepare(sql));
+const _clearByDataspace = [
+  'DELETE FROM assets WHERE dataspace_id = @id',
+  'DELETE FROM hub_artifacts WHERE dataspace_id = @id',
+  'DELETE FROM hub_profiles WHERE dataspace_id = @id',
+  'DELETE FROM dataspace_settings WHERE dataspace_id = @id',
+].map((sql) => db.prepare(sql));
+
+// Everything a dataspace holds. The entry on the list stays unless removeEntry is set.
+const clearDataspace = db.transaction((dataspaceId, nodeIds, { removeEntry = false } = {}) => {
+  for (const id of nodeIds) for (const stmt of _clearByNode) stmt.run({ id });
+  for (const stmt of _clearByDataspace) stmt.run({ id: dataspaceId });
+  if (removeEntry) _deleteDataspace.run(dataspaceId);
+});
 
 // ---------------------------------------------------------------------------
 // Dataspace settings
@@ -351,6 +372,7 @@ module.exports = {
   getAllDataspaces: () => _getAllDataspaces.all(),
   renameDataspace: (id, name) => _renameDataspace.run(name, id),
   getConfiguredDataspaceIds: () => _getConfiguredDataspaceIds.all().map((r) => r.dataspace_id),
+  clearDataspace,
 
   // Dataspace settings
   getDataspaceSettings,

@@ -78,6 +78,7 @@ function SimulatorPage() {
     const [dataTransfer, setDataTransfer] = useState(null);
 
     const [dataspaces, setDataspaces] = useState([]);
+    const [dataspacesLoaded, setDataspacesLoaded] = useState(false);
     const [chosenDataspaceId, setActiveDataspaceId] = useState(() => localStorage.getItem('simulator.activeDataspaceId') || '');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('simulator.sidebarCollapsed') === '1');
 
@@ -98,6 +99,8 @@ function SimulatorPage() {
                 if (!cancelled) setDataspaces(list);
             } catch (err) {
                 console.error('Dataspaces could not be loaded:', err);
+            } finally {
+                if (!cancelled) setDataspacesLoaded(true);
             }
         })();
         return () => { cancelled = true; };
@@ -276,6 +279,20 @@ function SimulatorPage() {
         }
     };
 
+    const handleDeleteDataspace = async (id) => {
+        const name = dataspaces.find((d) => d.id === id)?.name || id;
+        try {
+            const res = await fetch(`${API_BASE}/dataspaces/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+            addLog(`Dataspace deleted: ${name}`);
+        } catch (err) {
+            addLog(`Dataspace could not be deleted: ${err.message}`);
+        }
+        if (id === activeDataspaceId) setActiveConnector(null);
+        await refreshDataspaces();
+    };
+
     const handleResetDemo = async () => {
         try {
             const keepAssets = activeDataspaceId === 'demo';
@@ -313,6 +330,7 @@ function SimulatorPage() {
                     activeDataspaceId={activeDataspaceId}
                     onSelect={handleSelectDataspace}
                     onCreate={handleCreateDataspace}
+                    onDelete={handleDeleteDataspace}
                     collapsed={sidebarCollapsed}
                     onToggle={() => setSidebarCollapsed((v) => !v)}
                 />
@@ -340,6 +358,9 @@ function SimulatorPage() {
                     runContractAnimation={runContractAnimation}
                     minimalView={minimalView}
                 />}
+                {dataspacesLoaded && !activeDataspace && (
+                    <div className="dataspace-empty">No dataspaces. Create one in the sidebar.</div>
+                )}
             </div>
 
 

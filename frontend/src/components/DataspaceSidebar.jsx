@@ -1,11 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronRight, ChevronLeft, Plus, Database } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronRight, ChevronLeft, Plus, Database, MoreVertical, Trash2 } from 'lucide-react';
+import DeleteConfirmDialog from './BalloonGroup/dialogs/DeleteConfirmDialog';
 
 export default function DataspaceSidebar({
     dataspaces,
     activeDataspaceId,
     onSelect,
     onCreate,
+    onDelete,
     collapsed,
     onToggle,
 }) {
@@ -13,6 +15,25 @@ export default function DataspaceSidebar({
     const [scenarios, setScenarios] = useState([]);
     const [scenarioId, setScenarioId] = useState('');
     const [creating, setCreating] = useState(false);
+    const [menu, setMenu] = useState(null);
+    const [confirm, setConfirm] = useState(null);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        if (!menu) return undefined;
+        const close = (e) => {
+            if (!menuRef.current?.contains(e.target)) setMenu(null);
+        };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [menu]);
+
+    // Fixed rather than absolute: the scrolling list would clip the lower items' menus.
+    const toggleMenu = (e, id) => {
+        if (menu?.id === id) return setMenu(null);
+        const rect = e.currentTarget.getBoundingClientRect();
+        setMenu({ id, top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    };
 
     useEffect(() => {
         fetch('/api/scenarios')
@@ -43,6 +64,16 @@ export default function DataspaceSidebar({
         }
     };
 
+    const askDelete = (space) => {
+        setMenu(null);
+        setConfirm({
+            title: 'Delete dataspace?',
+            message: <>This removes <strong>{space.name}</strong> with all its participants, assets, transfers and hub profiles. It cannot be undone.</>,
+            confirmLabel: 'Delete',
+            run: () => onDelete(space.id),
+        });
+    };
+
     return (
         <div className={`dataspace-sidebar ${collapsed ? 'collapsed' : ''}`}>
             <button className="dataspace-sidebar-toggle" onClick={onToggle} title={collapsed ? 'Open sidebar' : 'Close sidebar'}>
@@ -56,20 +87,32 @@ export default function DataspaceSidebar({
                         <div className="dataspace-sidebar-subtitle">Session switcher</div>
                     </div>
 
-                    <div className="dataspace-list">
+                    <div className="dataspace-list" onScroll={() => setMenu(null)}>
                         {dataspaces.map((space) => {
                             const isActive = space.id === activeDataspaceId;
                             return (
-                                <button
-                                    key={space.id}
-                                    className={`dataspace-item ${isActive ? 'active' : ''}`}
-                                    onClick={() => onSelect(space.id)}
-                                >
-                                    <div className="dataspace-item-main">
+                                <div key={space.id} className={`dataspace-item ${isActive ? 'active' : ''}`}>
+                                    <button className="dataspace-item-main" onClick={() => onSelect(space.id)}>
                                         <Database size={13} />
                                         <span className="dataspace-item-name">{space.name}</span>
+                                    </button>
+                                    <div className="dataspace-item-menu" ref={menu?.id === space.id ? menuRef : null}>
+                                        <button
+                                            className="dataspace-item-menu-btn"
+                                            onClick={(e) => toggleMenu(e, space.id)}
+                                            title="Dataspace actions"
+                                        >
+                                            <MoreVertical size={14} />
+                                        </button>
+                                        {menu?.id === space.id && (
+                                            <div className="dataspace-menu" style={{ top: menu.top, right: menu.right }}>
+                                                <button className="dataspace-menu-item danger" onClick={() => askDelete(space)}>
+                                                    <Trash2 size={13} /> Delete
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                </button>
+                                </div>
                             );
                         })}
                     </div>
@@ -114,6 +157,18 @@ export default function DataspaceSidebar({
                     </div>
                 </>
             )}
+
+            <DeleteConfirmDialog
+                show={Boolean(confirm)}
+                title={confirm?.title}
+                message={confirm?.message}
+                confirmLabel={confirm?.confirmLabel}
+                onConfirm={() => {
+                    confirm.run();
+                    setConfirm(null);
+                }}
+                onCancel={() => setConfirm(null)}
+            />
         </div>
     );
 }

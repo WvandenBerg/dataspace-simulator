@@ -26,7 +26,9 @@ const {
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
     readRecords,
-    semanticSearch
+    semanticSearch,
+    executeSelect,
+    executeUpdate,
 } = require('./semantic');
 const { initiateNegotiation, advanceNegotiation, initiateTransfer } = require('./state-machine');
 
@@ -600,6 +602,29 @@ app.patch('/api/dataspaces/:id', (req, res) => {
     if (!name) return res.status(400).json({ error: `name required, at most ${MAX_NAME_LENGTH} characters` });
     db.renameDataspace(req.params.id, name);
     res.json(dataspaceResponse(req.params.id));
+});
+
+// Fuseki goes first: if it is unreachable, nothing is removed and the user can retry.
+async function clearDataspace(dataspaceId, options) {
+    const ds = encodeURIComponent(dataspaceId);
+    const rows = await executeSelect('SELECT DISTINCT ?g WHERE { GRAPH ?g { } }');
+    const graphs = rows.map((r) => r.g.value)
+        .filter((g) => g.endsWith(`:session:${ds}`) || g.startsWith(`urn:graph:vocabhub:${ds}:`));
+    // One request is one write transaction; a request per graph took seconds each.
+    if (graphs.length > 0) await executeUpdate(graphs.map((g) => `DROP SILENT GRAPH <${g}>`).join(' ;\n'));
+
+    const nodeIds = db.getAllNodes().filter((n) => nodeDataspaceId(n) === dataspaceId).map((n) => n.node_id);
+    db.clearDataspace(dataspaceId, nodeIds, options);
+}
+
+app.delete('/api/dataspaces/:id', async (req, res) => {
+    if (!db.getDataspace(req.params.id)) return res.status(404).json({ error: 'Dataspace not found' });
+    try {
+        await clearDataspace(req.params.id, { removeEntry: true });
+    } catch (err) {
+        return res.status(500).json({ error: `Could not delete: ${err.message}` });
+    }
+    res.json({ success: true });
 });
 
 // ============================================================

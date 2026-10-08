@@ -512,17 +512,16 @@ body {
 }
 
 .dataspace-item {
+  position: relative;
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid var(--border-subtle);
   background: var(--bg-elevated);
   color: var(--text-secondary);
   border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
 }
 
 .dataspace-item:hover {
@@ -535,10 +534,17 @@ body {
 }
 
 .dataspace-item-main {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 7px;
   min-width: 0;
+  padding: 8px;
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .dataspace-item-name {
@@ -548,10 +554,61 @@ body {
   font-size: 0.78rem;
 }
 
-.dataspace-item-right {
+.dataspace-item-menu {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+}
+
+.dataspace-item-menu-btn {
+  padding: 0 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 7px;
+}
+
+.dataspace-item-menu-btn:hover {
+  color: var(--color-primary);
+}
+
+.dataspace-menu {
+  position: fixed;
+  min-width: 160px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  z-index: 50;
+}
+
+.dataspace-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dataspace-menu-item:hover {
+  background: var(--color-primary-bg);
+}
+
+.dataspace-menu-item.danger {
+  color: #ef4444;
+}
+
+.dataspace-menu-item.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
 }
 
 .dataspace-item-code {
@@ -560,16 +617,6 @@ body {
   border: 1px solid var(--color-primary-light);
   border-radius: 999px;
   padding: 1px 6px;
-}
-
-.dataspace-delete {
-  color: var(--text-muted);
-  display: inline-flex;
-  align-items: center;
-}
-
-.dataspace-delete:hover {
-  color: #f87171;
 }
 
 .dataspace-create {
@@ -640,6 +687,16 @@ body {
   padding: 0 10px 10px;
   font-size: 0.7rem;
   color: var(--text-muted);
+}
+
+.dataspace-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 280px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 .dataspace-circle {

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion as Motion } from 'framer-motion';
 
 // Portalled out of the canvas, whose zoom would otherwise shrink it into the card.
-const DeleteConfirmDialog = ({ show, name, onConfirm, onCancel }) => {
+const DeleteConfirmDialog = ({ show, name, title = 'Delete Participant?', message, confirmLabel = 'Delete', onConfirm, onCancel }) => {
     if (!show) return null;
 
     return createPortal(
@@ -41,9 +41,9 @@ const DeleteConfirmDialog = ({ show, name, onConfirm, onCancel }) => {
                     boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
                 }}
             >
-                <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>Delete Participant?</h3>
+                <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>{title}</h3>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
-                    Are you sure you want to remove <strong style={{ color: 'var(--text-secondary)' }}>{name}</strong> from the Dataspace?
+                    {message ?? <>Are you sure you want to remove <strong style={{ color: 'var(--text-secondary)' }}>{name}</strong> from the Dataspace?</>}
                 </p>
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                     <button
@@ -70,7 +70,7 @@ const DeleteConfirmDialog = ({ show, name, onConfirm, onCancel }) => {
                             cursor: 'pointer'
                         }}
                     >
-                        Delete
+                        {confirmLabel}
                     </button>
                 </div>
             </Motion.div>
