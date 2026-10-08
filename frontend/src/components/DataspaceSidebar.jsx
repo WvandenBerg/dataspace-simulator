@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, ChevronLeft, Plus, Database, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Database, MoreVertical, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import DeleteConfirmDialog from './BalloonGroup/dialogs/DeleteConfirmDialog';
 import NewDataspaceDialog from './NewDataspaceDialog';
 
@@ -11,6 +11,7 @@ export default function DataspaceSidebar({
     onSelect,
     onCreate,
     onRename,
+    onReset,
     onDelete,
     collapsed,
     onToggle,
@@ -83,6 +84,18 @@ export default function DataspaceSidebar({
         if (!cancelled && name && name !== space.name) onRename(space.id, name);
     };
 
+    const askReset = (space) => {
+        setMenu(null);
+        setConfirm({
+            title: space.scenario ? 'Reset to scenario?' : 'Clear dataspace?',
+            message: space.scenario
+                ? <>This puts <strong>{space.name}</strong> back to the <strong>{space.scenario.name}</strong> scenario. Everything added or changed since, including hub settings, is lost.</>
+                : <>This removes all participants, assets and hub profiles from <strong>{space.name}</strong>.</>,
+            confirmLabel: space.scenario ? 'Reset' : 'Clear',
+            run: () => onReset(space.id),
+        });
+    };
+
     const askDelete = (space) => {
         setMenu(null);
         setConfirm({
@@ -131,6 +144,14 @@ export default function DataspaceSidebar({
                     <div className="dataspace-menu" style={{ top: menu.top, right: menu.right }}>
                         <button className="dataspace-menu-item" onClick={() => startRename(space)}>
                             <Pencil size={13} /> Rename
+                        </button>
+                        <button
+                            className="dataspace-menu-item"
+                            onClick={() => askReset(space)}
+                            disabled={Boolean(space.scenarioId && !space.scenario)}
+                            title={space.scenarioId && !space.scenario ? `Scenario ${space.scenarioId} no longer exists` : undefined}
+                        >
+                            <RotateCcw size={13} /> {space.scenarioId ? 'Reset to scenario' : 'Clear'}
                         </button>
                         <button className="dataspace-menu-item danger" onClick={() => askDelete(space)}>
                             <Trash2 size={13} /> Delete

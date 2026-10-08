@@ -637,6 +637,21 @@ app.delete('/api/dataspaces/:id', async (req, res) => {
     res.json({ success: true });
 });
 
+// Back to how it was created: the scenario's contents, or empty without one.
+app.post('/api/dataspaces/:id/reset', async (req, res) => {
+    const row = db.getDataspace(req.params.id);
+    if (!row) return res.status(404).json({ error: 'Dataspace not found' });
+    const scenario = row.scenario_id ? scenarios.getScenario(row.scenario_id) : null;
+    if (row.scenario_id && !scenario) return res.status(409).json({ error: `Scenario ${row.scenario_id} no longer exists` });
+    try {
+        await clearDataspace(row.dataspace_id);
+    } catch (err) {
+        return res.status(500).json({ error: `Could not reset: ${err.message}` });
+    }
+    const loaded = scenario ? await loadScenario(row.dataspace_id, scenario) : null;
+    res.json({ dataspace: dataspaceResponse(row.dataspace_id), loaded });
+});
+
 // ============================================================
 // Dataspace settings
 //

@@ -637,6 +637,12 @@ body {
   background: var(--color-primary-bg);
 }
 
+.dataspace-menu-item:disabled {
+  opacity: 0.5;
+  cursor: default;
+  background: transparent;
+}
+
 .dataspace-menu-item.danger {
   color: #ef4444;
 }

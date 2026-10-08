@@ -81,6 +81,8 @@ function SimulatorPage() {
     const [dataspacesLoaded, setDataspacesLoaded] = useState(false);
     const [chosenDataspaceId, setActiveDataspaceId] = useState(() => localStorage.getItem('simulator.activeDataspaceId') || '');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('simulator.sidebarCollapsed') === '1');
+    // Bumped by a reset so the canvas reloads the dataspace it shows.
+    const [resetCount, setResetCount] = useState(0);
 
     // A chosen dataspace that no longer exists falls back to the first one.
     const activeDataspace = dataspaces.find((d) => d.id === chosenDataspaceId) || dataspaces[0] || null;
@@ -298,6 +300,23 @@ function SimulatorPage() {
         await refreshDataspaces();
     };
 
+    const handleResetDataspace = async (id) => {
+        const name = dataspaces.find((d) => d.id === id)?.name || id;
+        try {
+            const res = await fetch(`${API_BASE}/dataspaces/${encodeURIComponent(id)}/reset`, { method: 'POST' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+            addLog(`Dataspace reset: ${name}`);
+        } catch (err) {
+            addLog(`Dataspace could not be reset: ${err.message}`);
+        }
+        if (id === activeDataspaceId) {
+            setActiveConnector(null);
+            setResetCount((n) => n + 1);
+        }
+        await refreshDataspaces();
+    };
+
     const handleDeleteDataspace = async (id) => {
         const name = dataspaces.find((d) => d.id === id)?.name || id;
         try {
@@ -351,11 +370,12 @@ function SimulatorPage() {
                     onCreate={handleCreateDataspace}
                     onRename={handleRenameDataspace}
                     onDelete={handleDeleteDataspace}
+                    onReset={handleResetDataspace}
                     collapsed={sidebarCollapsed}
                     onToggle={() => setSidebarCollapsed((v) => !v)}
                 />
                 {activeDataspace && <MacroView
-                    key={activeDataspaceId}
+                    key={`${activeDataspaceId}:${resetCount}`}
                     ref={macroViewRef}
                     dataspaceId={activeDataspaceId}
                     onConnectorClick={handleConnectorClick}
