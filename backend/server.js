@@ -23,6 +23,7 @@ const { assetToRecord, valuesAt } = require('./record');
 const { evaluatePolicyAgainstClaims, filterAssetsByClaims } = require('./policy');
 const {
     upsertSemanticDataset,
+    upsertSemanticDatasets,
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
     readRecords,
@@ -130,11 +131,15 @@ function sleep(ms) {
 }
 
 async function indexAsset(asset) {
+    await upsertSemanticDataset(datasetFor(asset));
+}
+
+function datasetFor(asset) {
     const owner = db.getNode(asset.owner_node_id);
     const ownerName = owner?.name || scenarios.participantName(DEMO_SCENARIO, asset.owner_node_id);
     const dataspaceId = String(asset.dataspace_id || owner?.metadata?.dataspaceId || 'demo');
 
-    await upsertSemanticDataset({
+    return {
         datasetId: asset.asset_id,
         record: recordOf(asset),
         policyName: policyLabel(asset.policy_id),
@@ -142,7 +147,7 @@ async function indexAsset(asset) {
         publisherName: ownerName,
         sessionCode: dataspaceId,
         publishedAt: asset.published_at || new Date().toISOString(),
-    });
+    };
 }
 
 async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 1500 } = {}) {
@@ -452,12 +457,10 @@ async function loadScenario(dataspaceId, scenario) {
     const added = writeScenarioRows(dataspaceId, scenario);
 
     const failed = [];
-    for (const row of added) {
-        try {
-            await indexAsset(row);
-        } catch (err) {
-            failed.push({ assetId: row.asset_id, error: err.message });
-        }
+    try {
+        await upsertSemanticDatasets(added.map(datasetFor));
+    } catch (err) {
+        failed.push(...added.map((row) => ({ assetId: row.asset_id, error: err.message })));
     }
 
     let hubTriples = 0;

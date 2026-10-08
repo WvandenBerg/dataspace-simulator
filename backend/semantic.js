@@ -166,9 +166,33 @@ WHERE {
 // ---------------------------------------------------------------------------
 
 async function upsertSemanticDataset(dataset) {
+    await upsertSemanticDatasets([dataset]);
+}
+
+// One request is one write transaction, and each costs a commit.
+async function upsertSemanticDatasets(datasets) {
+    if (datasets.length === 0) return;
+    const values = datasets.map((d) => `<${datasetIri(d.datasetId)}>`).join(' ');
+    const inserts = datasets.map((dataset) => `    GRAPH <${graphIriForDataset(dataset)}> {
+    ${datasetTriples(dataset).join('\n    ')}
+    }`);
+
+    const updateQuery = `
+${ownedNodesDelete(`VALUES ?ds { ${values} }`)} ;
+
+DELETE { GRAPH ?g { ?ds ?p ?o } }
+WHERE  { VALUES ?ds { ${values} } GRAPH ?g { ?ds ?p ?o } } ;
+
+INSERT DATA {
+${inserts.join('\n')}
+}`;
+
+    await executeUpdate(updateQuery);
+}
+
+function datasetTriples(dataset) {
     const dsIri = datasetIri(dataset.datasetId);
     const pubIri = participantIri(dataset.publisherBpn);
-    const graphIri = graphIriForDataset(dataset);
     let nodes = 0;
     const mint = () => `${dsIri}#n${nodes++}`;
 
@@ -189,20 +213,7 @@ async function upsertSemanticDataset(dataset) {
     if (dataset.sessionCode) {
         triples.push(`<${dsIri}> <http://purl.org/dc/terms/isPartOf> "${escapeLiteral(dataset.sessionCode)}" .`);
     }
-
-    const updateQuery = `
-${ownedNodesDelete(`VALUES ?ds { <${dsIri}> }`)} ;
-
-DELETE { GRAPH ?g { <${dsIri}> ?p ?o } }
-WHERE  { GRAPH ?g { <${dsIri}> ?p ?o } } ;
-
-INSERT DATA {
-    GRAPH <${graphIri}> {
-    ${triples.join('\n    ')}
-    }
-}`;
-
-    await executeUpdate(updateQuery);
+    return triples;
 }
 
 // ---------------------------------------------------------------------------
@@ -407,6 +418,7 @@ LIMIT ${Math.max(1, Math.min(Number(limit) || 25, 200))}`;
 
 module.exports = {
     upsertSemanticDataset,
+    upsertSemanticDatasets,
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
     semanticSearch,
