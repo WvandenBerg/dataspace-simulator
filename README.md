@@ -35,8 +35,13 @@ What it does not include:
 docker compose up -d --build
 ```
 
-On first startup, the backend seeds a ready-to-run demo scenario with preset participants
-and sample assets (including multiple product passports for NordBeton).
+On first startup, the backend creates one Demo dataspace from the construction demo scenario,
+with preset participants and sample assets (including multiple product passports for
+NordBeton).
+
+The sidebar lists the dataspaces grouped by the scenario they came from. New dataspace offers
+each scenario as a card. A dataspace's menu renames it, resets it to its scenario (or clears
+one without a scenario), and deletes it with everything it holds.
 
 Open:
 - Simulator UI: `http://localhost:4000`
@@ -172,6 +177,7 @@ the entries point at, such as the profile a distribution conforms to.
 ## Scenarios
 
 A scenario in `backend/scenarios/` populates a new dataspace with participants and entries.
+The dataspace remembers its scenario and can be reset to it.
 Besides those it can declare:
 - `catalogProfiles`: profiles it installs in the hub. The first becomes the catalog's
   profile in a dataspace that has not chosen one. Each has its files, and optionally the

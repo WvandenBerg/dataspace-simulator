@@ -30,13 +30,14 @@ Responsibilities:
 - node, asset, policy, catalog endpoints
 - semantic search endpoint (`/api/semantic/search`)
 - negotiation/transfer endpoints
-- reset and housekeeping endpoints
+- dataspace endpoints: list, create from a scenario, rename, reset, delete
 
 ### `backend/db.js`
 
 SQLite schema and data access layer (better-sqlite3).
 
 Core tables:
+- `dataspaces`: the list in the sidebar, with the scenario each came from
 - `nodes`
 - `assets`
 - `policies`
@@ -170,6 +171,13 @@ Request body fields:
 - `POST /negotiate`
 - `GET /negotiate/:id`
 - `POST /transfer`
+
+### Dataspaces
+- `GET /dataspaces`: each with its scenario and its participant and asset counts
+- `POST /dataspaces` with `{ name, scenarioId? }`: creates it and loads the scenario
+- `PATCH /dataspaces/:id` with `{ name }`
+- `POST /dataspaces/:id/reset`: back to its scenario, or empty without one
+- `DELETE /dataspaces/:id`: removes it with everything it holds, in SQLite and Fuseki
 
 ### Dataspace settings and validation
 - `GET /dataspaces/:id/settings`
