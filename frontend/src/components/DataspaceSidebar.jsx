@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, ChevronLeft, Plus, Database, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import DeleteConfirmDialog from './BalloonGroup/dialogs/DeleteConfirmDialog';
+import NewDataspaceDialog from './NewDataspaceDialog';
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
@@ -14,10 +15,8 @@ export default function DataspaceSidebar({
     collapsed,
     onToggle,
 }) {
-    const [draftName, setDraftName] = useState('');
     const [scenarios, setScenarios] = useState([]);
-    const [scenarioId, setScenarioId] = useState('');
-    const [creating, setCreating] = useState(false);
+    const [createOpen, setCreateOpen] = useState(false);
     const [menu, setMenu] = useState(null);
     const [confirm, setConfirm] = useState(null);
     const [renaming, setRenaming] = useState(null);
@@ -52,11 +51,6 @@ export default function DataspaceSidebar({
         [dataspaces, activeDataspaceId]
     );
 
-    const selectedScenario = useMemo(
-        () => scenarios.find((s) => s.id === scenarioId),
-        [scenarios, scenarioId]
-    );
-
     // Scenarios alphabetically, dataspaces without one last.
     const groups = useMemo(() => {
         const byKey = new Map();
@@ -74,18 +68,6 @@ export default function DataspaceSidebar({
         }
         return [...byKey.values()].sort((a, b) => (a.key === '') - (b.key === '') || a.title.localeCompare(b.title));
     }, [dataspaces]);
-
-    const submitCreate = async () => {
-        const trimmed = draftName.trim();
-        if (!trimmed || creating) return;
-        setCreating(true);
-        try {
-            await onCreate({ name: trimmed, scenarioId });
-            setDraftName('');
-        } finally {
-            setCreating(false);
-        }
-    };
 
     const startRename = (space) => {
         setMenu(null);
@@ -182,37 +164,8 @@ export default function DataspaceSidebar({
                     </div>
 
                     <div className="dataspace-create">
-                        <input
-                            value={draftName}
-                            onChange={(e) => setDraftName(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') submitCreate();
-                            }}
-                            placeholder="New dataspace name"
-                            className="dataspace-create-input"
-                        />
-                        {scenarios.length > 0 && (
-                            <select
-                                value={scenarioId}
-                                onChange={(e) => setScenarioId(e.target.value)}
-                                className="dataspace-create-select"
-                                title="Populate the new dataspace from a scenario"
-                            >
-                                <option value="">Empty dataspace</option>
-                                {scenarios.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
-                        )}
-                        {selectedScenario && (
-                            <div className="dataspace-create-hint">
-                                {selectedScenario.participantCount} participants, {selectedScenario.assetCount} assets
-                            </div>
-                        )}
-                        <button className="dataspace-create-btn" onClick={submitCreate} disabled={creating}>
-                            <Plus size={13} /> {creating ? 'Creating…' : 'New dataspace'}
+                        <button className="dataspace-create-btn" onClick={() => setCreateOpen(true)}>
+                            <Plus size={13} /> New dataspace
                         </button>
                     </div>
 
@@ -220,6 +173,10 @@ export default function DataspaceSidebar({
                         Active: <strong>{active?.name || 'n/a'}</strong>
                     </div>
                 </>
+            )}
+
+            {createOpen && (
+                <NewDataspaceDialog scenarios={scenarios} onCreate={onCreate} onClose={() => setCreateOpen(false)} />
             )}
 
             <DeleteConfirmDialog
