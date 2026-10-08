@@ -68,6 +68,11 @@ async function dropGraph(graphIri) {
     await executeUpdate(`DROP SILENT GRAPH <${graphIri}>`);
 }
 
+// TDB2 keeps every old version of the data until compacted; Fuseki runs this as a background task.
+async function compactStore() {
+    await axios.post(`${FUSEKI_URL}/$/compact/${FUSEKI_DATASET}`, null, withAuth({ params: { deleteOld: true } }));
+}
+
 // The named graphs merged into one, as Turtle.
 async function graphsAsTurtle(graphIris) {
     const response = await axios.get(QUERY_ENDPOINT, withAuth({
@@ -429,6 +434,7 @@ module.exports = {
     executeUpdate,
     replaceGraph,
     dropGraph,
+    compactStore,
     escapeIri,
     escapeLiteral,
 };

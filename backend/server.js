@@ -30,6 +30,7 @@ const {
     semanticSearch,
     executeSelect,
     executeUpdate,
+    compactStore,
 } = require('./semantic');
 const { initiateNegotiation, advanceNegotiation, initiateTransfer } = require('./state-machine');
 
@@ -1085,10 +1086,10 @@ server.listen(PORT, () => {
     if (db.isNewDatabase) seedDemoDataspace();
     const registered = registerUnlistedDataspaces();
     if (registered.length > 0) console.log(`[Seed] Listed ${registered.length} dataspace(s) found in the data: ${registered.join(', ')}`);
-    reindexAllAssetsToSemantic().catch((err) => {
+    const reindexed = reindexAllAssetsToSemantic().catch((err) => {
         console.error(`[Seed] SEARCH WILL BE INCOMPLETE: ${err.message}`);
     });
-    vocabhub.refreshScenarioHubs()
+    const refreshed = vocabhub.refreshScenarioHubs()
         .then((loaded) => {
             for (const { dataspaceId, scenarioId, tripleCount, profileFields } of loaded) {
                 console.log(`[Hub] ${dataspaceId}: ${tripleCount} triple(s), ${profileFields} catalog field(s) from scenario ${scenarioId}.`);
@@ -1098,6 +1099,10 @@ server.listen(PORT, () => {
         .catch((err) => {
             console.error(`[Hub] VOCABULARY HUBS NOT REFRESHED: ${err.message}`);
         });
+    Promise.all([reindexed, refreshed])
+        .then(() => compactStore())
+        .then(() => console.log('[Seed] Fuseki store compaction started.'))
+        .catch((err) => console.error(`[Seed] Fuseki store not compacted: ${err.message}`));
     console.log('');
 
     console.log('══════════════════════════════════════════════');
