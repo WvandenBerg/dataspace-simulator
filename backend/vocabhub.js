@@ -83,6 +83,8 @@ async function refreshScenarioHubs() {
     for (const { dataspace_id: dataspaceId, scenario_id: scenarioId } of db.getAllDataspaces()) {
         const scenario = scenarioId ? scenarios.getScenario(scenarioId) : null;
         if (!scenario || (!scenarios.catalogExportFile(scenario) && !scenario.catalogProfiles)) continue;
+        // The refresh takes minutes; one deleted meanwhile would otherwise get its hub back.
+        if (!db.getDataspace(dataspaceId)) continue;
         const { tripleCount, profileFields } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));
         loaded.push({ dataspaceId, scenarioId, tripleCount, profileFields });
     }

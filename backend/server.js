@@ -162,9 +162,16 @@ async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 150
         }
 
         for (const asset of pending) {
+            // A dataspace deleted while this runs would otherwise get its graphs back.
+            if (!db.getAsset(asset.asset_id)) continue;
             try {
                 await indexAsset(asset);
                 indexed.add(asset.asset_id);
+                // Deleted while it was being written.
+                if (!db.getAsset(asset.asset_id)) {
+                    const dataspaceId = assetDataspaceId(asset);
+                    await (db.getDataspace(dataspaceId) ? deleteSemanticDataset(asset.asset_id) : dropDataspaceGraphs(dataspaceId));
+                }
             } catch (_err) {
                 // Fuseki is usually just not up yet; the next attempt retries.
             }
@@ -606,15 +613,18 @@ app.patch('/api/dataspaces/:id', (req, res) => {
 
 // Fuseki goes first: if it is unreachable, nothing is removed and the user can retry.
 async function clearDataspace(dataspaceId, options) {
+    await dropDataspaceGraphs(dataspaceId);
+    const nodeIds = db.getAllNodes().filter((n) => nodeDataspaceId(n) === dataspaceId).map((n) => n.node_id);
+    db.clearDataspace(dataspaceId, nodeIds, options);
+}
+
+async function dropDataspaceGraphs(dataspaceId) {
     const ds = encodeURIComponent(dataspaceId);
     const rows = await executeSelect('SELECT DISTINCT ?g WHERE { GRAPH ?g { } }');
     const graphs = rows.map((r) => r.g.value)
         .filter((g) => g.endsWith(`:session:${ds}`) || g.startsWith(`urn:graph:vocabhub:${ds}:`));
     // One request is one write transaction; a request per graph took seconds each.
     if (graphs.length > 0) await executeUpdate(graphs.map((g) => `DROP SILENT GRAPH <${g}>`).join(' ;\n'));
-
-    const nodeIds = db.getAllNodes().filter((n) => nodeDataspaceId(n) === dataspaceId).map((n) => n.node_id);
-    db.clearDataspace(dataspaceId, nodeIds, options);
 }
 
 app.delete('/api/dataspaces/:id', async (req, res) => {
