@@ -45,6 +45,7 @@ const MacroView = forwardRef(({
     setDataTransfer,
     onRequestContract,
     runContractAnimation,
+    onContentChange,
     minimalView = false
 }, ref) => {
     const containerRef = useRef(null);
@@ -165,6 +166,7 @@ const MacroView = forwardRef(({
             [nodeId]: [...(prev[nodeId] || []), { ...asset, ownerNodeId: nodeId }]
         }));
         validator.run();
+        onContentChange?.();
     };
 
     // Delete asset — calls backend then updates local state
@@ -179,6 +181,7 @@ const MacroView = forwardRef(({
             [nodeId]: (prev[nodeId] || []).filter(a => a.id !== assetId && a['@id'] !== assetId)
         }));
         validator.run();
+        onContentChange?.();
     };
 
     const handleEditAsset = async (assetId, payload, nodeId) => {
@@ -215,15 +218,16 @@ const MacroView = forwardRef(({
     };
 
     // Delete Handler
-    const handleDeleteNode = (id) => {
+    const handleDeleteNode = async (id) => {
         if (!isDemo) {
             console.log('[MacroView] Cannot delete node in hosted mode');
             return;
         }
-        removeNode(id);
         if (activeConnector === id) {
             onConnectorClick(null);
         }
+        await removeNode(id);
+        onContentChange?.();
     };
 
     // Remove node by BPN (for WebSocket participant_left events)
@@ -237,7 +241,11 @@ const MacroView = forwardRef(({
 
     // Expose functions to parent
     useImperativeHandle(ref, () => ({
-        addNode: (participantData) => addNode(participantData, hubPositions),
+        addNode: async (participantData) => {
+            const id = await addNode(participantData, hubPositions);
+            onContentChange?.();
+            return id;
+        },
         getProviders,
         filterNodes,
         nodes,

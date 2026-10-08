@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, ChevronLeft, Plus, Database, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import DeleteConfirmDialog from './BalloonGroup/dialogs/DeleteConfirmDialog';
 
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
 export default function DataspaceSidebar({
     dataspaces,
     activeDataspaceId,
@@ -127,7 +129,12 @@ export default function DataspaceSidebar({
             ) : (
                 <button className="dataspace-item-main" onClick={() => onSelect(space.id)}>
                     <Database size={13} />
-                    <span className="dataspace-item-name">{space.name}</span>
+                    <span className="dataspace-item-text">
+                        <span className="dataspace-item-name">{space.name}</span>
+                        <span className="dataspace-item-meta">
+                            {plural(space.participants, 'participant')}, {plural(space.assets, 'asset')}
+                        </span>
+                    </span>
                 </button>
             )}
             <div className="dataspace-item-menu" ref={menu?.id === space.id ? menuRef : null}>

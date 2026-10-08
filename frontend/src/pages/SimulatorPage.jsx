@@ -87,7 +87,11 @@ function SimulatorPage() {
     const activeDataspaceId = activeDataspace?.id || '';
 
     const refreshDataspaces = async () => {
-        setDataspaces(await fetchDataspaces());
+        try {
+            setDataspaces(await fetchDataspaces());
+        } catch (err) {
+            console.error('Dataspaces could not be loaded:', err);
+        }
     };
 
     useEffect(() => {
@@ -372,6 +376,7 @@ function SimulatorPage() {
                     setDataTransfer={setDataTransfer}
                     onRequestContract={handleRequestContract}
                     runContractAnimation={runContractAnimation}
+                    onContentChange={refreshDataspaces}
                     minimalView={minimalView}
                 />}
                 {dataspacesLoaded && !activeDataspace && (

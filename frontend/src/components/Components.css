@@ -569,6 +569,18 @@ body {
   font-size: 0.78rem;
 }
 
+.dataspace-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.dataspace-item-meta {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+
 .dataspace-item-rename {
   flex: 1;
   width: auto;
