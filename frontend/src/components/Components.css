@@ -165,27 +165,6 @@ body {
   gap: 12px;
 }
 
-.reset-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.reset-btn:hover {
-  background: #ef4444;
-  color: white;
-  border-color: #ef4444;
-}
-
 .theme-toggle-bottom-right {
   position: fixed;
   bottom: 20px;

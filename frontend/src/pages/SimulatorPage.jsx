@@ -331,30 +331,11 @@ function SimulatorPage() {
         await refreshDataspaces();
     };
 
-    const handleResetDemo = async () => {
-        try {
-            const keepAssets = activeDataspaceId === 'demo';
-            await fetch(`${API_BASE}/reset`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    dataspaceId: activeDataspaceId,
-                    keepNodes: false,
-                    keepAssets,
-                })
-            });
-            window.location.reload();
-        } catch (error) {
-            console.error('Reset failed:', error);
-        }
-    };
-
 
     return (
         <div className="app-container simulator-page" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
             <TopBar
                 onAddParticipant={openAddDialog}
-                onReset={handleResetDemo}
                 onPolicies={() => { }}
 
                 isDemo={true}

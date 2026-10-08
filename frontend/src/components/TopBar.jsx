@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, RotateCcw } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 import './Components.css';
 
 const TopBar = ({
     onAddParticipant,
-    onReset,
 
     isDemo = false,
     title = 'Data Space Demo',
@@ -36,12 +35,6 @@ const TopBar = ({
                 {showThemeToggle && (
                     <button onClick={toggleTheme} className="theme-toggle" title="Toggle theme">
                         {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-                    </button>
-                )}
-                {isDemo && onReset && (
-                    <button onClick={onReset} className="reset-btn">
-                        <RotateCcw size={16} />
-                        Reset
                     </button>
                 )}
 
