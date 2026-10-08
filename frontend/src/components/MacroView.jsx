@@ -20,102 +20,6 @@ import './Components.css';
 const DATASPACE_RADIUS = 550;
 const CONNECTOR_OFFSET = 60;
 
-// Preset participants for the demo dataspace
-const PRESET_PARTICIPANTS = {
-    bergstein: {
-        name: 'Bergstein Bau GmbH',
-        bpn: 'did:web:bergstein-bau.sim.local',
-        location: 'Munich, Germany',
-        roles: { provider: true, consumer: true },
-        domain: 'Construction',
-        metadata: { industry: 'construction', orgRole: 'contractor' },
-        ontologies: ['IFC', 'BOT'],
-        dataCategories: ['BIM', 'Documents', 'Schedules'],
-        formats: ['JSON', 'IFC', 'PDF'],
-        tags: ['Hochbau', 'Sanierung', 'Generalunternehmer']
-    },
-    nordbeton: {
-        name: 'NordBeton AG',
-        bpn: 'did:web:nordbeton-ag.sim.local',
-        location: 'Hamburg, Deutschland',
-        roles: { provider: true, consumer: true },
-        domain: 'Construction',
-        metadata: { industry: 'construction', orgRole: 'supplier' },
-        ontologies: ['IFC', 'BOT'],
-        dataCategories: ['BIM', 'Documents'],
-        formats: ['JSON', 'IFC', 'CSV'],
-        tags: ['Infrastruktur', 'Tiefbau', 'Beton']
-    },
-    stahlwerk: {
-        name: 'Stahlwerk Weber',
-        bpn: 'did:web:stahlwerk-weber.sim.local',
-        location: 'Essen, Deutschland',
-        roles: { provider: true, consumer: false },
-        domain: 'Manufacturing',
-        metadata: { industry: 'manufacturing', orgRole: 'manufacturer' },
-        ontologies: ['IFC'],
-        dataCategories: ['Documents', 'Contracts'],
-        formats: ['JSON', 'PDF', 'CSV'],
-        tags: ['Stahlbau', 'Industriehallen', 'Zulieferer']
-    },
-    fundament: {
-        name: 'Fundament Plus GmbH',
-        bpn: 'did:web:fundament-plus.sim.local',
-        location: 'Stuttgart, Deutschland',
-        roles: { provider: true, consumer: true },
-        domain: 'Construction',
-        metadata: { industry: 'construction', orgRole: 'customer' },
-        ontologies: ['IFC', 'BOT'],
-        dataCategories: ['BIM', 'GIS', 'Documents'],
-        formats: ['JSON', 'IFC'],
-        tags: ['Civil Engineering', 'Foundations', 'Special Foundation Works']
-    },
-    krantech: {
-        name: 'KranTech Solutions',
-        bpn: 'did:web:krantech-solutions.sim.local',
-        location: 'Frankfurt, Deutschland',
-        roles: { provider: true, consumer: true },
-        domain: 'Logistics',
-        metadata: { industry: 'logistics', orgRole: 'supplier' },
-        ontologies: ['BOT'],
-        dataCategories: ['IoT', 'Schedules'],
-        formats: ['JSON', 'CSV'],
-        tags: ['Construction Equipment', 'Logistics', 'Cranes']
-    },
-    elektro: {
-        name: 'Elektro Schneider',
-        bpn: 'did:web:elektro-schneider.sim.local',
-        location: 'Cologne, Germany',
-        roles: { provider: true, consumer: true },
-        domain: 'Energy',
-        metadata: { industry: 'energy', orgRole: 'contractor' },
-        ontologies: ['BRICK', 'SAREF'],
-        dataCategories: ['IoT', 'Documents'],
-        formats: ['JSON', 'PDF'],
-        tags: ['Elektroinstallation', 'Handwerk', 'Smart Building']
-    }
-};
-
-// Initial nodes for demo dataspace (evenly distributed, one at bottom)
-const INITIAL_NODES = {
-    bergstein: {
-        x: Math.cos(210 * Math.PI / 180) * 610,
-        y: Math.sin(210 * Math.PI / 180) * 610,
-        ...PRESET_PARTICIPANTS.bergstein
-    },
-
-    nordbeton: {
-        x: Math.cos(330 * Math.PI / 180) * 610,
-        y: Math.sin(330 * Math.PI / 180) * 610,
-        ...PRESET_PARTICIPANTS.nordbeton
-    },
-    stahlwerk: {
-        x: Math.cos(90 * Math.PI / 180) * 610,
-        y: Math.sin(90 * Math.PI / 180) * 610,
-        ...PRESET_PARTICIPANTS.stahlwerk
-    }
-};
-
 // Schwellwerte für Zoom-basierte Interaktion
 const ZOOM_THRESHOLD_FOCUS = 0.7;  // Ab diesem Scale gilt ein Node als "fokussiert"
 const ZOOM_THRESHOLD_UNFOCUS = 0.5; // Below this scale, focus is released
@@ -154,18 +58,6 @@ const MacroView = forwardRef(({
     // Zoom-basierte Fokus-Logik (ersetzt isZoomed boolean)
     const isFocused = viewState.scale > ZOOM_THRESHOLD_FOCUS;
 
-    // Only the two built-in dataspaces get the preset participants. A dataspace
-    // the user creates starts empty, or is filled from a scenario, rather than
-    // inheriting three construction firms with nothing to serve.
-    const initialNodesForDataspace = React.useMemo(() => {
-        if (dataspaceId === 'demo') return INITIAL_NODES;
-        if (dataspaceId !== 'simulator') return {};
-        const namespaced = {};
-        for (const [id, node] of Object.entries(INITIAL_NODES)) {
-            namespaced[`${dataspaceId}::${id}`] = node;
-        }
-        return namespaced;
-    }, [dataspaceId]);
     const ringRadius = (minimalView ? 330 : 550) + 60;
 
     const {
@@ -182,7 +74,7 @@ const MacroView = forwardRef(({
         handleDragStart,
         handleDrag,
         handleDragEnd
-    } = useDragNodes(initialNodesForDataspace, isFocused, dataspaceId, minimalView ? 330 : 550);
+    } = useDragNodes(isFocused, dataspaceId, minimalView ? 330 : 550);
 
     const participantPositions = React.useMemo(() => Object.values(nodes), [nodes]);
     const vocabHub = useVocabularyHub(dataspaceId, ringRadius, participantPositions);

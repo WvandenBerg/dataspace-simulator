@@ -104,32 +104,23 @@ function seedPolicies() {
     }
 }
 
-// The demo scenario is seeded on every start so a fresh volume is never empty.
+// A fresh volume starts with the demo scenario, once; after that the demo
+// dataspace is the user's to rename, reset or delete.
 const DEMO_SCENARIO = scenarios.getScenario(scenarios.DEFAULT_SCENARIO_ID);
 const DEMO_DATASPACE_ID = 'demo';
 
 // Seeding writes SQLite only. Indexing is left to reindexAllAssetsToSemantic so
 // that seeding never yields partway through, which is what used to let the
 // reindexer start against a half-populated table.
-function seedDemoAssets() {
-    console.log('[Seed] Ensuring demo scenario assets ...');
-
-    let inserted = 0;
-    for (const asset of DEMO_SCENARIO.assets) {
-        const row = scenarios.toAssetRow(asset, {
-            dataspaceId: DEMO_DATASPACE_ID,
-            publishedAt: new Date().toISOString(),
-        });
-        if (db.getAsset(row.asset_id)) {
-            continue;
-        }
-        db.insertAsset(row);
-        inserted += 1;
-    }
-
-    if (inserted > 0) {
-        console.log(`[Seed] Demo scenario initialized (${inserted} new asset(s)).`);
-    }
+function seedDemoDataspace() {
+    db.insertDataspace({
+        dataspace_id: DEMO_DATASPACE_ID,
+        name: 'Demo',
+        scenario_id: DEMO_SCENARIO.id,
+        created_at: new Date().toISOString(),
+    });
+    const added = writeScenarioRows(DEMO_DATASPACE_ID, DEMO_SCENARIO);
+    console.log(`[Seed] Demo dataspace created (${added.length} asset(s)).`);
 }
 
 function sleep(ms) {
@@ -449,27 +440,7 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
 });
 
 async function loadScenario(dataspaceId, scenario) {
-    const publishedAt = new Date().toISOString();
-    // Before indexing, which tags the free-text fields with it.
-    if (scenario.metadataLanguage && !db.getDataspaceSettings(dataspaceId).metadata?.language) {
-        db.patchDataspaceSettings(dataspaceId, { metadata: { language: scenario.metadataLanguage } });
-    }
-
-    scenario.participants.forEach((participant, index) => {
-        db.upsertNode(scenarios.toNodeRow(participant, {
-            dataspaceId,
-            index,
-            total: scenario.participants.length,
-        }));
-    });
-
-    const added = [];
-    for (const asset of scenario.assets) {
-        const row = scenarios.toAssetRow(asset, { dataspaceId, publishedAt });
-        if (db.getAsset(row.asset_id)) continue;
-        db.insertAsset(row);
-        added.push(row);
-    }
+    const added = writeScenarioRows(dataspaceId, scenario);
 
     const failed = [];
     for (const row of added) {
@@ -499,6 +470,32 @@ async function loadScenario(dataspaceId, scenario) {
         profileFields,
         indexingFailures: failed,
     };
+}
+
+// The SQLite half of loading a scenario. Returns the assets it added.
+function writeScenarioRows(dataspaceId, scenario) {
+    const publishedAt = new Date().toISOString();
+    // Before indexing, which tags the free-text fields with it.
+    if (scenario.metadataLanguage && !db.getDataspaceSettings(dataspaceId).metadata?.language) {
+        db.patchDataspaceSettings(dataspaceId, { metadata: { language: scenario.metadataLanguage } });
+    }
+
+    scenario.participants.forEach((participant, index) => {
+        db.upsertNode(scenarios.toNodeRow(participant, {
+            dataspaceId,
+            index,
+            total: scenario.participants.length,
+        }));
+    });
+
+    const added = [];
+    for (const asset of scenario.assets) {
+        const row = scenarios.toAssetRow(asset, { dataspaceId, publishedAt });
+        if (db.getAsset(row.asset_id)) continue;
+        db.insertAsset(row);
+        added.push(row);
+    }
+    return added;
 }
 
 // ============================================================
@@ -1029,7 +1026,7 @@ function recordOf(a) {
 
 server.listen(PORT, () => {
     seedPolicies();
-    seedDemoAssets();
+    if (db.isNewDatabase) seedDemoDataspace();
     const registered = registerUnlistedDataspaces();
     if (registered.length > 0) console.log(`[Seed] Listed ${registered.length} dataspace(s) found in the data: ${registered.join(', ')}`);
     reindexAllAssetsToSemantic().catch((err) => {

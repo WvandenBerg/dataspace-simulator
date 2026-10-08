@@ -20,6 +20,9 @@ const db = new Database(DB_PATH);
 
 db.pragma('journal_mode = WAL');
 
+// Read before the schema below creates the tables.
+const isNewDatabase = !db.prepare(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'nodes'`).get();
+
 // ---------------------------------------------------------------------------
 // Schema
 // ---------------------------------------------------------------------------
@@ -340,6 +343,8 @@ function enrichPolicy(row) {
 }
 
 module.exports = {
+  isNewDatabase,
+
   // Dataspaces
   insertDataspace: (d) => _insertDataspace.run(d),
   getDataspace: (id) => _getDataspace.get(id) || null,

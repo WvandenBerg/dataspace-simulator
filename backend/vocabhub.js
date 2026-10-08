@@ -75,22 +75,16 @@ async function loadScenarioIntoHub(dataspaceId, scenario) {
     return { tripleCount, profileFields: profiles[0]?.fields ?? 0 };
 }
 
-// Startup refresh, so an edited fixture takes effect on restart. A dataspace
-// counts as holding a scenario when it holds any of that scenario's assets.
+// Startup refresh, so an edited fixture takes effect on restart.
 async function refreshScenarioHubs() {
-    const assetIds = new Set(db.getAllAssets().map((a) => a.asset_id));
-    const dataspaceIds = new Set(db.getAllAssets().map((a) => a.dataspace_id || 'demo'));
     const loaded = [];
 
     await withRetry(() => executeUpdate(`DROP SILENT GRAPH <${LEGACY_SHARED_GRAPH}>`));
-    for (const dataspaceId of dataspaceIds) {
-        for (const summary of scenarios.listScenarios()) {
-            const scenario = scenarios.getScenario(summary.id);
-            const holds = scenario.assets.some((a) => assetIds.has(scenarios.scopedId(dataspaceId, a.assetId)));
-            if (!holds || (!scenarios.catalogExportFile(scenario) && !scenario.catalogProfiles)) continue;
-            const { tripleCount, profileFields } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));
-            loaded.push({ dataspaceId, scenarioId: scenario.id, tripleCount, profileFields });
-        }
+    for (const { dataspace_id: dataspaceId, scenario_id: scenarioId } of db.getAllDataspaces()) {
+        const scenario = scenarioId ? scenarios.getScenario(scenarioId) : null;
+        if (!scenario || (!scenarios.catalogExportFile(scenario) && !scenario.catalogProfiles)) continue;
+        const { tripleCount, profileFields } = await withRetry(() => loadScenarioIntoHub(dataspaceId, scenario));
+        loaded.push({ dataspaceId, scenarioId, tripleCount, profileFields });
     }
     return loaded;
 }
