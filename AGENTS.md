@@ -43,19 +43,22 @@ Before assuming a field or endpoint is wired up, grep for an actual use. Several
 
 These are verified, not suspected. Full evidence in `TEST-LOG.md`.
 
-**Cold start under-indexes, and reports success.** `seedDemoAssets()` and
-`reindexAllAssetsToSemantic()` are both launched unawaited in `server.listen`. The reindexer
-snapshots the asset list before seeding finishes, so its retry loop covers only what existed
-at that instant. A restart repairs it, which is why it is easy to miss.
+**Startup work runs for minutes after every restart.** `reindexAllAssetsToSemantic()` and
+`vocabhub.refreshScenarioHubs()` rewrite every dataspace in Fuseki. Until they finish,
+creating or resetting a dataspace from a scenario takes far longer than usual. Both skip a
+dataspace deleted while they run; keep it that way, or the deleted dataspace comes back.
 
 **`isDemo` gates editing.** A dataspace with `isDemo: false` hides Publish Asset and
 replaces the participant menu with "Managed by participant". This models participants owned
 by external connectors — a distinction inherited from the parent application that means
-nothing here, since nothing external is ever contacted.
+nothing here, since nothing external is ever contacted. Dataspaces no longer carry the flag,
+so `MacroView`'s default of `true` always applies.
 
-**Demo assets are seeded only into the `demo` dataspace** (`dataspace_id: 'demo'`, hardcoded).
-Every other dataspace starts empty. An empty Data Storage panel renders as three static dots
-that look exactly like a loading spinner.
+**The dataspace list lives in the `dataspaces` table**, with the scenario each dataspace came
+from in `scenario_id`. A fresh database gets one Demo dataspace from `construction-demo`,
+once. At startup, any dataspace id that holds data but has no row is added under its id, so
+data written under an unknown id shows up in the sidebar. An empty Data Storage panel renders
+as three static dots that look exactly like a loading spinner.
 
 **The Browse Dataspace UI lives in `BalloonGroup/popups/BrowseDataspacePopup.jsx`.** An older
 `BrowseDataspacePanel.jsx` was deleted once it was confirmed unreachable, along with the
@@ -93,7 +96,8 @@ that wraps its paths in `sh:or` reports no path; such findings concern their foc
 **Loading a scenario leaves existing entries alone.** A dataspace created before a scenario's
 entries changed keeps the old entries. The startup hub refresh still installs the scenario's
 new profiles, and a dataspace that never chose one gets the first, so old entries end up
-checked against a new profile. Create a fresh dataspace to see a scenario as it now is.
+checked against a new profile. Reset the dataspace to its scenario, from its menu in the
+sidebar, to see a scenario as it now is.
 
 ## 5) Conventions
 

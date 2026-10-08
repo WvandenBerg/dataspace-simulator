@@ -40,10 +40,10 @@ const DEFAULT_METADATA = {
  * Nodes are persisted in SQLite via the backend API.
  * localStorage is NOT used — all state survives browser reload via the backend.
  */
-export const useDragNodes = (initialNodes, isZoomed, dataspaceId = 'demo', dataspaceRadius = DEFAULT_DATASPACE_RADIUS) => {
+export const useDragNodes = (isZoomed, dataspaceId, dataspaceRadius = DEFAULT_DATASPACE_RADIUS) => {
     const targetRadius = dataspaceRadius + CONNECTOR_OFFSET;
 
-    const [nodes, setNodes] = useState(initialNodes);
+    const [nodes, setNodes] = useState({});
     const [loaded, setLoaded] = useState(false);
     const [draggedId, setDraggedId] = useState(null);
     const [isSnapZone, setIsSnapZone] = useState(false);
@@ -54,8 +54,6 @@ export const useDragNodes = (initialNodes, isZoomed, dataspaceId = 'demo', datas
 
     // -----------------------------------------------------------------------
     // Load saved nodes from backend on mount
-    // Merge with preset nodes: preset data takes priority for metadata,
-    // but saved positions override the presets
     // -----------------------------------------------------------------------
 
     useEffect(() => {
@@ -68,60 +66,25 @@ export const useDragNodes = (initialNodes, isZoomed, dataspaceId = 'demo', datas
                     return rowDataspaceId === dataspaceId;
                 });
 
-                if (saved.length === 0) {
-                    // First run: persist the preset initial nodes to the backend
-                    for (const [id, node] of Object.entries(initialNodes)) {
-                        await fetch(`${API_BASE}/nodes`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                nodeId: id,
-                                name: node.name,
-                                x: node.x,
-                                y: node.y,
-                                metadata: {
-                                    ...DEFAULT_METADATA,
-                                    dataspaceId,
-                                    bpn: node.bpn || '',
-                                    location: node.location || '',
-                                    domain: node.domain || '',
-                                    ontologies: node.ontologies || [],
-                                    dataCategories: node.dataCategories || [],
-                                    formats: node.formats || [],
-                                    tags: node.tags || [],
-                                    roles: node.roles || { provider: true, consumer: true },
-                                    dspEndpoint: node.dspEndpoint || '',
-                                    catalogUrl: node.catalogUrl || '',
-                                    // credentials for policy evaluation
-                                    industry: node.metadata?.industry || '',
-                                    orgRole: node.metadata?.orgRole || '',
-                                }
-                            })
-                        });
-                    }
-                    setNodes(initialNodes);
-                } else {
-                    // Convert array from backend → { id: node } map
-                    const fromBackend = {};
-                    for (const row of saved) {
-                        fromBackend[row.node_id] = {
-                            x: row.x,
-                            y: row.y,
-                            name: row.name,
-                            ...row.metadata,
-                        };
-                    }
-                    setNodes(fromBackend);
+                // Convert array from backend → { id: node } map
+                const fromBackend = {};
+                for (const row of saved) {
+                    fromBackend[row.node_id] = {
+                        x: row.x,
+                        y: row.y,
+                        name: row.name,
+                        ...row.metadata,
+                    };
                 }
+                setNodes(fromBackend);
             } catch (err) {
                 console.error('[useDragNodes] Failed to load nodes from backend:', err);
-                setNodes(initialNodes);
             } finally {
                 setLoaded(true);
             }
         }
         loadNodes();
-    }, [dataspaceId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [dataspaceId]);
 
     // -----------------------------------------------------------------------
     // Add node

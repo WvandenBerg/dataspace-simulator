@@ -153,6 +153,7 @@ async function addProfile(dataspaceId, { profileId, title, version, description,
         }
     } catch (err) {
         await Promise.all(loaded.map((f) => dropGraph(f.graph)));
+        forgetModels(dataspaceId);
         throw err;
     }
 
@@ -194,6 +195,7 @@ async function addProfile(dataspaceId, { profileId, title, version, description,
             created_at: createdAt,
         })),
     );
+    forgetModels(dataspaceId);
     await writeUploadsGraph(dataspaceId);
 
     const model = await fieldModel(dataspaceId, id);
@@ -204,6 +206,7 @@ async function removeProfile(dataspaceId, profileId) {
     const artifacts = db.getHubArtifacts(dataspaceId).filter((a) => a.profile_id === profileId);
     await Promise.all(artifacts.map((a) => dropGraph(artifactGraph(dataspaceId, a.artifact_id))));
     db.removeHubProfile(dataspaceId, profileId);
+    forgetModels(dataspaceId);
     await writeUploadsGraph(dataspaceId);
 }
 
@@ -361,11 +364,30 @@ function countFields(fields) {
     return fields.reduce((n, f) => n + 1 + countFields(f.fields || []), 0);
 }
 
+// Building a model takes several queries over the shapes, which change only with the hub's profiles.
+const models = new Map();
+
+function cachedModel(key, build) {
+    if (!models.has(key)) {
+        models.set(key, build().catch((err) => {
+            models.delete(key);
+            throw err;
+        }));
+    }
+    return models.get(key);
+}
+
+function forgetModels(dataspaceId) {
+    for (const key of models.keys()) if (key.startsWith(`${dataspaceId}\n`)) models.delete(key);
+}
+
 async function fieldModel(dataspaceId, profileId) {
-    const artifacts = artifactsOf(dataspaceId, profileId);
-    if (!artifacts.some((a) => a.role === 'validation')) return null;
-    const stored = db.getHubProfile(dataspaceId, profileId)?.data_standard_path;
-    return modelFromGraphs(profileId, artifacts.map((a) => artifactGraph(dataspaceId, a.artifact_id)), stored ? JSON.parse(stored) : null);
+    return cachedModel(`${dataspaceId}\n${profileId}`, async () => {
+        const artifacts = artifactsOf(dataspaceId, profileId);
+        if (!artifacts.some((a) => a.role === 'validation')) return null;
+        const stored = db.getHubProfile(dataspaceId, profileId)?.data_standard_path;
+        return modelFromGraphs(profileId, artifacts.map((a) => artifactGraph(dataspaceId, a.artifact_id)), stored ? JSON.parse(stored) : null);
+    });
 }
 
 async function modelFromGraphs(profileId, graphs, dataStandardPath = null) {
@@ -471,7 +493,7 @@ async function catalogModel(dataspaceId, hubOn) {
 
     await loadDefaultProfile();
     const graphs = DEFAULT_PROFILE.files.map((_, i) => defaultGraph(i));
-    const fallback = await modelFromGraphs(DEFAULT_PROFILE.profileId, graphs, DEFAULT_PROFILE.dataStandardPath);
+    const fallback = await cachedModel('\ndefault', () => modelFromGraphs(DEFAULT_PROFILE.profileId, graphs, DEFAULT_PROFILE.dataStandardPath));
     return { ...fallback, title: DEFAULT_PROFILE.title, source: 'default' };
 }
 
@@ -513,6 +535,7 @@ async function setDataStandard(dataspaceId, profileId, dataStandardPath) {
         throw new ProfileError('dataStandardPath must be null or the path of a field this profile defines');
     }
     db.setHubProfileDataStandard(dataspaceId, profileId, dataStandardPath);
+    forgetModels(dataspaceId);
     return { dataStandard: dataStandardField(model.fields, dataStandardPath) };
 }
 
@@ -538,6 +561,7 @@ module.exports = {
     installScenarioProfiles,
     listFileProfiles,
     fieldModel,
+    forgetModels,
     catalogModel,
     catalogShapes,
     setDataStandard,

@@ -20,6 +20,9 @@ const db = new Database(DB_PATH);
 
 db.pragma('journal_mode = WAL');
 
+// Read before the schema below creates the tables.
+const isNewDatabase = !db.prepare(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'nodes'`).get();
+
 // ---------------------------------------------------------------------------
 // Schema
 // ---------------------------------------------------------------------------
@@ -87,6 +90,14 @@ db.exec(`
     asset_content    TEXT NOT NULL DEFAULT '',
     transfer_id      TEXT NOT NULL,
     received_at      TEXT NOT NULL
+  );
+
+  -- scenario_id is the scenario the dataspace was created from, or NULL for an empty one.
+  CREATE TABLE IF NOT EXISTS dataspaces (
+    dataspace_id TEXT PRIMARY KEY,
+    name         TEXT NOT NULL,
+    scenario_id  TEXT,
+    created_at   TEXT NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS dataspace_settings (
@@ -234,6 +245,42 @@ const _getReceivedByNode = db.prepare(`
 `);
 
 // ---------------------------------------------------------------------------
+// Dataspaces
+// ---------------------------------------------------------------------------
+
+const _insertDataspace = db.prepare(`
+  INSERT INTO dataspaces (dataspace_id, name, scenario_id, created_at)
+  VALUES (@dataspace_id, @name, @scenario_id, @created_at)
+`);
+const _getDataspace = db.prepare(`SELECT * FROM dataspaces WHERE dataspace_id = ?`);
+const _getAllDataspaces = db.prepare(`SELECT * FROM dataspaces ORDER BY created_at, name`);
+const _renameDataspace = db.prepare(`UPDATE dataspaces SET name = ? WHERE dataspace_id = ?`);
+const _getConfiguredDataspaceIds = db.prepare(`
+  SELECT dataspace_id FROM dataspace_settings UNION SELECT dataspace_id FROM hub_profiles
+`);
+const _deleteDataspace = db.prepare(`DELETE FROM dataspaces WHERE dataspace_id = ?`);
+const _clearByNode = [
+  'DELETE FROM negotiations WHERE consumer_node_id = @id OR provider_node_id = @id',
+  'DELETE FROM transfers WHERE consumer_node_id = @id OR provider_node_id = @id',
+  'DELETE FROM received_data WHERE receiver_node_id = @id OR provider_node_id = @id',
+  'DELETE FROM assets WHERE owner_node_id = @id',
+  'DELETE FROM nodes WHERE node_id = @id',
+].map((sql) => db.prepare(sql));
+const _clearByDataspace = [
+  'DELETE FROM assets WHERE dataspace_id = @id',
+  'DELETE FROM hub_artifacts WHERE dataspace_id = @id',
+  'DELETE FROM hub_profiles WHERE dataspace_id = @id',
+  'DELETE FROM dataspace_settings WHERE dataspace_id = @id',
+].map((sql) => db.prepare(sql));
+
+// Everything a dataspace holds. The entry on the list stays unless removeEntry is set.
+const clearDataspace = db.transaction((dataspaceId, nodeIds, { removeEntry = false } = {}) => {
+  for (const id of nodeIds) for (const stmt of _clearByNode) stmt.run({ id });
+  for (const stmt of _clearByDataspace) stmt.run({ id: dataspaceId });
+  if (removeEntry) _deleteDataspace.run(dataspaceId);
+});
+
+// ---------------------------------------------------------------------------
 // Dataspace settings
 // ---------------------------------------------------------------------------
 
@@ -317,6 +364,16 @@ function enrichPolicy(row) {
 }
 
 module.exports = {
+  isNewDatabase,
+
+  // Dataspaces
+  insertDataspace: (d) => _insertDataspace.run(d),
+  getDataspace: (id) => _getDataspace.get(id) || null,
+  getAllDataspaces: () => _getAllDataspaces.all(),
+  renameDataspace: (id, name) => _renameDataspace.run(name, id),
+  getConfiguredDataspaceIds: () => _getConfiguredDataspaceIds.all().map((r) => r.dataspace_id),
+  clearDataspace,
+
   // Dataspace settings
   getDataspaceSettings,
   patchDataspaceSettings,

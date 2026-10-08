@@ -10,6 +10,40 @@ import '../components/Components.css';
 
 // Use relative URL so Vite proxy (dev) and nginx (prod) both work
 const API_BASE = '/api';
+const LEGACY_DATASPACES_KEY = 'simulator.dataspaces';
+
+async function fetchDataspaces() {
+    const res = await fetch(`${API_BASE}/dataspaces`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
+
+// The names used to live only in this browser; hand them to the backend once.
+async function importLegacyDataspaces() {
+    const raw = localStorage.getItem(LEGACY_DATASPACES_KEY);
+    if (!raw) return;
+    let legacy = [];
+    try { legacy = JSON.parse(raw); } catch { /* unreadable: nothing to import */ }
+    const known = new Map((await fetchDataspaces()).map((d) => [d.id, d]));
+    for (const old of Array.isArray(legacy) ? legacy : []) {
+        if (!old?.id || !old?.name) continue;
+        const row = known.get(old.id);
+        if (!row) {
+            await fetch(`${API_BASE}/dataspaces`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: old.id, name: old.name }),
+            });
+        } else if (row.name === row.id && old.name !== row.id) {
+            await fetch(`${API_BASE}/dataspaces/${encodeURIComponent(old.id)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: old.name }),
+            });
+        }
+    }
+    localStorage.removeItem(LEGACY_DATASPACES_KEY);
+}
 
 
 function SimulatorPage() {
@@ -43,55 +77,44 @@ function SimulatorPage() {
     const [dataPlaneConnection, setDataPlaneConnection] = useState(null);
     const [dataTransfer, setDataTransfer] = useState(null);
 
-    // System dataspaces
-    const SYSTEM_DATASPACES = [
-        {
-            id: 'simulator',
-            code: 'SIM',
-            name: 'Simulator',
-            participants: 3,
-            isDemo: true,
-            locked: true,
-        },
-        {
-            id: 'demo',
-            code: 'DEMO',
-            name: 'Demo',
-            participants: 3,
-            isDemo: true,
-            locked: true,
-        }
-    ];
-
-    // Multi-Dataspace State
-    const [dataspaces, setDataspaces] = useState(() => {
-        try {
-            const saved = JSON.parse(localStorage.getItem('simulator.dataspaces') || '[]');
-            if (Array.isArray(saved) && saved.length > 0) {
-                const merged = [...saved];
-                for (const systemSpace of SYSTEM_DATASPACES) {
-                    const idx = merged.findIndex((d) => d.id === systemSpace.id);
-                    if (idx === -1) {
-                        merged.unshift(systemSpace);
-                    } else {
-                        merged[idx] = { ...merged[idx], ...systemSpace, locked: true, isDemo: true };
-                    }
-                }
-                return merged;
-            }
-        } catch (_) { }
-        return SYSTEM_DATASPACES;
-    });
-    const [activeDataspaceId, setActiveDataspaceId] = useState(() => localStorage.getItem('simulator.activeDataspaceId') || 'simulator');
+    const [dataspaces, setDataspaces] = useState([]);
+    const [dataspacesLoaded, setDataspacesLoaded] = useState(false);
+    const [chosenDataspaceId, setActiveDataspaceId] = useState(() => localStorage.getItem('simulator.activeDataspaceId') || '');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('simulator.sidebarCollapsed') === '1');
+    // Bumped by a reset so the canvas reloads the dataspace it shows.
+    const [resetCount, setResetCount] = useState(0);
+
+    // A chosen dataspace that no longer exists falls back to the first one.
+    const activeDataspace = dataspaces.find((d) => d.id === chosenDataspaceId) || dataspaces[0] || null;
+    const activeDataspaceId = activeDataspace?.id || '';
+
+    const refreshDataspaces = async () => {
+        try {
+            setDataspaces(await fetchDataspaces());
+        } catch (err) {
+            console.error('Dataspaces could not be loaded:', err);
+        }
+    };
 
     useEffect(() => {
-        localStorage.setItem('simulator.dataspaces', JSON.stringify(dataspaces));
-    }, [dataspaces]);
+        let cancelled = false;
+        (async () => {
+            try {
+                await importLegacyDataspaces();
+                const list = await fetchDataspaces();
+                if (!cancelled) setDataspaces(list);
+            } catch (err) {
+                console.error('Dataspaces could not be loaded:', err);
+            } finally {
+                if (!cancelled) setDataspacesLoaded(true);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
 
     useEffect(() => {
-        localStorage.setItem('simulator.activeDataspaceId', activeDataspaceId);
-    }, [activeDataspaceId]);
+        localStorage.setItem('simulator.activeDataspaceId', chosenDataspaceId);
+    }, [chosenDataspaceId]);
 
     useEffect(() => {
         localStorage.setItem('simulator.sidebarCollapsed', sidebarCollapsed ? '1' : '0');
@@ -240,76 +263,79 @@ function SimulatorPage() {
         setActiveConnector(null);
     };
 
-    const handleCreateDataspace = async ({ name, isDemo = false, scenarioId = '' }) => {
-        const id = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36)}`;
-        let participants = 0;
-
-        // Load before switching. MacroView seeds its own participants when the
-        // backend reports none for a dataspace, so the scenario has to be in
-        // place before that mount happens.
-        if (scenarioId) {
-            try {
-                const res = await fetch(`/api/scenarios/${encodeURIComponent(scenarioId)}/load`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dataspaceId: id }),
-                });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const result = await res.json();
-                participants = result.participants;
-                addLog(`Scenario loaded: ${participants} participant(s), ${result.assetsAdded} asset(s)`);
-            } catch (err) {
-                addLog(`Scenario could not be loaded: ${err.message}`);
-            }
-        }
-
-        const next = {
-            id,
-            name,
-            participants,
-            isDemo,
-        };
-        setDataspaces((prev) => [...prev, next]);
-        setActiveDataspaceId(id);
-        setActiveConnector(null);
-        addLog(`Dataspace created: ${name}`);
-    };
-
-    const handleDeleteDataspace = (id) => {
-        if (id === 'demo' || id === 'simulator') return;
-        setDataspaces((prev) => prev.filter((d) => d.id !== id));
-        if (activeDataspaceId === id) {
-            setActiveDataspaceId('simulator');
-            setActiveConnector(null);
-        }
-    };
-
-    const handleResetDemo = async () => {
+    // The backend loads the scenario before answering, so MacroView mounts on a filled dataspace.
+    const handleCreateDataspace = async ({ name, scenarioId = '' }) => {
         try {
-            const keepAssets = activeDataspaceId === 'demo';
-            await fetch(`${API_BASE}/reset`, {
+            const res = await fetch(`${API_BASE}/dataspaces`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    dataspaceId: activeDataspaceId,
-                    keepNodes: false,
-                    keepAssets,
-                })
+                body: JSON.stringify({ name, scenarioId: scenarioId || null }),
             });
-            window.location.reload();
-        } catch (error) {
-            console.error('Reset failed:', error);
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+            if (data.loaded) {
+                addLog(`Scenario loaded: ${data.loaded.participants} participant(s), ${data.loaded.assetsAdded} asset(s)`);
+            }
+            await refreshDataspaces();
+            setActiveDataspaceId(data.dataspace.id);
+            setActiveConnector(null);
+            addLog(`Dataspace created: ${name}`);
+        } catch (err) {
+            addLog(`Dataspace could not be created: ${err.message}`);
         }
     };
 
+    const handleRenameDataspace = async (id, name) => {
+        try {
+            const res = await fetch(`${API_BASE}/dataspaces/${encodeURIComponent(id)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+        } catch (err) {
+            addLog(`Dataspace could not be renamed: ${err.message}`);
+        }
+        await refreshDataspaces();
+    };
 
-    const activeDataspace = dataspaces.find(ds => ds.id === activeDataspaceId);
+    const handleResetDataspace = async (id) => {
+        const name = dataspaces.find((d) => d.id === id)?.name || id;
+        try {
+            const res = await fetch(`${API_BASE}/dataspaces/${encodeURIComponent(id)}/reset`, { method: 'POST' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+            addLog(`Dataspace reset: ${name}`);
+        } catch (err) {
+            addLog(`Dataspace could not be reset: ${err.message}`);
+        }
+        if (id === activeDataspaceId) {
+            setActiveConnector(null);
+            setResetCount((n) => n + 1);
+        }
+        await refreshDataspaces();
+    };
+
+    const handleDeleteDataspace = async (id) => {
+        const name = dataspaces.find((d) => d.id === id)?.name || id;
+        try {
+            const res = await fetch(`${API_BASE}/dataspaces/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+            addLog(`Dataspace deleted: ${name}`);
+        } catch (err) {
+            addLog(`Dataspace could not be deleted: ${err.message}`);
+        }
+        if (id === activeDataspaceId) setActiveConnector(null);
+        await refreshDataspaces();
+    };
+
 
     return (
         <div className="app-container simulator-page" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
             <TopBar
                 onAddParticipant={openAddDialog}
-                onReset={handleResetDemo}
                 onPolicies={() => { }}
 
                 isDemo={true}
@@ -323,15 +349,16 @@ function SimulatorPage() {
                     activeDataspaceId={activeDataspaceId}
                     onSelect={handleSelectDataspace}
                     onCreate={handleCreateDataspace}
+                    onRename={handleRenameDataspace}
                     onDelete={handleDeleteDataspace}
+                    onReset={handleResetDataspace}
                     collapsed={sidebarCollapsed}
                     onToggle={() => setSidebarCollapsed((v) => !v)}
                 />
-                <MacroView
-                    key={activeDataspaceId}
+                {activeDataspace && <MacroView
+                    key={`${activeDataspaceId}:${resetCount}`}
                     ref={macroViewRef}
                     dataspaceId={activeDataspaceId}
-                    isDemo={Boolean(activeDataspace?.isDemo)}
                     onConnectorClick={handleConnectorClick}
                     activeConnector={activeConnector}
                     simulationState={simulationState}
@@ -350,8 +377,12 @@ function SimulatorPage() {
                     setDataTransfer={setDataTransfer}
                     onRequestContract={handleRequestContract}
                     runContractAnimation={runContractAnimation}
+                    onContentChange={refreshDataspaces}
                     minimalView={minimalView}
-                />
+                />}
+                {dataspacesLoaded && !activeDataspace && (
+                    <div className="dataspace-empty">No dataspaces. Create one in the sidebar.</div>
+                )}
             </div>
 
 

@@ -68,6 +68,11 @@ async function dropGraph(graphIri) {
     await executeUpdate(`DROP SILENT GRAPH <${graphIri}>`);
 }
 
+// TDB2 keeps every old version of the data until compacted; Fuseki runs this as a background task.
+async function compactStore() {
+    await axios.post(`${FUSEKI_URL}/$/compact/${FUSEKI_DATASET}`, null, withAuth({ params: { deleteOld: true } }));
+}
+
 // The named graphs merged into one, as Turtle.
 async function graphsAsTurtle(graphIris) {
     const response = await axios.get(QUERY_ENDPOINT, withAuth({
@@ -143,11 +148,14 @@ function recordTriples(subjectIri, record, mint) {
 // Removes a dataset's own nodes; datasetPattern must bind ?ds. Nodes used to be
 // minted as urn:distribution:<id>:<n> and urn:datastandard:<id>:<n>, which a
 // store from before this change still holds until each dataset is re-indexed.
+// Following the dataset's links keeps this from testing every triple in the store.
 function ownedNodesDelete(datasetPattern) {
     return `DELETE { GRAPH ?g { ?n ?p ?o } }
 WHERE {
     GRAPH ?g {
         ${datasetPattern}
+        ?ds <http://purl.org/dc/terms/identifier> ?anyId .
+        ?ds (!<urn:none>)+ ?n .
         ?n ?p ?o .
         BIND(STRAFTER(STR(?ds), "urn:dataset:") AS ?id)
         FILTER(STRSTARTS(STR(?n), CONCAT(STR(?ds), "#"))
@@ -163,9 +171,33 @@ WHERE {
 // ---------------------------------------------------------------------------
 
 async function upsertSemanticDataset(dataset) {
+    await upsertSemanticDatasets([dataset]);
+}
+
+// One request is one write transaction, and each costs a commit.
+async function upsertSemanticDatasets(datasets) {
+    if (datasets.length === 0) return;
+    const values = datasets.map((d) => `<${datasetIri(d.datasetId)}>`).join(' ');
+    const inserts = datasets.map((dataset) => `    GRAPH <${graphIriForDataset(dataset)}> {
+    ${datasetTriples(dataset).join('\n    ')}
+    }`);
+
+    const updateQuery = `
+${ownedNodesDelete(`VALUES ?ds { ${values} }`)} ;
+
+DELETE { GRAPH ?g { ?ds ?p ?o } }
+WHERE  { VALUES ?ds { ${values} } GRAPH ?g { ?ds ?p ?o } } ;
+
+INSERT DATA {
+${inserts.join('\n')}
+}`;
+
+    await executeUpdate(updateQuery);
+}
+
+function datasetTriples(dataset) {
     const dsIri = datasetIri(dataset.datasetId);
     const pubIri = participantIri(dataset.publisherBpn);
-    const graphIri = graphIriForDataset(dataset);
     let nodes = 0;
     const mint = () => `${dsIri}#n${nodes++}`;
 
@@ -186,20 +218,7 @@ async function upsertSemanticDataset(dataset) {
     if (dataset.sessionCode) {
         triples.push(`<${dsIri}> <http://purl.org/dc/terms/isPartOf> "${escapeLiteral(dataset.sessionCode)}" .`);
     }
-
-    const updateQuery = `
-${ownedNodesDelete(`VALUES ?ds { <${dsIri}> }`)} ;
-
-DELETE { GRAPH ?g { <${dsIri}> ?p ?o } }
-WHERE  { GRAPH ?g { <${dsIri}> ?p ?o } } ;
-
-INSERT DATA {
-    GRAPH <${graphIri}> {
-    ${triples.join('\n    ')}
-    }
-}`;
-
-    await executeUpdate(updateQuery);
+    return triples;
 }
 
 // ---------------------------------------------------------------------------
@@ -404,6 +423,7 @@ LIMIT ${Math.max(1, Math.min(Number(limit) || 25, 200))}`;
 
 module.exports = {
     upsertSemanticDataset,
+    upsertSemanticDatasets,
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
     semanticSearch,
@@ -414,6 +434,7 @@ module.exports = {
     executeUpdate,
     replaceGraph,
     dropGraph,
+    compactStore,
     escapeIri,
     escapeLiteral,
 };

@@ -23,10 +23,14 @@ const { assetToRecord, valuesAt } = require('./record');
 const { evaluatePolicyAgainstClaims, filterAssetsByClaims } = require('./policy');
 const {
     upsertSemanticDataset,
+    upsertSemanticDatasets,
     deleteSemanticDataset,
     deleteSemanticDatasetsForParticipant,
     readRecords,
-    semanticSearch
+    semanticSearch,
+    executeSelect,
+    executeUpdate,
+    compactStore,
 } = require('./semantic');
 const { initiateNegotiation, advanceNegotiation, initiateTransfer } = require('./state-machine');
 
@@ -104,32 +108,23 @@ function seedPolicies() {
     }
 }
 
-// The demo scenario is seeded on every start so a fresh volume is never empty.
+// A fresh volume starts with the demo scenario, once; after that the demo
+// dataspace is the user's to rename, reset or delete.
 const DEMO_SCENARIO = scenarios.getScenario(scenarios.DEFAULT_SCENARIO_ID);
 const DEMO_DATASPACE_ID = 'demo';
 
 // Seeding writes SQLite only. Indexing is left to reindexAllAssetsToSemantic so
 // that seeding never yields partway through, which is what used to let the
 // reindexer start against a half-populated table.
-function seedDemoAssets() {
-    console.log('[Seed] Ensuring demo scenario assets ...');
-
-    let inserted = 0;
-    for (const asset of DEMO_SCENARIO.assets) {
-        const row = scenarios.toAssetRow(asset, {
-            dataspaceId: DEMO_DATASPACE_ID,
-            publishedAt: new Date().toISOString(),
-        });
-        if (db.getAsset(row.asset_id)) {
-            continue;
-        }
-        db.insertAsset(row);
-        inserted += 1;
-    }
-
-    if (inserted > 0) {
-        console.log(`[Seed] Demo scenario initialized (${inserted} new asset(s)).`);
-    }
+function seedDemoDataspace() {
+    db.insertDataspace({
+        dataspace_id: DEMO_DATASPACE_ID,
+        name: 'Demo',
+        scenario_id: DEMO_SCENARIO.id,
+        created_at: new Date().toISOString(),
+    });
+    const added = writeScenarioRows(DEMO_DATASPACE_ID, DEMO_SCENARIO);
+    console.log(`[Seed] Demo dataspace created (${added.length} asset(s)).`);
 }
 
 function sleep(ms) {
@@ -137,11 +132,15 @@ function sleep(ms) {
 }
 
 async function indexAsset(asset) {
+    await upsertSemanticDataset(datasetFor(asset));
+}
+
+function datasetFor(asset) {
     const owner = db.getNode(asset.owner_node_id);
     const ownerName = owner?.name || scenarios.participantName(DEMO_SCENARIO, asset.owner_node_id);
     const dataspaceId = String(asset.dataspace_id || owner?.metadata?.dataspaceId || 'demo');
 
-    await upsertSemanticDataset({
+    return {
         datasetId: asset.asset_id,
         record: recordOf(asset),
         policyName: policyLabel(asset.policy_id),
@@ -149,8 +148,11 @@ async function indexAsset(asset) {
         publisherName: ownerName,
         sessionCode: dataspaceId,
         publishedAt: asset.published_at || new Date().toISOString(),
-    });
+    };
 }
+
+// Each request is a write transaction, and the store keeps every old version until compacted.
+const REINDEX_BATCH = 50;
 
 async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 1500 } = {}) {
     const indexed = new Set();
@@ -168,10 +170,17 @@ async function reindexAllAssetsToSemantic({ maxAttempts = 20, retryDelayMs = 150
             return;
         }
 
-        for (const asset of pending) {
+        for (let i = 0; i < pending.length; i += REINDEX_BATCH) {
+            // A dataspace deleted while this runs would otherwise get its graphs back.
+            const batch = pending.slice(i, i + REINDEX_BATCH).filter((a) => db.getAsset(a.asset_id));
             try {
-                await indexAsset(asset);
-                indexed.add(asset.asset_id);
+                await upsertSemanticDatasets(batch.map(datasetFor));
+                batch.forEach((a) => indexed.add(a.asset_id));
+                // Deleted while it was being written.
+                for (const asset of batch.filter((a) => !db.getAsset(a.asset_id))) {
+                    const dataspaceId = assetDataspaceId(asset);
+                    await (db.getDataspace(dataspaceId) ? deleteSemanticDataset(asset.asset_id) : dropDataspaceGraphs(dataspaceId));
+                }
             } catch (_err) {
                 // Fuseki is usually just not up yet; the next attempt retries.
             }
@@ -445,8 +454,42 @@ app.get('/api/scenarios', (_req, res) => {
 app.post('/api/scenarios/:id/load', async (req, res) => {
     const scenario = scenarios.getScenario(req.params.id);
     if (!scenario) return res.status(404).json({ error: 'Scenario not found' });
+    res.json(await loadScenario(resolveDataspaceId(req.body?.dataspaceId), scenario));
+});
 
-    const dataspaceId = resolveDataspaceId(req.body?.dataspaceId);
+async function loadScenario(dataspaceId, scenario) {
+    const added = writeScenarioRows(dataspaceId, scenario);
+
+    const failed = [];
+    try {
+        await upsertSemanticDatasets(added.map(datasetFor));
+    } catch (err) {
+        failed.push(...added.map((row) => ({ assetId: row.asset_id, error: err.message })));
+    }
+
+    let hubTriples = 0;
+    let profileFields = 0;
+    try {
+        ({ tripleCount: hubTriples, profileFields } = await vocabhub.loadScenarioIntoHub(dataspaceId, scenario));
+    } catch (err) {
+        failed.push({ hub: true, error: err.message });
+    }
+
+    return {
+        success: failed.length === 0,
+        scenarioId: scenario.id,
+        dataspaceId,
+        participants: scenario.participants.length,
+        assetsAdded: added.length,
+        assetsSkipped: scenario.assets.length - added.length,
+        hubTriples,
+        profileFields,
+        indexingFailures: failed,
+    };
+}
+
+// The SQLite half of loading a scenario. Returns the assets it added.
+function writeScenarioRows(dataspaceId, scenario) {
     const publishedAt = new Date().toISOString();
     // Before indexing, which tags the free-text fields with it.
     if (scenario.metadataLanguage && !db.getDataspaceSettings(dataspaceId).metadata?.language) {
@@ -468,35 +511,153 @@ app.post('/api/scenarios/:id/load', async (req, res) => {
         db.insertAsset(row);
         added.push(row);
     }
+    return added;
+}
 
-    const failed = [];
-    for (const row of added) {
-        try {
-            await indexAsset(row);
-        } catch (err) {
-            failed.push({ assetId: row.asset_id, error: err.message });
+// ============================================================
+// Dataspaces
+//
+// The list the sidebar shows, and the scenario each one came from.
+// ============================================================
+
+const nodeDataspaceId = (n) => String(n?.metadata?.dataspaceId || 'demo');
+const assetDataspaceId = (a) => String(a.dataspace_id || 'demo');
+const DATASPACE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/;
+const MAX_NAME_LENGTH = 100;
+
+function dataspaceToResponse(row, nodes, assets) {
+    const scenario = row.scenario_id ? scenarios.getScenario(row.scenario_id) : null;
+    return {
+        id: row.dataspace_id,
+        name: row.name,
+        scenarioId: row.scenario_id,
+        scenario: scenario ? { id: scenario.id, name: scenario.name, description: scenario.description || '' } : null,
+        createdAt: row.created_at,
+        participants: nodes.filter((n) => nodeDataspaceId(n) === row.dataspace_id).length,
+        assets: assets.filter((a) => assetDataspaceId(a) === row.dataspace_id).length,
+    };
+}
+
+function dataspaceResponse(dataspaceId) {
+    return dataspaceToResponse(db.getDataspace(dataspaceId), db.getAllNodes(), db.getAllAssets());
+}
+
+function nameFrom(raw) {
+    const name = String(raw ?? '').trim();
+    return name && name.length <= MAX_NAME_LENGTH ? name : null;
+}
+
+// The scenario most of whose participants a dataspace holds. Sharing one
+// participant, as two unrelated scenarios can, is not enough.
+function likelyScenario(dataspaceId, nodeIds) {
+    let best = null;
+    let bestShare = 0.5;
+    for (const { id } of scenarios.listScenarios()) {
+        const scenario = scenarios.getScenario(id);
+        const held = scenario.participants.filter((p) => nodeIds.has(scenarios.scopedId(dataspaceId, p.id))).length;
+        const share = held / scenario.participants.length;
+        if (share >= bestShare) {
+            best = scenario.id;
+            bestShare = share;
         }
     }
+    return best;
+}
 
-    let hubTriples = 0;
-    let profileFields = 0;
-    try {
-        ({ tripleCount: hubTriples, profileFields } = await vocabhub.loadScenarioIntoHub(dataspaceId, scenario));
-    } catch (err) {
-        failed.push({ hub: true, error: err.message });
+// Data written under a dataspace id nobody registered still shows up in the
+// list, so nothing holds data the user cannot see or delete.
+function registerUnlistedDataspaces() {
+    const nodes = db.getAllNodes();
+    const assets = db.getAllAssets();
+    const ids = new Set([...nodes.map(nodeDataspaceId), ...assets.map(assetDataspaceId), ...db.getConfiguredDataspaceIds()]);
+    const nodeIds = new Set(nodes.map((n) => n.node_id));
+    const createdAt = new Date().toISOString();
+    const registered = [];
+    for (const id of ids) {
+        if (db.getDataspace(id)) continue;
+        db.insertDataspace({ dataspace_id: id, name: id, scenario_id: likelyScenario(id, nodeIds), created_at: createdAt });
+        registered.push(id);
+    }
+    return registered;
+}
+
+app.get('/api/dataspaces', (_req, res) => {
+    const nodes = db.getAllNodes();
+    const assets = db.getAllAssets();
+    res.json(db.getAllDataspaces().map((row) => dataspaceToResponse(row, nodes, assets)));
+});
+
+// An id is accepted only to carry over dataspaces the browser used to keep itself.
+app.post('/api/dataspaces', async (req, res) => {
+    const name = nameFrom(req.body?.name);
+    if (!name) return res.status(400).json({ error: `name required, at most ${MAX_NAME_LENGTH} characters` });
+
+    const scenarioId = req.body?.scenarioId || null;
+    const scenario = scenarioId ? scenarios.getScenario(scenarioId) : null;
+    if (scenarioId && !scenario) return res.status(400).json({ error: 'Scenario not found' });
+
+    let id = req.body?.id;
+    if (id !== undefined) {
+        if (typeof id !== 'string' || !DATASPACE_ID_PATTERN.test(id)) return res.status(400).json({ error: 'Invalid id' });
+        if (db.getDataspace(id)) return res.status(409).json({ error: 'Dataspace exists', dataspace: dataspaceResponse(id) });
+    } else {
+        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'dataspace';
+        id = `${slug}-${Date.now().toString(36)}`;
     }
 
-    res.json({
-        success: failed.length === 0,
-        scenarioId: scenario.id,
-        dataspaceId,
-        participants: scenario.participants.length,
-        assetsAdded: added.length,
-        assetsSkipped: scenario.assets.length - added.length,
-        hubTriples,
-        profileFields,
-        indexingFailures: failed,
-    });
+    db.insertDataspace({ dataspace_id: id, name, scenario_id: scenario?.id || null, created_at: new Date().toISOString() });
+    const loaded = scenario ? await loadScenario(id, scenario) : null;
+    res.status(201).json({ dataspace: dataspaceResponse(id), loaded });
+});
+
+app.patch('/api/dataspaces/:id', (req, res) => {
+    if (!db.getDataspace(req.params.id)) return res.status(404).json({ error: 'Dataspace not found' });
+    const name = nameFrom(req.body?.name);
+    if (!name) return res.status(400).json({ error: `name required, at most ${MAX_NAME_LENGTH} characters` });
+    db.renameDataspace(req.params.id, name);
+    res.json(dataspaceResponse(req.params.id));
+});
+
+// Fuseki goes first: if it is unreachable, nothing is removed and the user can retry.
+async function clearDataspace(dataspaceId, options) {
+    await dropDataspaceGraphs(dataspaceId);
+    const nodeIds = db.getAllNodes().filter((n) => nodeDataspaceId(n) === dataspaceId).map((n) => n.node_id);
+    db.clearDataspace(dataspaceId, nodeIds, options);
+    catalogProfiles.forgetModels(dataspaceId);
+}
+
+async function dropDataspaceGraphs(dataspaceId) {
+    const ds = encodeURIComponent(dataspaceId);
+    const rows = await executeSelect('SELECT DISTINCT ?g WHERE { GRAPH ?g { } }');
+    const graphs = rows.map((r) => r.g.value)
+        .filter((g) => g.endsWith(`:session:${ds}`) || g.startsWith(`urn:graph:vocabhub:${ds}:`));
+    // One request is one write transaction; a request per graph took seconds each.
+    if (graphs.length > 0) await executeUpdate(graphs.map((g) => `DROP SILENT GRAPH <${g}>`).join(' ;\n'));
+}
+
+app.delete('/api/dataspaces/:id', async (req, res) => {
+    if (!db.getDataspace(req.params.id)) return res.status(404).json({ error: 'Dataspace not found' });
+    try {
+        await clearDataspace(req.params.id, { removeEntry: true });
+    } catch (err) {
+        return res.status(500).json({ error: `Could not delete: ${err.message}` });
+    }
+    res.json({ success: true });
+});
+
+// Back to how it was created: the scenario's contents, or empty without one.
+app.post('/api/dataspaces/:id/reset', async (req, res) => {
+    const row = db.getDataspace(req.params.id);
+    if (!row) return res.status(404).json({ error: 'Dataspace not found' });
+    const scenario = row.scenario_id ? scenarios.getScenario(row.scenario_id) : null;
+    if (row.scenario_id && !scenario) return res.status(409).json({ error: `Scenario ${row.scenario_id} no longer exists` });
+    try {
+        await clearDataspace(row.dataspace_id);
+    } catch (err) {
+        return res.status(500).json({ error: `Could not reset: ${err.message}` });
+    }
+    const loaded = scenario ? await loadScenario(row.dataspace_id, scenario) : null;
+    res.json({ dataspace: dataspaceResponse(row.dataspace_id), loaded });
 });
 
 // ============================================================
@@ -923,19 +1084,26 @@ function recordOf(a) {
 
 server.listen(PORT, () => {
     seedPolicies();
-    seedDemoAssets();
-    reindexAllAssetsToSemantic().catch((err) => {
+    if (db.isNewDatabase) seedDemoDataspace();
+    const registered = registerUnlistedDataspaces();
+    if (registered.length > 0) console.log(`[Seed] Listed ${registered.length} dataspace(s) found in the data: ${registered.join(', ')}`);
+    const reindexed = reindexAllAssetsToSemantic().catch((err) => {
         console.error(`[Seed] SEARCH WILL BE INCOMPLETE: ${err.message}`);
     });
-    vocabhub.refreshScenarioHubs()
+    const refreshed = vocabhub.refreshScenarioHubs()
         .then((loaded) => {
             for (const { dataspaceId, scenarioId, tripleCount, profileFields } of loaded) {
                 console.log(`[Hub] ${dataspaceId}: ${tripleCount} triple(s), ${profileFields} catalog field(s) from scenario ${scenarioId}.`);
             }
+            console.log(`[Hub] Scenario hubs refreshed (${loaded.length} reloaded, the rest unchanged).`);
         })
         .catch((err) => {
             console.error(`[Hub] VOCABULARY HUBS NOT REFRESHED: ${err.message}`);
         });
+    Promise.all([reindexed, refreshed])
+        .then(() => compactStore())
+        .then(() => console.log('[Seed] Fuseki store compaction started.'))
+        .catch((err) => console.error(`[Seed] Fuseki store not compacted: ${err.message}`));
     console.log('');
 
     console.log('══════════════════════════════════════════════');
