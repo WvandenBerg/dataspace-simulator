@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronRight, ChevronLeft, Plus, Database, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Database } from 'lucide-react';
 
 export default function DataspaceSidebar({
     dataspaces,
     activeDataspaceId,
     onSelect,
     onCreate,
-    onDelete,
     collapsed,
     onToggle,
 }) {
@@ -37,13 +36,7 @@ export default function DataspaceSidebar({
         if (!trimmed || creating) return;
         setCreating(true);
         try {
-            await onCreate({
-                name: trimmed,
-                scenarioId,
-                // Editable like the built-in dataspaces. isDemo: false models participants
-                // owned by external connectors, which this standalone build never contacts.
-                isDemo: true,
-            });
+            await onCreate({ name: trimmed, scenarioId });
             setDraftName('');
         } finally {
             setCreating(false);
@@ -75,20 +68,6 @@ export default function DataspaceSidebar({
                                     <div className="dataspace-item-main">
                                         <Database size={13} />
                                         <span className="dataspace-item-name">{space.name}</span>
-                                    </div>
-                                    <div className="dataspace-item-right">
-                                        {!space.isDemo && (
-                                            <span
-                                                className="dataspace-delete"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onDelete(space.id);
-                                                }}
-                                                title="Delete dataspace"
-                                            >
-                                                <Trash2 size={12} />
-                                            </span>
-                                        )}
                                     </div>
                                 </button>
                             );

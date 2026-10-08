@@ -89,6 +89,14 @@ db.exec(`
     received_at      TEXT NOT NULL
   );
 
+  -- scenario_id is the scenario the dataspace was created from, or NULL for an empty one.
+  CREATE TABLE IF NOT EXISTS dataspaces (
+    dataspace_id TEXT PRIMARY KEY,
+    name         TEXT NOT NULL,
+    scenario_id  TEXT,
+    created_at   TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS dataspace_settings (
     dataspace_id TEXT PRIMARY KEY,
     settings     TEXT NOT NULL DEFAULT '{}'
@@ -234,6 +242,21 @@ const _getReceivedByNode = db.prepare(`
 `);
 
 // ---------------------------------------------------------------------------
+// Dataspaces
+// ---------------------------------------------------------------------------
+
+const _insertDataspace = db.prepare(`
+  INSERT INTO dataspaces (dataspace_id, name, scenario_id, created_at)
+  VALUES (@dataspace_id, @name, @scenario_id, @created_at)
+`);
+const _getDataspace = db.prepare(`SELECT * FROM dataspaces WHERE dataspace_id = ?`);
+const _getAllDataspaces = db.prepare(`SELECT * FROM dataspaces ORDER BY created_at, name`);
+const _renameDataspace = db.prepare(`UPDATE dataspaces SET name = ? WHERE dataspace_id = ?`);
+const _getConfiguredDataspaceIds = db.prepare(`
+  SELECT dataspace_id FROM dataspace_settings UNION SELECT dataspace_id FROM hub_profiles
+`);
+
+// ---------------------------------------------------------------------------
 // Dataspace settings
 // ---------------------------------------------------------------------------
 
@@ -317,6 +340,13 @@ function enrichPolicy(row) {
 }
 
 module.exports = {
+  // Dataspaces
+  insertDataspace: (d) => _insertDataspace.run(d),
+  getDataspace: (id) => _getDataspace.get(id) || null,
+  getAllDataspaces: () => _getAllDataspaces.all(),
+  renameDataspace: (id, name) => _renameDataspace.run(name, id),
+  getConfiguredDataspaceIds: () => _getConfiguredDataspaceIds.all().map((r) => r.dataspace_id),
+
   // Dataspace settings
   getDataspaceSettings,
   patchDataspaceSettings,
