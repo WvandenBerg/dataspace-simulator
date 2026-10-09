@@ -200,6 +200,12 @@ docker run --rm -v "$PWD":/w --entrypoint sh $IMG -c \
   > $DIR/vocabulary-subset.ttl
 ```
 
+The DigiLab scenario shows the same discovery outside mobility. Its records follow DCAT-AP
+3.0.1 and name their data standard in `dct:conformsTo`. Switch its hub on and search for OGC
+SensorThings data: with alignments, the search also returns lab, tower, air quality and flux
+datasets, each saying which alignment reached it. The raw logger stream stays out, because
+alignments are never chained.
+
 ## Semantic implementation details
 
 ### Data model

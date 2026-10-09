@@ -26,6 +26,9 @@ and under `backend/scenarios/catalog-profiles/mobilitydcat-ap-3.0.0/`, with copi
 | `dcat-ap_3.0.1_shapes.ttl`, `_range.ttl`, `_deprecateduris.ttl` | SEMIC, DCAT-AP 3.0.1 | not declared in the files |
 | `vocabulary-subset.ttl` | generated from mobilityDCAT-AP vocabularies and EU Vocabularies tables | CC BY 4.0, noted in its header |
 
+and `backend/scenarios/catalog-profiles/digilab/vocabulary-subset.ttl`, generated the same
+way from EU Vocabularies tables for the DigiLab scenario (CC BY 4.0, noted in its header).
+
 The licence is declared inside each file (`dct:license`), and the files are copied
 verbatim, so the notice travels with them. That is probably enough for CC BY, but
 nothing at repo level says these files are not ours, where they came from, or that
