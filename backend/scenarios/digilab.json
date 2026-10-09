@@ -1,0 +1,1660 @@
+{
+    "id": "digilab",
+    "name": "DigiLab TK: FTO Duurzaamheid",
+    "description": "DigiLab TK institutes from the FTO Duurzaamheid use case, sharing greenhouse-gas and air-quality measurements from satellite, atmosphere, field and lab. Records follow DCAT-AP 3.0.1 and name the data standard of their payload in dct:conformsTo, which the Vocabulary Hub resolves and aligns. Institutes and facility types come from the use case; datasets, standard versions, alignment coverage and one deliberately incomplete record are illustrative.",
+    "metadataLanguage": "en",
+    "catalogProfiles": [
+        {
+            "profileId": "urn:vocabhub:profile:dcat-ap-3.0.1",
+            "files": [
+                "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_shapes.ttl",
+                "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_range.ttl",
+                "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_deprecateduris.ttl",
+                "catalog-profiles/digilab/vocabulary-subset.ttl"
+            ],
+            "dataStandardPath": [
+                "http://purl.org/dc/terms/conformsTo"
+            ]
+        }
+    ],
+    "participants": [
+        {
+            "id": "deltares",
+            "name": "Deltares",
+            "bpn": "did:web:deltares.nl",
+            "location": "Delft, Netherlands",
+            "domain": "Research",
+            "roles": {
+                "provider": true,
+                "consumer": true
+            },
+            "credentials": {
+                "industry": "environment",
+                "orgRole": "research institute"
+            },
+            "ontologies": [
+                "FLUXNET2015",
+                "Aquo",
+                "OGC SensorThings"
+            ],
+            "dataCategories": [
+                "Greenhouse-gas fluxes",
+                "Water quality"
+            ],
+            "formats": [
+                "CSV",
+                "XML",
+                "JSON",
+                "TOA5"
+            ],
+            "tags": [
+                "Use case lead",
+                "Mobile field facility",
+                "Lab facility"
+            ]
+        },
+        {
+            "id": "knmi",
+            "name": "KNMI",
+            "bpn": "did:web:knmi.nl",
+            "location": "De Bilt, Netherlands",
+            "domain": "Meteorology",
+            "roles": {
+                "provider": true,
+                "consumer": true
+            },
+            "credentials": {
+                "industry": "environment",
+                "orgRole": "research institute"
+            },
+            "ontologies": [
+                "CF Conventions",
+                "ICOS"
+            ],
+            "dataCategories": [
+                "Satellite observations",
+                "Atmospheric measurements"
+            ],
+            "formats": [
+                "NetCDF",
+                "CSV"
+            ],
+            "tags": [
+                "Satellite observations",
+                "Tall-tower station"
+            ]
+        },
+        {
+            "id": "rivm",
+            "name": "RIVM",
+            "bpn": "did:web:rivm.nl",
+            "location": "Bilthoven, Netherlands",
+            "domain": "Public health and environment",
+            "roles": {
+                "provider": true,
+                "consumer": true
+            },
+            "credentials": {
+                "industry": "environment",
+                "orgRole": "research institute"
+            },
+            "ontologies": [
+                "EEA AQ e-Reporting",
+                "CF Conventions"
+            ],
+            "dataCategories": [
+                "Air quality",
+                "Atmospheric modelling"
+            ],
+            "formats": [
+                "XML",
+                "NetCDF"
+            ],
+            "tags": [
+                "Air quality network",
+                "Atmospheric modelling",
+                "Dashboard"
+            ]
+        },
+        {
+            "id": "tno",
+            "name": "TNO",
+            "bpn": "did:web:tno.nl",
+            "location": "The Hague, Netherlands",
+            "domain": "Research",
+            "roles": {
+                "provider": true,
+                "consumer": true
+            },
+            "credentials": {
+                "industry": "environment",
+                "orgRole": "research institute"
+            },
+            "ontologies": [
+                "CF Conventions",
+                "OGC SensorThings"
+            ],
+            "dataCategories": [
+                "Emission inventories",
+                "Urban measurements"
+            ],
+            "formats": [
+                "NetCDF",
+                "JSON",
+                "CSV"
+            ],
+            "tags": [
+                "Emission inventory",
+                "Urban measuring network",
+                "Mobile measurement facility"
+            ]
+        },
+        {
+            "id": "wur",
+            "name": "Wageningen Research",
+            "bpn": "did:web:wur.nl",
+            "location": "Wageningen, Netherlands",
+            "domain": "Research",
+            "roles": {
+                "provider": true,
+                "consumer": true
+            },
+            "credentials": {
+                "industry": "environment",
+                "orgRole": "research institute"
+            },
+            "ontologies": [
+                "OGC SensorThings",
+                "FLUXNET2015"
+            ],
+            "dataCategories": [
+                "Livestock emissions",
+                "Soil, water and atmosphere"
+            ],
+            "formats": [
+                "JSON",
+                "CSV"
+            ],
+            "tags": [
+                "Dairy barn research",
+                "Field research site"
+            ]
+        },
+        {
+            "id": "nlr",
+            "name": "NLR",
+            "bpn": "did:web:nlr.nl",
+            "location": "Amsterdam, Netherlands",
+            "domain": "Aerospace research",
+            "roles": {
+                "provider": false,
+                "consumer": true
+            },
+            "credentials": {
+                "industry": "environment",
+                "orgRole": "research institute"
+            },
+            "ontologies": [],
+            "dataCategories": [],
+            "formats": [],
+            "tags": [
+                "Role to be confirmed"
+            ]
+        },
+        {
+            "id": "naturalis",
+            "name": "Naturalis Biodiversity Center",
+            "bpn": "did:web:naturalis.nl",
+            "location": "Leiden, Netherlands",
+            "domain": "Biodiversity research",
+            "roles": {
+                "provider": false,
+                "consumer": true
+            },
+            "credentials": {
+                "industry": "environment",
+                "orgRole": "research institute"
+            },
+            "ontologies": [],
+            "dataCategories": [],
+            "formats": [],
+            "tags": [
+                "Role to be confirmed"
+            ]
+        }
+    ],
+    "assets": [
+        {
+            "assetId": "deltares-ec-fluxes-peat",
+            "ownerId": "deltares",
+            "name": "Eddy-covariance CO2 and CH4 fluxes, peat meadow",
+            "description": "Half-hourly CO2 and CH4 fluxes from an eddy-covariance mast in a drained peat meadow, quality-controlled and gap-filled. Used to study how water-level management changes greenhouse-gas emissions from peat soils.",
+            "fileName": "peat-meadow-fluxes.csv",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "eddy covariance",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CO2",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CH4",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "peat meadow",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "greenhouse gas",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/MONTHLY"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-04-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:fluxnet2015"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Half-hourly fluxes, FLUXNET2015 format",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/deltares/peat-meadow-fluxes.csv"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/CSV"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "intervalMinutes": 30,
+                "variables": [
+                    "FC",
+                    "FCH4",
+                    "LE",
+                    "H",
+                    "TA",
+                    "SWC"
+                ],
+                "gapFilled": true
+            }
+        },
+        {
+            "assetId": "deltares-ec-raw-logger",
+            "ownerId": "deltares",
+            "name": "Raw 10 Hz logger stream, peat meadow mast",
+            "description": "Unprocessed 10 Hz wind and gas readings as the field logger writes them, from the same mast as the peat meadow fluxes. Input for the flux processing chain, not yet comparable with other sites.",
+            "fileName": "peat-meadow-raw.dat",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "eddy covariance",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "raw data",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "logger",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "high frequency",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-04-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:campbell-toa5"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Logger files, TOA5",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/deltares/peat-meadow-raw/"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/TXT"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "samplingHz": 10,
+                "channels": [
+                    "Ux",
+                    "Uy",
+                    "Uz",
+                    "Ts",
+                    "CO2",
+                    "H2O",
+                    "CH4"
+                ],
+                "fileHeader": "TOA5"
+            }
+        },
+        {
+            "assetId": "deltares-lab-dissolved-ghg",
+            "ownerId": "deltares",
+            "name": "Dissolved greenhouse gases in water samples",
+            "description": "Concentrations of dissolved CO2, CH4 and N2O in surface-water and pore-water samples taken in the field and analysed in the lab by gas chromatography.",
+            "fileName": "dissolved-ghg-samples.xml",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "water samples",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "lab analysis",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CH4",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "N2O",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "surface water",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-04-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:aquo"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Lab results, Aquo exchange model",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/deltares/dissolved-ghg-samples.xml"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/XML"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "parameters": [
+                    "CO2",
+                    "CH4",
+                    "N2O"
+                ],
+                "method": "headspace gas chromatography",
+                "samples": 420
+            }
+        },
+        {
+            "assetId": "deltares-floating-chambers",
+            "ownerId": "deltares",
+            "name": "Floating-chamber fluxes, fresh surface water",
+            "description": "Diffusive and ebullitive CH4 and CO2 fluxes from automated floating chambers on ditches and lakes, served as observations per chamber.",
+            "fileName": "floating-chambers.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "floating chamber",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CH4",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CO2",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "surface water",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "greenhouse gas",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/DAILY"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-04-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:ogc-sensorthings-1.1"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Chamber observations, SensorThings API",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/deltares/sta/v1.1/Datastreams"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/JSON"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "chambers": 12,
+                "observedProperties": [
+                    "CH4 flux",
+                    "CO2 flux"
+                ],
+                "api": "SensorThings v1.1"
+            }
+        },
+        {
+            "assetId": "knmi-tall-tower-ghg",
+            "ownerId": "knmi",
+            "name": "Tall-tower CO2 and CH4 mole fractions",
+            "description": "Continuous CO2 and CH4 mole fractions measured at several heights on a tall atmospheric research tower, calibrated to the WMO scales.",
+            "fileName": "tall-tower-ghg.csv",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "atmosphere",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "tall tower",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CO2",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CH4",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "mole fraction",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/ANNUAL"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-01-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:icos-atmosphere-l2"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Hourly mole fractions, ICOS Atmosphere Level 2",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/knmi/tall-tower-ghg.csv"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/CSV"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "heightsM": [
+                    20,
+                    60,
+                    120,
+                    200
+                ],
+                "species": [
+                    "CO2",
+                    "CH4"
+                ],
+                "calibration": "WMO scales"
+            }
+        },
+        {
+            "assetId": "knmi-tropomi-ch4",
+            "ownerId": "knmi",
+            "name": "Sentinel-5P TROPOMI methane over the Netherlands",
+            "description": "Column-averaged methane (XCH4) from the TROPOMI instrument on Sentinel-5P, cut out over the Netherlands and the North Sea.",
+            "fileName": "tropomi-ch4-nl.nc",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "satellite",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "TROPOMI",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "Sentinel-5P",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CH4",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "XCH4",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/DAILY"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-01-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:sentinel-5p-l2"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Level 2 methane product, NetCDF",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/knmi/tropomi-ch4-nl.nc"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/NETCDF"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "product": "L2__CH4___",
+                "variable": "methane_mixing_ratio_bias_corrected",
+                "pixelKm": "5.5 x 7"
+            }
+        },
+        {
+            "assetId": "rivm-air-quality-network",
+            "ownerId": "rivm",
+            "name": "National air quality network, hourly",
+            "description": "Hourly NO2, PM10, PM2.5, O3 and NH3 concentrations from the national air quality monitoring network, in the form reported to the European Environment Agency.",
+            "fileName": "air-quality-hourly.xml",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "air quality",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "NO2",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "particulate matter",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "NH3",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "monitoring network",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        },
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/HEAL"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/HOURLY"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-01-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:eea-aq-e-reporting"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Hourly concentrations, AQ e-Reporting",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/rivm/air-quality-hourly.xml"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/XML"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "pollutants": [
+                    "NO2",
+                    "PM10",
+                    "PM2.5",
+                    "O3",
+                    "NH3"
+                ],
+                "aggregation": "hourly mean",
+                "stations": 80
+            }
+        },
+        {
+            "assetId": "rivm-atmospheric-model-output",
+            "ownerId": "rivm",
+            "name": "Atmospheric transport model output",
+            "description": "Gridded CH4 and NH3 concentration fields from an atmospheric transport model, used to link measured concentrations to emission sources.",
+            "fileName": "transport-model-fields.nc",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "atmospheric model",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "concentration fields",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CH4",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "NH3",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "gridded",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/ANNUAL"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-01-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2027-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:cf-1.11"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Concentration fields, NetCDF-CF",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/rivm/transport-model-fields.nc"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/NETCDF"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "gridKm": 1,
+                "variables": [
+                    "mole_fraction_of_methane_in_air",
+                    "mass_concentration_of_ammonia_in_air"
+                ],
+                "timeStep": "1 hour"
+            }
+        },
+        {
+            "assetId": "tno-ghg-emission-grid",
+            "ownerId": "tno",
+            "name": "Gridded greenhouse-gas emission inventory",
+            "description": "CO2 and CH4 emissions per source sector on a high-resolution grid, used as prior for inverse modelling and for comparison with satellite observations.",
+            "fileName": "ghg-emission-grid.nc",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "emission inventory",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CO2",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CH4",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "gridded",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "source sectors",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/ANNUAL"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2025-01-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2025-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:accessRights": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED"
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:cf-1.11"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Emission grid, NetCDF-CF",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/tno/ghg-emission-grid.nc"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/NETCDF"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "species": [
+                    "CO2",
+                    "CH4"
+                ],
+                "sectorClassification": "GNFR",
+                "gridKm": 1
+            }
+        },
+        {
+            "assetId": "tno-urban-co2-network",
+            "ownerId": "tno",
+            "name": "Urban CO2 measuring network",
+            "description": "CO2 and air-quality readings from a network of sensors across an urban area, served as live observations per sensor.",
+            "fileName": "urban-co2-network.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "urban",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CO2",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "sensor network",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "air quality",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "real-time",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-06-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:ogc-sensorthings-1.1"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Sensor observations, SensorThings API",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/tno/sta/v1.1/Datastreams"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/JSON"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "sensors": 30,
+                "observedProperties": [
+                    "CO2",
+                    "NO2",
+                    "PM2.5"
+                ],
+                "api": "SensorThings v1.1"
+            }
+        },
+        {
+            "assetId": "tno-mobile-campaign",
+            "ownerId": "tno",
+            "name": "Mobile measurement campaign, emission plumes",
+            "description": "Plume transects of CH4, NH3 and CO2 measured from a mobile laboratory around point sources. Deliberately incomplete: the record names no data standard, so the Vocabulary Hub has nothing to resolve and no search by data standard finds it.",
+            "fileName": "mobile-campaign.csv",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "mobile laboratory",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "plume",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CH4",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "NH3",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "point source",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-09-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2026-11-30",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Campaign transects",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/tno/mobile-campaign.csv"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/CSV"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "transects": 64,
+                "columns": [
+                    "time",
+                    "lat",
+                    "lon",
+                    "ch4_ppb",
+                    "nh3_ppb",
+                    "co2_ppm"
+                ]
+            }
+        },
+        {
+            "assetId": "wur-dairy-barn-emissions",
+            "ownerId": "wur",
+            "name": "Dairy barn NH3 and CH4 emissions",
+            "description": "Ammonia and methane emissions from an experimental dairy barn with separate compartments, measured per compartment to compare emission-reducing measures.",
+            "fileName": "dairy-barn-emissions.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "dairy",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "barn",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "NH3",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CH4",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "emission reduction",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/AGRI"
+                        },
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/DAILY"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-03-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:ogc-sensorthings-1.1"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Compartment observations, SensorThings API",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/wur/sta/v1.1/Datastreams"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/JSON"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BYNC_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "compartments": 4,
+                "observedProperties": [
+                    "NH3 emission",
+                    "CH4 emission",
+                    "ventilation rate"
+                ],
+                "api": "SensorThings v1.1"
+            }
+        },
+        {
+            "assetId": "wur-field-site-ec-fluxes",
+            "ownerId": "wur",
+            "name": "Field-site eddy-covariance fluxes",
+            "description": "Half-hourly CO2, water and energy fluxes from an eddy-covariance mast at a field research site for interactions between soil, water, atmosphere and biodiversity.",
+            "fileName": "field-site-fluxes.csv",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [
+                        {
+                            "value": "eddy covariance",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "CO2",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "evapotranspiration",
+                            "lang": "en"
+                        },
+                        {
+                            "value": "field site",
+                            "lang": "en"
+                        }
+                    ],
+                    "dcat:theme": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/ENVI"
+                        },
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/data-theme/AGRI"
+                        }
+                    ],
+                    "dct:accrualPeriodicity": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/frequency/MONTHLY"
+                        }
+                    ],
+                    "dct:spatial": [
+                        {
+                            "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+                        }
+                    ],
+                    "dct:temporal": [
+                        {
+                            "type": "dct:PeriodOfTime",
+                            "fields": {
+                                "dcat:startDate": [
+                                    {
+                                        "value": "2026-01-01",
+                                        "datatype": "xsd:date"
+                                    }
+                                ],
+                                "dcat:endDate": [
+                                    {
+                                        "value": "2028-12-31",
+                                        "datatype": "xsd:date"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "dct:conformsTo": [
+                        {
+                            "iri": "urn:vocabhub:profile:fluxnet2015"
+                        }
+                    ],
+                    "dcat:distribution": [
+                        {
+                            "type": "dcat:Distribution",
+                            "fields": {
+                                "dct:title": [
+                                    {
+                                        "value": "Half-hourly fluxes, FLUXNET2015 format",
+                                        "lang": "en"
+                                    }
+                                ],
+                                "dcat:accessURL": [
+                                    {
+                                        "iri": "https://data.sim.local/wur/field-site-fluxes.csv"
+                                    }
+                                ],
+                                "dct:format": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/file-type/CSV"
+                                    }
+                                ],
+                                "dct:license": [
+                                    {
+                                        "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "content": {
+                "intervalMinutes": 30,
+                "variables": [
+                    "FC",
+                    "LE",
+                    "H",
+                    "NETRAD",
+                    "TA",
+                    "SWC"
+                ],
+                "gapFilled": true
+            }
+        }
+    ]
+}
