@@ -2,6 +2,7 @@
     "id": "digilab",
     "name": "DigiLab TK: FTO Duurzaamheid",
     "description": "DigiLab TK institutes from the FTO Duurzaamheid use case, sharing greenhouse-gas and air-quality measurements from satellite, atmosphere, field and lab. Records follow DCAT-AP 3.0.1 and name the data standard of their payload in dct:conformsTo, which the Vocabulary Hub resolves and aligns. Institutes and facility types come from the use case; datasets, standard versions, alignment coverage and one deliberately incomplete record are illustrative.",
+    "catalogExport": "catalog-exports/digilab.ttl",
     "metadataLanguage": "en",
     "catalogProfiles": [
         {

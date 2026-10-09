@@ -1,0 +1,417 @@
+# Vocabulary Hub contents for the digilab scenario.
+#
+# Same shape as fuse4ccam.ttl, which follows Semantic Treehouse's catalogue
+# export v2: profiles carry prof:hasResource descriptors, alignments are
+# pmap:ProfileAlignment with a directed source and target. Coverage on an
+# alignment is the same proposed extension as there.
+#
+# Every data standard here is external, so none of them could come out of a
+# real STH export today. Versions and coverage figures are illustrative.
+
+@prefix adms:    <http://www.w3.org/ns/adms#> .
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix dqv:     <http://www.w3.org/ns/dqv#> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix pmap:    <https://w3id.org/pmap#> .
+@prefix prof:    <http://www.w3.org/ns/dx/prof/> .
+@prefix role:    <http://www.w3.org/ns/dx/prof/role/> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix vhx:     <urn:vocabhub:ext:> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+
+#################################################################
+#  Catalogue
+#################################################################
+
+<urn:vocabhub:catalog:digilab>
+    a dcat:Catalog, adms:AssetRepository ;
+    dcterms:title "DigiLab TK Vocabulary Hub"@en ;
+    dcterms:description "Schema registry for the FTO Duurzaamheid use case. Holds the profile that governs catalogue records and the data standards in which greenhouse-gas and air-quality measurements are exchanged."@en ;
+    dcterms:publisher <urn:vocabhub:agent:digilab> ;
+    dcat:landingPage <https://www.semantic-treehouse.nl/> ;
+    dcat:resource
+        <urn:vocabhub:profile:dcat-ap-3.0.1> ,
+        <urn:vocabhub:profile:cf-1.11> ,
+        <urn:vocabhub:profile:sentinel-5p-l2> ,
+        <urn:vocabhub:profile:icos-atmosphere-l2> ,
+        <urn:vocabhub:profile:fluxnet2015> ,
+        <urn:vocabhub:profile:ogc-sensorthings-1.1> ,
+        <urn:vocabhub:profile:aquo> ,
+        <urn:vocabhub:profile:eea-aq-e-reporting> ,
+        <urn:vocabhub:profile:campbell-toa5> ,
+        <urn:vocabhub:alignment:aquo-to-sensorthings> ,
+        <urn:vocabhub:alignment:icos-atmosphere-to-sensorthings> ,
+        <urn:vocabhub:alignment:eea-aq-to-sensorthings> ,
+        <urn:vocabhub:alignment:fluxnet2015-to-sensorthings> ,
+        <urn:vocabhub:alignment:toa5-to-fluxnet2015> ,
+        <urn:vocabhub:alignment:sentinel-5p-l2-to-cf> .
+
+
+#################################################################
+#  Coverage metric, proposed extension (see fuse4ccam.ttl)
+#################################################################
+
+vhx:profileCoverage
+    a dqv:Metric ;
+    skos:prefLabel "Profile coverage"@en ;
+    skos:definition "Share of the target profile's properties an alignment can populate from the source profile."@en ;
+    dqv:inDimension vhx:completeness ;
+    dqv:expectedDataType xsd:decimal .
+
+vhx:completeness
+    a dqv:Dimension ;
+    skos:prefLabel "Completeness"@en .
+
+
+#################################################################
+#  Publishers
+#################################################################
+
+<urn:vocabhub:agent:digilab>   a foaf:Agent ; foaf:name "DigiLab TK consortium" .
+<urn:vocabhub:agent:semic>     a foaf:Agent ; foaf:name "SEMIC, European Commission" .
+<urn:vocabhub:agent:cf>        a foaf:Agent ; foaf:name "CF Conventions community" .
+<urn:vocabhub:agent:copernicus> a foaf:Agent ; foaf:name "ESA / Copernicus" .
+<urn:vocabhub:agent:icos>      a foaf:Agent ; foaf:name "ICOS ERIC" .
+<urn:vocabhub:agent:fluxnet>   a foaf:Agent ; foaf:name "FLUXNET" .
+<urn:vocabhub:agent:ogc>       a foaf:Agent ; foaf:name "Open Geospatial Consortium" .
+<urn:vocabhub:agent:ihw>       a foaf:Agent ; foaf:name "Informatiehuis Water" .
+<urn:vocabhub:agent:eea>       a foaf:Agent ; foaf:name "European Environment Agency" .
+<urn:vocabhub:agent:campbell>  a foaf:Agent ; foaf:name "Campbell Scientific" .
+
+
+#################################################################
+#  Axis A: the profile that governs the catalogue records
+#################################################################
+
+<urn:vocabhub:profile:dcat-ap-3.0.1>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "DCAT-AP 3.0.1"@en ;
+    dcterms:description "European application profile for data catalogues. Every DigiLab record names the data standard of its payload in dct:conformsTo."@en ;
+    dcterms:publisher <urn:vocabhub:agent:semic> ;
+    owl:versionInfo "3.0.1" ;
+    prof:isProfileOf <https://www.w3.org/TR/vocab-dcat-3/> ;
+    prof:hasResource _:r-dcatap-spec, _:r-dcatap-shapes, _:r-dcatap-ranges ;
+    dcat:distribution _:r-dcatap-spec, _:r-dcatap-shapes, _:r-dcatap-ranges .
+
+_:r-dcatap-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://semiceu.github.io/DCAT-AP/releases/3.0.1/> ;
+    dcat:accessURL <https://semiceu.github.io/DCAT-AP/releases/3.0.1/> ;
+    dcterms:format "text/html" .
+
+_:r-dcatap-shapes
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:validation ;
+    prof:hasArtifact <https://semiceu.github.io/DCAT-AP/releases/3.0.1/shacl/dcat-ap-SHACL.ttl> ;
+    dcat:accessURL <https://semiceu.github.io/DCAT-AP/releases/3.0.1/shacl/dcat-ap-SHACL.ttl> ;
+    dcterms:format "text/turtle" .
+
+_:r-dcatap-ranges
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:validation ;
+    prof:hasArtifact <https://semiceu.github.io/DCAT-AP/releases/3.0.1/shacl/ranges.ttl> ;
+    dcat:accessURL <https://semiceu.github.io/DCAT-AP/releases/3.0.1/shacl/ranges.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+#################################################################
+#  Axis B: the data standards the payloads are written in
+#################################################################
+
+<urn:vocabhub:profile:cf-1.11>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "CF Conventions 1.11"@en ;
+    dcterms:description "Climate and Forecast metadata conventions for NetCDF: standard names, units and grid description for gridded climate and model data."@en ;
+    dcterms:publisher <urn:vocabhub:agent:cf> ;
+    owl:versionInfo "1.11" ;
+    prof:hasResource _:r-cf-spec ;
+    dcat:distribution _:r-cf-spec .
+
+_:r-cf-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html> ;
+    dcat:accessURL <https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:sentinel-5p-l2>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "Sentinel-5P Level 2 product format"@en ;
+    dcterms:description "NetCDF-4 product format of the TROPOMI Level 2 trace-gas products, including methane."@en ;
+    dcterms:publisher <urn:vocabhub:agent:copernicus> ;
+    owl:versionInfo "2" ;
+    prof:hasResource _:r-s5p-spec ;
+    dcat:distribution _:r-s5p-spec .
+
+_:r-s5p-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://sentiwiki.copernicus.eu/web/s5p-products> ;
+    dcat:accessURL <https://sentiwiki.copernicus.eu/web/s5p-products> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:icos-atmosphere-l2>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ICOS Atmosphere Level 2"@en ;
+    dcterms:description "Quality-controlled, calibrated greenhouse-gas mole fraction time series from atmospheric stations."@en ;
+    dcterms:publisher <urn:vocabhub:agent:icos> ;
+    owl:versionInfo "2024-1" ;
+    prof:hasResource _:r-icos-spec ;
+    dcat:distribution _:r-icos-spec .
+
+_:r-icos-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.icos-cp.eu/data-products> ;
+    dcat:accessURL <https://www.icos-cp.eu/data-products> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:fluxnet2015>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "FLUXNET2015 format"@en ;
+    dcterms:description "Variable names, units and quality flags for processed eddy-covariance flux and meteorological time series."@en ;
+    dcterms:publisher <urn:vocabhub:agent:fluxnet> ;
+    owl:versionInfo "2015" ;
+    prof:hasResource _:r-fluxnet-spec ;
+    dcat:distribution _:r-fluxnet-spec .
+
+_:r-fluxnet-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://fluxnet.org/data/fluxnet2015-dataset/> ;
+    dcat:accessURL <https://fluxnet.org/data/fluxnet2015-dataset/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:ogc-sensorthings-1.1>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "OGC SensorThings API 1.1"@en ;
+    dcterms:description "Things, sensors, datastreams and observations behind one API. The shared target for station and sensor measurements in this data space."@en ;
+    dcterms:publisher <urn:vocabhub:agent:ogc> ;
+    owl:versionInfo "1.1" ;
+    prof:hasResource _:r-sta-spec ;
+    dcat:distribution _:r-sta-spec .
+
+_:r-sta-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://docs.ogc.org/is/18-088/18-088.html> ;
+    dcat:accessURL <https://docs.ogc.org/is/18-088/18-088.html> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:aquo>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "Aquo"@en ;
+    dcterms:description "Dutch standard for exchanging water data: parameters, units, compartments and the exchange model for measurement results."@en ;
+    dcterms:publisher <urn:vocabhub:agent:ihw> ;
+    owl:versionInfo "2024" ;
+    prof:hasResource _:r-aquo-spec ;
+    dcat:distribution _:r-aquo-spec .
+
+_:r-aquo-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.aquo.nl/> ;
+    dcat:accessURL <https://www.aquo.nl/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:eea-aq-e-reporting>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "EEA Air Quality e-Reporting"@en ;
+    dcterms:description "Data model in which member states report air quality measurements to the European Environment Agency."@en ;
+    dcterms:publisher <urn:vocabhub:agent:eea> ;
+    owl:versionInfo "2.0" ;
+    prof:hasResource _:r-eea-spec ;
+    dcat:distribution _:r-eea-spec .
+
+_:r-eea-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://aqportal.discomap.eea.europa.eu/> ;
+    dcat:accessURL <https://aqportal.discomap.eea.europa.eu/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:campbell-toa5>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "Campbell Scientific TOA5"@en ;
+    dcterms:description "Text file format written by field data loggers: a short header followed by raw, timestamped readings."@en ;
+    dcterms:publisher <urn:vocabhub:agent:campbell> ;
+    prof:hasResource _:r-toa5-spec ;
+    dcat:distribution _:r-toa5-spec .
+
+_:r-toa5-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.campbellsci.com/> ;
+    dcat:accessURL <https://www.campbellsci.com/> ;
+    dcterms:format "text/html" .
+
+
+#################################################################
+#  Alignments: directed, single hop, coverage attached
+#
+#  SensorThings is the shared target for station and sensor data,
+#  so most alignments run towards it.
+#################################################################
+
+<urn:vocabhub:alignment:aquo-to-sensorthings>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "Aquo to OGC SensorThings API 1.1"@en ;
+    dcterms:description "Measurement results to observations. Sampling and lab analysis details have no direct place in the target."@en ;
+    dcterms:publisher <urn:vocabhub:agent:digilab> ;
+    pmap:sourceProfile <urn:vocabhub:profile:aquo> ;
+    pmap:targetProfile <urn:vocabhub:profile:ogc-sensorthings-1.1> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.72"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-aquo ;
+    dcat:distribution _:r-align-aquo .
+
+_:r-align-aquo
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:aquo-to-sensorthings.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+<urn:vocabhub:alignment:icos-atmosphere-to-sensorthings>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "ICOS Atmosphere Level 2 to OGC SensorThings API 1.1"@en ;
+    dcterms:description "Station time series to datastreams per species and inlet height. Calibration scale history is lost."@en ;
+    dcterms:publisher <urn:vocabhub:agent:digilab> ;
+    pmap:sourceProfile <urn:vocabhub:profile:icos-atmosphere-l2> ;
+    pmap:targetProfile <urn:vocabhub:profile:ogc-sensorthings-1.1> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.75"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-icos ;
+    dcat:distribution _:r-align-icos .
+
+_:r-align-icos
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:icos-atmosphere-to-sensorthings.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+<urn:vocabhub:alignment:eea-aq-to-sensorthings>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "EEA Air Quality e-Reporting to OGC SensorThings API 1.1"@en ;
+    dcterms:description "Both build on observations and measurements, so stations, samplers and hourly values carry over almost whole."@en ;
+    dcterms:publisher <urn:vocabhub:agent:digilab> ;
+    pmap:sourceProfile <urn:vocabhub:profile:eea-aq-e-reporting> ;
+    pmap:targetProfile <urn:vocabhub:profile:ogc-sensorthings-1.1> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.80"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-eea ;
+    dcat:distribution _:r-align-eea .
+
+_:r-align-eea
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:eea-aq-to-sensorthings.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+# Below 0.7, so a coverage threshold of 0.7 drops the flux datasets again.
+
+<urn:vocabhub:alignment:fluxnet2015-to-sensorthings>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "FLUXNET2015 format to OGC SensorThings API 1.1"@en ;
+    dcterms:description "Half-hourly fluxes to observations per variable. Gap-filling and partitioning flags have no counterpart."@en ;
+    dcterms:publisher <urn:vocabhub:agent:digilab> ;
+    pmap:sourceProfile <urn:vocabhub:profile:fluxnet2015> ;
+    pmap:targetProfile <urn:vocabhub:profile:ogc-sensorthings-1.1> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.62"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-fluxnet ;
+    dcat:distribution _:r-align-fluxnet .
+
+_:r-align-fluxnet
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:fluxnet2015-to-sensorthings.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+# The no-chaining control. TOA5 reaches FLUXNET and FLUXNET reaches
+# SensorThings, but the raw logger stream must not be offered to someone
+# searching for SensorThings. US-6 is single hop.
+
+<urn:vocabhub:alignment:toa5-to-fluxnet2015>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "Campbell Scientific TOA5 to FLUXNET2015 format"@en ;
+    dcterms:description "Raw logger columns to FLUXNET variables. Fluxes have to be computed in between, so only the meteorological variables map directly."@en ;
+    dcterms:publisher <urn:vocabhub:agent:digilab> ;
+    pmap:sourceProfile <urn:vocabhub:profile:campbell-toa5> ;
+    pmap:targetProfile <urn:vocabhub:profile:fluxnet2015> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.41"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-toa5 ;
+    dcat:distribution _:r-align-toa5 .
+
+_:r-align-toa5
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:toa5-to-fluxnet2015.rml.ttl> ;
+    dcterms:format "text/turtle" .
+
+
+<urn:vocabhub:alignment:sentinel-5p-l2-to-cf>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "Sentinel-5P Level 2 product format to CF Conventions 1.11"@en ;
+    dcterms:description "The product is already NetCDF and largely CF-compliant. Only the per-pixel quality and support data need renaming."@en ;
+    dcterms:publisher <urn:vocabhub:agent:digilab> ;
+    pmap:sourceProfile <urn:vocabhub:profile:sentinel-5p-l2> ;
+    pmap:targetProfile <urn:vocabhub:profile:cf-1.11> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.90"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-s5p ;
+    dcat:distribution _:r-align-s5p .
+
+_:r-align-s5p
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:sentinel-5p-l2-to-cf.rml.ttl> ;
+    dcterms:format "text/turtle" .
