@@ -1,0 +1,288 @@
+# Vocabulary Hub contents for the pliades-uc4 scenario.
+#
+# Same shape as digilab.ttl, which follows Semantic Treehouse's catalogue
+# export v2: profiles carry prof:hasResource descriptors, alignments are
+# pmap:ProfileAlignment with a directed source and target. Coverage on an
+# alignment is the same proposed extension as there.
+#
+# Taken from the PLIADES Vocabulary Hub (pliades.vocabulary-hub.eu, read
+# 2026-11-03): the names and fields of "GPS measurements" and "[ROS 2 profile]
+# GNSS Fix", and the direction of the mapping between them. The IRIs are
+# hand-written; landing pages point at the real specifications. Coverage
+# figures are illustrative: the live mapping is a draft of three rows, here
+# it is taken as finished.
+
+@prefix adms:    <http://www.w3.org/ns/adms#> .
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix dqv:     <http://www.w3.org/ns/dqv#> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix pmap:    <https://w3id.org/pmap#> .
+@prefix prof:    <http://www.w3.org/ns/dx/prof/> .
+@prefix role:    <http://www.w3.org/ns/dx/prof/role/> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix vhx:     <urn:vocabhub:ext:> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+
+#################################################################
+#  Catalogue
+#################################################################
+
+<urn:vocabhub:catalog:pliades-uc4>
+    a dcat:Catalog, adms:AssetRepository ;
+    dcterms:title "PLIADES Vocabulary Hub"@en ;
+    dcterms:description "Schema registry for PLIADES use case 4. Holds the data models in which partners share vehicle recordings and traffic data, and the alignments between them."@en ;
+    dcterms:publisher <urn:vocabhub:agent:pliades> ;
+    dcat:landingPage <https://pliades.vocabulary-hub.eu/> ;
+    dcat:resource
+        <urn:vocabhub:profile:ros2-gnss-fix-1.0.0> ,
+        <urn:vocabhub:profile:certh-gps-measurements-0.1> ,
+        <urn:vocabhub:profile:nmea-0183-gga-4.11> ,
+        <urn:vocabhub:profile:golemio-vehicle-positions-2> ,
+        <urn:vocabhub:profile:asam-openlabel-1.0.0> ,
+        <urn:vocabhub:profile:camea-detections> ,
+        <urn:vocabhub:alignment:certh-gps-measurements-to-ros2-gnss-fix> ,
+        <urn:vocabhub:alignment:nmea-gga-to-ros2-gnss-fix> ,
+        <urn:vocabhub:alignment:golemio-to-ros2-gnss-fix> .
+
+
+#################################################################
+#  Coverage metric, proposed extension (see fuse4ccam.ttl)
+#################################################################
+
+vhx:profileCoverage
+    a dqv:Metric ;
+    skos:prefLabel "Profile coverage"@en ;
+    skos:definition "Share of the target profile's properties an alignment can populate from the source profile."@en ;
+    dqv:inDimension vhx:completeness ;
+    dqv:expectedDataType xsd:decimal .
+
+vhx:completeness
+    a dqv:Dimension ;
+    skos:prefLabel "Completeness"@en .
+
+
+#################################################################
+#  Publishers
+#################################################################
+
+<urn:vocabhub:agent:pliades>   a foaf:Agent ; foaf:name "PLIADES consortium partners" .
+<urn:vocabhub:agent:certh>     a foaf:Agent ; foaf:name "CERTH/ITI" .
+<urn:vocabhub:agent:ctu>       a foaf:Agent ; foaf:name "CTU in Prague, Faculty of Transportation Sciences" .
+<urn:vocabhub:agent:nmea>      a foaf:Agent ; foaf:name "National Marine Electronics Association" .
+<urn:vocabhub:agent:asam>      a foaf:Agent ; foaf:name "ASAM e.V." .
+<urn:vocabhub:agent:golemio>   a foaf:Agent ; foaf:name "Operátor ICT (Golemio)" .
+
+
+#################################################################
+#  GNSS position fixes
+#################################################################
+
+<urn:vocabhub:profile:ros2-gnss-fix-1.0.0>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/InformationExchangePackageDescription> ;
+    dcterms:title "[ROS 2 profile] GNSS Fix 1.0.0"@en ;
+    dcterms:description "How smart vehicles record GNSS position fixes, following the ROS 2 sensor_msgs/NavSatFix message (ROS 2 Jazzy, common_interfaces 5.3): header with stamp and frame_id, fix status and service, latitude, longitude, altitude, position_covariance and position_covariance_type."@en ;
+    dcterms:publisher <urn:vocabhub:agent:pliades> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/other> ;
+    owl:versionInfo "1.0.0" ;
+    prof:isProfileOf <https://github.com/ros2/common_interfaces/blob/jazzy/sensor_msgs/msg/NavSatFix.msg> ;
+    dcat:landingPage <https://pliades.vocabulary-hub.eu/message-model/MessageModelSpec_ab80a08b-4a7a-43f2-b9fe-dd6f94a67fc2> ;
+    prof:hasResource _:r-ros2-gnss-spec, _:r-ros2-gnss-msg ;
+    dcat:distribution _:r-ros2-gnss-spec, _:r-ros2-gnss-msg .
+
+_:r-ros2-gnss-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://pliades.vocabulary-hub.eu/message-model/MessageModelSpec_ab80a08b-4a7a-43f2-b9fe-dd6f94a67fc2> ;
+    dcat:accessURL <https://pliades.vocabulary-hub.eu/message-model/MessageModelSpec_ab80a08b-4a7a-43f2-b9fe-dd6f94a67fc2> ;
+    dcterms:format "text/html" .
+
+_:r-ros2-gnss-msg
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:schema ;
+    prof:hasArtifact <https://github.com/ros2/common_interfaces/blob/jazzy/sensor_msgs/msg/NavSatFix.msg> ;
+    dcat:accessURL <https://github.com/ros2/common_interfaces/blob/jazzy/sensor_msgs/msg/NavSatFix.msg> ;
+    dcterms:format "text/plain" .
+
+
+<urn:vocabhub:profile:certh-gps-measurements-0.1>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/InformationExchangePackageDescription> ;
+    dcterms:title "GPS measurements 0.1 (WIP)"@en ;
+    dcterms:description "GNSS position fixes from PLIADES UC4 vehicle recordings. One row per fix: timestamp, latitude, longitude, altitude, status, service, position_covariance and position_covariance_type."@en ;
+    dcterms:publisher <urn:vocabhub:agent:certh> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/other> ;
+    owl:versionInfo "0.1" ;
+    dcat:landingPage <https://pliades.vocabulary-hub.eu/message-model/MessageModelSpec_e3df4183-8b63-49fb-aa90-c10716377827> ;
+    prof:hasResource _:r-certh-gps-spec ;
+    dcat:distribution _:r-certh-gps-spec .
+
+_:r-certh-gps-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://pliades.vocabulary-hub.eu/message-model/MessageModelSpec_e3df4183-8b63-49fb-aa90-c10716377827> ;
+    dcat:accessURL <https://pliades.vocabulary-hub.eu/message-model/MessageModelSpec_e3df4183-8b63-49fb-aa90-c10716377827> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:nmea-0183-gga-4.11>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/InformationExchangePackageDescription> ;
+    dcterms:title "NMEA 0183 4.11 (GGA)"@en ;
+    dcterms:description "Serial sentences from GNSS receivers. The GGA sentence carries time of day, latitude, longitude, fix quality, satellites in use, HDOP and altitude."@en ;
+    dcterms:publisher <urn:vocabhub:agent:nmea> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/other> ;
+    owl:versionInfo "4.11" ;
+    prof:hasResource _:r-nmea-spec ;
+    dcat:distribution _:r-nmea-spec .
+
+_:r-nmea-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.nmea.org/nmea-0183.html> ;
+    dcat:accessURL <https://www.nmea.org/nmea-0183.html> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:golemio-vehicle-positions-2>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/InformationExchangePackageDescription> ;
+    dcterms:title "Golemio vehicle positions 2"@en ;
+    dcterms:description "Positions of Prague's public transport vehicles from the Golemio data platform, with trip, delay and the next stop."@en ;
+    dcterms:publisher <urn:vocabhub:agent:golemio> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/other> ;
+    owl:versionInfo "2" ;
+    prof:hasResource _:r-golemio-schema ;
+    dcat:distribution _:r-golemio-schema .
+
+_:r-golemio-schema
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:schema ;
+    prof:hasArtifact <https://api.golemio.cz/v2/pid/docs/openapi/> ;
+    dcat:accessURL <https://api.golemio.cz/v2/pid/docs/openapi/> ;
+    dcterms:format "text/html" .
+
+
+#################################################################
+#  Annotations and traffic detections
+#################################################################
+
+<urn:vocabhub:profile:asam-openlabel-1.0.0>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/InformationExchangePackageDescription> ;
+    dcterms:title "ASAM OpenLABEL 1.0.0"@en ;
+    dcterms:description "Annotation format for multi-sensor data and scenarios: objects, actions, events and relations, with the streams and coordinate systems they refer to."@en ;
+    dcterms:publisher <urn:vocabhub:agent:asam> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/other> ;
+    owl:versionInfo "1.0.0" ;
+    prof:hasResource _:r-openlabel-spec, _:r-openlabel-schema ;
+    dcat:distribution _:r-openlabel-spec, _:r-openlabel-schema .
+
+_:r-openlabel-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.asam.net/standards/detail/openlabel/> ;
+    dcat:accessURL <https://www.asam.net/standards/detail/openlabel/> ;
+    dcterms:format "text/html" .
+
+_:r-openlabel-schema
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:schema ;
+    prof:hasArtifact <https://openlabel.asam.net/V1-0-0/schema/openlabel_json_schema.json> ;
+    dcat:accessURL <https://openlabel.asam.net/V1-0-0/schema/openlabel_json_schema.json> ;
+    dcterms:format "application/schema+json" .
+
+
+<urn:vocabhub:profile:camea-detections>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/InformationExchangePackageDescription> ;
+    dcterms:title "CAMEA detection records"@en ;
+    dcterms:description "Vehicle detections exported from CAMEA traffic detectors: sensor, time slot, vehicle class, speed, length and licence plate."@en ;
+    dcterms:publisher <urn:vocabhub:agent:ctu> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/other> ;
+    prof:hasResource _:r-camea-spec ;
+    dcat:distribution _:r-camea-spec .
+
+_:r-camea-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.camea.cz/> ;
+    dcat:accessURL <https://www.camea.cz/> ;
+    dcterms:format "text/html" .
+
+
+#################################################################
+#  Alignments into ROS 2 GNSS Fix
+#################################################################
+
+<urn:vocabhub:alignment:certh-gps-measurements-to-ros2-gnss-fix>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "GPS measurements → ROS 2 GNSS Fix mapping"@en ;
+    dcterms:description "Field for field: every column has a NavSatFix field of the same name. Only timestamp has to be split into header.stamp sec and nanosec, and header.frame_id has no source."@en ;
+    dcterms:publisher <urn:vocabhub:agent:pliades> ;
+    pmap:sourceProfile <urn:vocabhub:profile:certh-gps-measurements-0.1> ;
+    pmap:targetProfile <urn:vocabhub:profile:ros2-gnss-fix-1.0.0> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.95"^^xsd:decimal
+    ] ;
+    dcat:landingPage <https://pliades.vocabulary-hub.eu/mapping-spec/MappingSpec_f091bb5a-8b3d-45c7-b9e3-6ddbb2bf1891> ;
+    prof:hasResource _:r-align-certh ;
+    dcat:distribution _:r-align-certh .
+
+_:r-align-certh
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:certh-gps-measurements-to-ros2-gnss-fix.sssom.tsv> ;
+    dcterms:format "text/tab-separated-values" .
+
+
+<urn:vocabhub:alignment:nmea-gga-to-ros2-gnss-fix>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "NMEA 0183 GGA → ROS 2 GNSS Fix mapping"@en ;
+    dcterms:description "Time of day, latitude, longitude, altitude and fix quality map directly. GGA names no constellation for status.service and has no covariance; HDOP gives at best an approximate diagonal one."@en ;
+    dcterms:publisher <urn:vocabhub:agent:pliades> ;
+    pmap:sourceProfile <urn:vocabhub:profile:nmea-0183-gga-4.11> ;
+    pmap:targetProfile <urn:vocabhub:profile:ros2-gnss-fix-1.0.0> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.60"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-nmea ;
+    dcat:distribution _:r-align-nmea .
+
+_:r-align-nmea
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:nmea-gga-to-ros2-gnss-fix.sssom.tsv> ;
+    dcterms:format "text/tab-separated-values" .
+
+
+<urn:vocabhub:alignment:golemio-to-ros2-gnss-fix>
+    a pmap:ProfileAlignment, prof:Profile, adms:Asset ;
+    adms:assetType <http://purl.org/adms/assettype/Mapping> ;
+    dcterms:title "Golemio vehicle positions → ROS 2 GNSS Fix mapping"@en ;
+    dcterms:description "Only the timestamp, latitude and longitude carry over. A public transport position has no altitude, fix status or covariance."@en ;
+    dcterms:publisher <urn:vocabhub:agent:pliades> ;
+    pmap:sourceProfile <urn:vocabhub:profile:golemio-vehicle-positions-2> ;
+    pmap:targetProfile <urn:vocabhub:profile:ros2-gnss-fix-1.0.0> ;
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.25"^^xsd:decimal
+    ] ;
+    prof:hasResource _:r-align-golemio ;
+    dcat:distribution _:r-align-golemio .
+
+_:r-align-golemio
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:mapping ;
+    prof:hasArtifact <urn:vocabhub:artifact:golemio-to-ros2-gnss-fix.sssom.tsv> ;
+    dcterms:format "text/tab-separated-values" .

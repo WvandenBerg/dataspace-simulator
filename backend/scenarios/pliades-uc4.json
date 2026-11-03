@@ -2,6 +2,7 @@
     "id": "pliades-uc4",
     "name": "PLIADES UC4: smart-vehicle data for ADAS/AD",
     "description": "Use case 4 of PLIADES: partners share recordings from their automated vehicles and from traffic infrastructure, so that others can train and test ADAS/AD functions. Participants, their roles and the formats they use come from the UC4 demonstrator material and requirements questionnaire. The Leganés recordings and CERTH's GPS measurements data model come from CERTH's catalogue sample and the PLIADES Vocabulary Hub. Everything else is made up for this simulation, including the other datasets, periods, access terms and alignment coverage. Entries are described in mobilityDCAT-AP 3.0.0 (draft), and each distribution points at its data standard in the Vocabulary Hub.",
+    "catalogExport": "catalog-exports/pliades-uc4.ttl",
     "metadataLanguage": "en",
     "catalogProfiles": [{
         "profileId": "urn:vocabhub:profile:mobilitydcat-ap-3.0.0",
