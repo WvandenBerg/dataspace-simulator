@@ -206,6 +206,16 @@ SensorThings data: with alignments, the search also returns lab, tower, air qual
 datasets, each saying which alignment reached it. The raw logger stream stays out, because
 alignments are never chained.
 
+PLIADES UC4 (`pliades-uc4`) is about finding vehicle data in the shape a consumer can use. It
+uses mobilityDCAT-AP 3.0.0 with its own subset, `vocabulary-subset-pliades-uc4.ttl`, generated
+from `pliades-uc4.json`. Switch its hub on, browse as AVL and search for data conforming to
+"[ROS 2 profile] GNSS Fix". Without alignments only UC3M's ROS 2 recordings match. With
+alignments, CERTH's GNSS fixes join at 95% coverage, and the NMEA logs of Vicomtech and
+BasqueCCAM at 60%. Prague's public transport positions reach only 25%, so they appear only once
+the threshold drops below its default of 50%. The 95% says that CERTH's own data model is the
+ROS 2 NavSatFix message under another name. Its CSV was in fact extracted from the same UC3M
+recordings.
+
 ## Semantic implementation details
 
 ### Data model
