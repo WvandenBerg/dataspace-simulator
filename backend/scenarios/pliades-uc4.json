@@ -1,0 +1,577 @@
+{
+    "id": "pliades-uc4",
+    "name": "PLIADES UC4: smart-vehicle data for ADAS/AD",
+    "description": "Use case 4 of PLIADES: partners share recordings from their automated vehicles and from traffic infrastructure, so that others can train and test ADAS/AD functions. Participants, their roles and the formats they use come from the UC4 demonstrator material and requirements questionnaire. The Leganés recordings and CERTH's GPS measurements data model come from CERTH's catalogue sample and the PLIADES Vocabulary Hub. Everything else is made up for this simulation, including the other datasets, periods, access terms and alignment coverage. Entries are described in mobilityDCAT-AP 3.0.0 (draft), and each distribution points at its data standard in the Vocabulary Hub.",
+    "metadataLanguage": "en",
+    "catalogProfiles": [{
+        "profileId": "urn:vocabhub:profile:mobilitydcat-ap-3.0.0",
+        "title": "mobilityDCAT-AP 3.0.0 (draft)",
+        "version": "3.0.0",
+        "description": "The stable draft of mobilityDCAT-AP 3.0.0, extending DCAT-AP 3.0.1, whose shapes it imports and which are included here. Its release as a NAPCORE Recommendation is being voted on.",
+        "files": [
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_shapes.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_ranges.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_mdr-vocabularies.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_deprecated-uris.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_shapes.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_range.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_deprecateduris.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/vocabulary-subset-pliades-uc4.ttl"
+        ],
+        "dataStandardPath": [
+            "http://www.w3.org/ns/dcat#distribution",
+            "http://purl.org/dc/terms/conformsTo"
+        ]
+    }],
+    "participants": [
+        {
+            "id": "certh",
+            "name": "CERTH/ITI",
+            "bpn": "did:web:iti.gr",
+            "location": "Thessaloniki, Greece",
+            "domain": "Research",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "research" },
+            "ontologies": ["mobilityDCAT-AP"],
+            "dataCategories": ["AV perception", "Localisation", "Annotations"],
+            "formats": ["ROS 2", "CSV", "JSON"],
+            "tags": ["UC4 leader", "PLIADES coordinator", "Polaris Ranger AV"]
+        },
+        {
+            "id": "uc3m",
+            "name": "Universidad Carlos III de Madrid",
+            "bpn": "did:web:uc3m.es",
+            "location": "Leganés, Spain",
+            "domain": "Research",
+            "roles": { "provider": true, "consumer": false },
+            "credentials": { "industry": "mobility", "orgRole": "research" },
+            "ontologies": ["ROS 2", "mobilityDCAT-AP"],
+            "dataCategories": ["AV perception", "GNSS", "IMU"],
+            "formats": ["ROS 2 bag"],
+            "tags": ["UC4", "Madrid pilot site"]
+        },
+        {
+            "id": "vicomtech",
+            "name": "Vicomtech",
+            "bpn": "did:web:vicomtech.org",
+            "location": "Donostia-San Sebastián, Spain",
+            "domain": "Applied research",
+            "roles": { "provider": true, "consumer": false },
+            "credentials": { "industry": "mobility", "orgRole": "research" },
+            "ontologies": ["NMEA 0183", "ASAM OpenLABEL", "mobilityDCAT-AP"],
+            "dataCategories": ["AV perception", "Vehicle state", "Annotations"],
+            "formats": ["NMEA", "JSON", "Binary"],
+            "tags": ["UC4"]
+        },
+        {
+            "id": "bccam",
+            "name": "BasqueCCAM",
+            "bpn": "did:web:basqueccam.com",
+            "location": "Basque Country, Spain",
+            "domain": "CCAM living lab",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "service-provider" },
+            "ontologies": ["NMEA 0183", "mobilityDCAT-AP"],
+            "dataCategories": ["Test vehicle data", "V2X"],
+            "formats": ["NMEA", "Binary"],
+            "tags": ["UC4", "Living Lab"]
+        },
+        {
+            "id": "ctu",
+            "name": "CTU in Prague, Faculty of Transportation Sciences",
+            "bpn": "did:web:cvut.cz",
+            "location": "Prague, Czechia",
+            "domain": "Traffic research",
+            "roles": { "provider": true, "consumer": false },
+            "credentials": { "industry": "mobility", "orgRole": "research" },
+            "ontologies": ["mobilityDCAT-AP"],
+            "dataCategories": ["Traffic flow", "Public transport"],
+            "formats": ["JSON", "XML"],
+            "tags": ["UC4", "AI-based traffic management"]
+        },
+        {
+            "id": "taltech",
+            "name": "TalTech",
+            "bpn": "did:web:taltech.ee",
+            "location": "Tallinn, Estonia",
+            "domain": "Research",
+            "roles": { "provider": false, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "research" },
+            "ontologies": ["ROS 2"],
+            "dataCategories": ["AV perception"],
+            "formats": ["ROS 2"],
+            "tags": ["UC4", "AV research group"]
+        },
+        {
+            "id": "zero",
+            "name": "ZERO GmbH",
+            "bpn": "did:web:zero-gmbh.example",
+            "location": "Ingolstadt, Germany",
+            "domain": "Connected vehicles",
+            "roles": { "provider": false, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "service-provider" },
+            "ontologies": [],
+            "dataCategories": ["Vehicle state", "V2X"],
+            "formats": ["JSON"],
+            "tags": ["UC4", "OpenDataPlatform"]
+        },
+        {
+            "id": "avl",
+            "name": "AVL List GmbH",
+            "bpn": "did:web:avl.com",
+            "location": "Graz, Austria",
+            "domain": "Automotive industry",
+            "roles": { "provider": false, "consumer": true },
+            "credentials": { "industry": "automotive", "orgRole": "manufacturer" },
+            "ontologies": ["ROS 2"],
+            "dataCategories": ["ADAS development", "Vehicle dynamics"],
+            "formats": ["ROS 2", "CSV"],
+            "tags": ["UC4", "Industrial data space"]
+        }
+    ],
+    "assets": [
+        {
+            "assetId": "uc3m-ros2-leganes",
+            "ownerId": "uc3m",
+            "name": "ROS 2 vehicle recordings, Leganés campaign",
+            "description": "Raw recordings from UC3M's automated vehicle on urban roads in Leganés, Madrid: 147 ROS 2 bags with front, left and right camera images, Velodyne LiDAR point clouds, GNSS fixes and IMU measurements. The GNSS topic is also offered on its own, as sensor_msgs/NavSatFix messages.",
+            "fileName": "leganes-campaign.mcap",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "ROS 2", "lang": "en"}, {"value": "automated vehicle", "lang": "en"}, {"value": "GNSS", "lang": "en"}, {"value": "LiDAR", "lang": "en"}, {"value": "camera", "lang": "en"}, {"value": "IMU", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/ESP"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2024-10-21", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2024-12-03", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "GNSS fixes, sensor_msgs/NavSatFix topic", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/uc3m/leganes/gnss.mcap"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ROS 2 sensor_msgs/NavSatFix", "lang": "en"}],
+                                    "dcat:version": [{"value": "5.3"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:ros2-gnss-fix-1.0.0"}]
+                        } },
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Complete ROS 2 bags, all sensors", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/uc3m/leganes/bags/"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dcat:byteSize": [{"value": "157334025950", "datatype": "xsd:nonNegativeInteger"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "bags": 147,
+                "topics": {
+                    "/insia/gps": "sensor_msgs/msg/NavSatFix",
+                    "/insia/gps_imu": "sensor_msgs/msg/Imu",
+                    "/velodyne_points": "sensor_msgs/msg/PointCloud2",
+                    "/camera_front/image_raw": "sensor_msgs/msg/Image",
+                    "/camera_left/image_raw": "sensor_msgs/msg/Image",
+                    "/camera_right/image_raw": "sensor_msgs/msg/Image"
+                },
+                "sampleMessage": {
+                    "topic": "/insia/gps",
+                    "header": { "stamp": { "sec": 1729506451, "nanosec": 120000000 }, "frame_id": "gps" },
+                    "status": { "status": 2, "service": 1 },
+                    "latitude": 40.33912,
+                    "longitude": -3.75201,
+                    "altitude": 668.4,
+                    "position_covariance": [0.43, 0, 0, 0, 0.43, 0, 0, 0, 1.21],
+                    "position_covariance_type": 2
+                }
+            }
+        },
+        {
+            "assetId": "certh-gnss-leganes",
+            "ownerId": "certh",
+            "name": "GNSS position fixes, UC4 vehicle recordings, Leganés",
+            "description": "2,556 GNSS fixes (GPS, mean HDOP 0.93) over 54.9 km of urban driving at a mean speed of 18.8 km/h. CERTH extracted them to CSV from UC3M's ROS 2 recordings of the Leganés campaign. The columns follow CERTH's GPS measurements data model in the PLIADES Vocabulary Hub.",
+            "fileName": "insia_gps.csv",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "GNSS", "lang": "en"}, {"value": "GPS", "lang": "en"}, {"value": "position", "lang": "en"}, {"value": "automated vehicle", "lang": "en"}, {"value": "ROS 2", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/ESP"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2024-10-21", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2024-12-03", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "CSV tabular data", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/certh/uc4/leganes/insia_gps.csv"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/CSV"}],
+                            "dcat:byteSize": [{"value": "304164", "datatype": "xsd:nonNegativeInteger"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "GPS measurements", "lang": "en"}],
+                                    "dcat:version": [{"value": "0.1"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:certh-gps-measurements-0.1"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "columns": ["timestamp", "latitude", "longitude", "altitude", "status", "service", "position_covariance", "position_covariance_type"],
+                "rows": 2556,
+                "sampleRow": ["2024-10-21T10:27:31.120Z", 40.33912, -3.75201, 668.4, 2, 1, "[0.43,0,0,0,0.43,0,0,0,1.21]", 2]
+            }
+        },
+        {
+            "assetId": "certh-camera-lidar-leganes",
+            "ownerId": "certh",
+            "name": "Camera and LiDAR frames, Leganés campaign",
+            "description": "JPEG frames from five vehicle cameras, some with context annotations, and Velodyne point clouds, extracted by CERTH from UC3M's ROS 2 recordings of the Leganés campaign. No data standard is named yet: imagery and point clouds come after the tabular data in UC4.",
+            "fileName": "leganes-frames.zip",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "camera", "lang": "en"}, {"value": "LiDAR", "lang": "en"}, {"value": "point cloud", "lang": "en"}, {"value": "automated vehicle", "lang": "en"}, {"value": "ROS 2", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/ESP"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2024-10-21", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2024-12-03", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "JPEG images", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/certh/uc4/leganes/cameras/"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/JPEG"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"}]
+                        } },
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "PCD point clouds", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/certh/uc4/leganes/velodyne/"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "cameras": ["camera_front", "camera_left", "camera_left_rect", "camera_right", "camera_right_rect"],
+                "imageFrames": 4213,
+                "lidar": "velodyne",
+                "pointClouds": 2548
+            }
+        },
+        {
+            "assetId": "vicomtech-gnss-nmea",
+            "ownerId": "vicomtech",
+            "name": "Vehicle GNSS positions, NMEA 0183, Gipuzkoa",
+            "description": "GNSS positions logged by Vicomtech's automated vehicle on test drives around Donostia-San Sebastián, as NMEA 0183 GGA and RMC sentences at 10 Hz. Recorded alongside fisheye camera, LiDAR and CAN bus data.",
+            "fileName": "vicomtech-gnss.nmea",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "GNSS", "lang": "en"}, {"value": "NMEA", "lang": "en"}, {"value": "position", "lang": "en"}, {"value": "automated vehicle", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}, {"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/regional-roads"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/ESP"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2025-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2026-06-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "NMEA log files", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/vicomtech/gnss/"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/TXT"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "NMEA 0183", "lang": "en"}],
+                                    "dcat:version": [{"value": "4.11"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:nmea-0183-gga-4.11"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "sentences": ["GGA", "RMC"],
+                "rateHz": 10,
+                "receiver": "dual-antenna GNSS, RTK when available"
+            }
+        },
+        {
+            "assetId": "vicomtech-openlabel",
+            "ownerId": "vicomtech",
+            "name": "Object- and action-level annotations, fisheye cameras",
+            "description": "Annotations of road users, their tracks and their actions in Vicomtech's fisheye camera recordings, written in ASAM OpenLABEL.",
+            "fileName": "vicomtech-annotations.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "annotations", "lang": "en"}, {"value": "OpenLABEL", "lang": "en"}, {"value": "object tracking", "lang": "en"}, {"value": "fisheye camera", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/ESP"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2025-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2026-06-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "OpenLABEL JSON", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/vicomtech/annotations/"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/JSON"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ASAM OpenLABEL", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.0.0"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:asam-openlabel-1.0.0"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "levels": ["object", "action"],
+                "objectClasses": ["car", "truck", "bus", "cyclist", "pedestrian"],
+                "streams": ["fisheye_front", "fisheye_rear", "fisheye_left", "fisheye_right"]
+            }
+        },
+        {
+            "assetId": "bccam-gnss-nmea",
+            "ownerId": "bccam",
+            "name": "Test vehicle positions, Basque CCAM Living Lab",
+            "description": "GNSS positions of the sensor-equipped vehicles testing vehicular communications in the Basque CCAM Living Lab, logged as NMEA 0183 sentences next to their V2X and CAN bus traces.",
+            "fileName": "bccam-positions.nmea",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "GNSS", "lang": "en"}, {"value": "NMEA", "lang": "en"}, {"value": "position", "lang": "en"}, {"value": "living lab", "lang": "en"}, {"value": "V2X testing", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/regional-roads"}, {"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/motorways"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/ESP"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2025-05-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2026-09-30", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "NMEA log files", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/bccam/living-lab/gnss/"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/TXT"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "NMEA 0183", "lang": "en"}],
+                                    "dcat:version": [{"value": "4.11"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:nmea-0183-gga-4.11"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "sentences": ["GGA", "VTG"],
+                "rateHz": 5,
+                "linkedTraces": ["V2X", "CAN bus"]
+            }
+        },
+        {
+            "assetId": "ctu-pt-positions-prague",
+            "ownerId": "ctu",
+            "name": "Public transport vehicle positions, Prague",
+            "description": "Positions of Prague's buses and trams with their delay and the scheduled time of the next stop, taken from the Golemio data platform about once a minute. Used for short-term traffic prediction.",
+            "fileName": "prague-vehicle-positions.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "public transport", "lang": "en"}, {"value": "vehicle positions", "lang": "en"}, {"value": "delays", "lang": "en"}, {"value": "Golemio", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/observed-data-on-delays-and-passing-time"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/bus"}, {"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/tram-light-rail"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/other-public-transport-network"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/CZE"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2025-01-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2026-12-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Vehicle positions, JSON", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/ctu/prague/vehicle-positions"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/JSON"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "Golemio vehicle positions", "lang": "en"}],
+                                    "dcat:version": [{"value": "2"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:golemio-vehicle-positions-2"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "fields": ["vehicle_id", "route", "timestamp", "latitude", "longitude", "delay_s", "next_stop_scheduled_time"],
+                "updateIntervalS": 60
+            }
+        },
+        {
+            "assetId": "ctu-traffic-detections-prague",
+            "ownerId": "ctu",
+            "name": "Traffic detections, Prague",
+            "description": "Vehicle detections from camera-based traffic detectors in Prague: class, speed and length of each vehicle, and its pseudonymised licence plate for travel-time matching between sensors.",
+            "fileName": "prague-detections.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "traffic detection", "lang": "en"}, {"value": "vehicle classification", "lang": "en"}, {"value": "speed", "lang": "en"}, {"value": "travel time", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/traffic-volume"}, {"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/traffic-speed"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}, {"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/truck"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/CZE"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2025-01-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2026-12-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Detection records, JSON", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/ctu/prague/detections"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/JSON"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "CAMEA detection records", "lang": "en"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:camea-detections"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "fields": ["object_id", "sensor_id", "class", "velocity", "length", "lp (pseudonymised)", "slot_from", "slot_to"],
+                "pseudonymised": true
+            }
+        }
+    ]
+}
