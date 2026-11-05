@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { AlertTriangle, ArrowUpRight, ChevronDown, ChevronRight } from 'lucide-react';
+import { AlertTriangle, ArrowUpRight, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { OpenHubProfileContext, ValidationReportContext } from '../../VocabularyHubContext';
 import { BASIC_PATHS, fieldLabels, findingLabel, flattenFields, labelWithin, nodesAt, repeatableNodes, shortIri, valuesAt } from '../../catalogFields';
 
@@ -81,6 +81,18 @@ const SchemaLink = ({ uri, dataspaceId }) => {
             >
                 <Chevron size={11} style={{ flexShrink: 0, marginTop: '1px' }} />
                 <span>{uri}</span>
+                {/^https?:\/\//i.test(uri) && (
+                    <a
+                        href={uri}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`Open ${uri}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ color: 'inherit', flexShrink: 0, marginTop: '1px', display: 'inline-flex' }}
+                    >
+                        <ExternalLink size={11} />
+                    </a>
+                )}
             </div>
 
             {open && status === 'loading' && <div style={{ ...labelStyle, marginLeft: '14px' }}>Asking the Vocabulary Hub...</div>}
