@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { AlertTriangle, ArrowUpRight, ChevronDown, ChevronRight } from 'lucide-react';
 import { OpenHubProfileContext, ValidationReportContext } from '../../VocabularyHubContext';
-import { BASIC_PATHS, fieldLabels, findingLabel, flattenFields, shortIri, valuesAt } from '../../catalogFields';
+import { BASIC_PATHS, fieldLabels, findingLabel, flattenFields, labelWithin, nodesAt, repeatableNodes, shortIri, valuesAt } from '../../catalogFields';
 
 const API_BASE = '/api';
 
@@ -9,6 +9,8 @@ const labelStyle = { fontSize: '0.64rem', color: 'var(--text-muted)', textTransf
 const valueStyle = { fontSize: '0.72rem', color: 'var(--text-primary)', wordBreak: 'break-word' };
 const sectionStyle = { fontSize: '0.66rem', fontWeight: 700, color: 'var(--text-secondary)', margin: '10px 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' };
 const uriStyle = { fontSize: '0.66rem', color: 'var(--color-primary)', fontFamily: 'monospace', wordBreak: 'break-all' };
+const nodeStyle = { margin: '2px 0 8px', paddingLeft: '8px', borderLeft: '2px solid var(--border-subtle)' };
+const nodeTitleStyle = { ...labelStyle, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px' };
 
 const Field = ({ label, children }) => (
     <div style={{ marginBottom: '6px' }}>
@@ -182,18 +184,35 @@ const DatasetDetail = ({ dataset, dataspaceId, model }) => {
     if (!dataset) return null;
 
     const standardKey = model?.dataStandard?.path.join(' ');
-    const entries = model
+    const groups = model ? repeatableNodes(model.fields) : [];
+    const fields = model
         ? flattenFields(model.fields)
             .filter((f) => !BASIC_PATHS.includes(f.path[0]))
-            .map((f) => ({ ...f, isStandard: f.key === standardKey, values: valuesAt(dataset.record, f.path) }))
-            .filter((f) => f.values.length > 0)
+            .map((f) => ({ ...f, isStandard: f.key === standardKey }))
         : [];
+    const filled = (fs, record) => fs
+        .map((f) => ({ ...f, values: valuesAt(record, f.path) }))
+        .filter((f) => f.values.length > 0);
+
+    const entries = filled(fields.filter((f) => !groups.some((g) => g.path === f.path[0])), dataset.record);
+    const nodes = groups.flatMap((g) => {
+        const found = nodesAt(dataset.record, g.path);
+        return found.map((node, i) => ({
+            key: `${g.path} ${i}`,
+            title: found.length > 1 ? `${g.label} ${i + 1}` : g.label,
+            entries: filled(fields.filter((f) => f.path[0] === g.path), { [g.path]: [node] })
+                .map((f) => ({ ...f, label: labelWithin(g, f) })),
+        }));
+    }).filter((n) => n.entries.length > 0);
+
     const shown = entries.filter((f) => f.status !== 'optional');
     const optional = entries.filter((f) => f.status === 'optional');
+    const optionalCount = optional.length + nodes.reduce((n, node) => n + node.entries.filter((f) => f.status === 'optional').length, 0);
 
     const publisher = dataset.publisherName || dataset.ownerName || dataset.publisherBpn;
     const policy = dataset.policyName || dataset.policyId;
     const Chevron = showOptional ? ChevronDown : ChevronRight;
+    const fieldsOf = (fs) => fs.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} dataspaceId={dataspaceId} /></Field>);
 
     return (
         <div>
@@ -203,20 +222,26 @@ const DatasetDetail = ({ dataset, dataspaceId, model }) => {
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>{dataset.description}</div>
             )}
 
-            {entries.length > 0 && (
+            {(entries.length > 0 || nodes.length > 0) && (
                 <Section title="Metadata">
-                    {shown.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} dataspaceId={dataspaceId} /></Field>)}
-                    {optional.length > 0 && (
+                    {fieldsOf(shown)}
+                    {nodes.map((node) => (
+                        <div key={node.key} style={nodeStyle}>
+                            <div style={nodeTitleStyle}>{node.title}</div>
+                            {fieldsOf(node.entries.filter((f) => showOptional || f.status !== 'optional'))}
+                        </div>
+                    ))}
+                    {optionalCount > 0 && (
                         <button
                             type="button"
                             onClick={() => setShowOptional(!showOptional)}
                             style={{ padding: 0, marginBottom: '6px', background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.66rem', color: 'var(--color-primary)' }}
                         >
                             <Chevron size={11} />
-                            {showOptional ? 'Fewer fields' : `${optional.length} optional field${optional.length === 1 ? '' : 's'}`}
+                            {showOptional ? 'Fewer fields' : `${optionalCount} optional field${optionalCount === 1 ? '' : 's'}`}
                         </button>
                     )}
-                    {showOptional && optional.map((f) => <Field key={f.key} label={f.label}><FieldValues field={f} dataspaceId={dataspaceId} /></Field>)}
+                    {showOptional && fieldsOf(optional)}
                 </Section>
             )}
 

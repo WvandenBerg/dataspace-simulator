@@ -77,9 +77,12 @@ filters, free text, the per-field counts, the publish and edit form and the entr
 follow that profile. Field status comes from `sh:severity`; `owl:imports` is never fetched.
 
 **The form writes records, one node per nested path.** Publish and edit send
-`dcatFields.record`. An edit replaces only the top-level fields the user touched and keeps
-the rest of the stored record, so fields outside the profile survive, and so do several
-distributions unless one of their fields is edited.
+`dcatFields.record`. The exception is a top-level field the profile allows more than once,
+such as `dcat:distribution`: the form and the entry view keep each of its nodes apart. An
+edit replaces only the top-level fields the user touched and keeps the rest of the stored
+record, so fields outside the profile survive. Editing any field of one distribution
+rewrites every distribution from the form, which drops what the form does not show, such as
+an IRI given next to a nested node.
 
 **The data-standard field belongs to the profile.** It is stored per hub profile
 (`hub_profiles.data_standard_path`) and seeded by the scenario that ships the profile. Code
