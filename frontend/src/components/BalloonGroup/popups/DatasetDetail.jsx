@@ -107,7 +107,9 @@ const SchemaLink = ({ uri, dataspaceId }) => {
                     {(profile.resources || []).map((resource) => (
                         <div key={resource.roleIri + resource.artifact} style={{ marginTop: '4px' }}>
                             <div style={labelStyle}>{resource.role}</div>
-                            <div style={uriStyle}>{resource.artifact}</div>
+                            {/^https?:\/\//i.test(resource.artifact)
+                                ? <a href={resource.artifact} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ ...uriStyle, display: 'block', textDecoration: 'underline' }}>{resource.artifact}</a>
+                                : <div style={uriStyle}>{resource.artifact}</div>}
                         </div>
                     ))}
                     {openHubProfile && (
