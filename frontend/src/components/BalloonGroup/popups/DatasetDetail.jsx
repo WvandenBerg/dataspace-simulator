@@ -239,12 +239,15 @@ const DatasetDetail = ({ dataset, dataspaceId, model }) => {
             {(entries.length > 0 || nodes.length > 0) && (
                 <Section title="Metadata">
                     {fieldsOf(shown)}
-                    {nodes.map((node) => (
-                        <div key={node.key} style={nodeStyle}>
-                            <div style={nodeTitleStyle}>{node.title}</div>
-                            {fieldsOf(node.entries.filter((f) => showOptional || f.status !== 'optional'))}
-                        </div>
-                    ))}
+                    {nodes.map((node) => {
+                        const visible = node.entries.filter((f) => showOptional || f.status !== 'optional');
+                        return visible.length > 0 && (
+                            <div key={node.key} style={nodeStyle}>
+                                <div style={nodeTitleStyle}>{node.title}</div>
+                                {fieldsOf(visible)}
+                            </div>
+                        );
+                    })}
                     {optionalCount > 0 && (
                         <button
                             type="button"
