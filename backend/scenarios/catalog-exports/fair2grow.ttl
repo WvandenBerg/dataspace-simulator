@@ -1,0 +1,692 @@
+# Vocabulary Hub contents for the fair2grow scenario.
+#
+# A Semantic Treehouse catalogue export (project "DigiLab TK FAIR2Grow") of a local STH,
+# produced by sth-greenhouse-bundle/fair2grow/tools/sth_publish.py. It holds the WUR logical
+# model of the FAIR2Grow export, the message model derived from SAREF4AGRI and SOSA, the two
+# codelists, the five ontologies, and the element and value alignments between the models.
+# The STH export is unedited. STH exports no coverage, so a hand-written coverage for the two
+# alignments is appended at the end, as in the other scenarios (proposed extension). Refresh the
+# export from tno.semantic-treehouse.nl once the specifications are published there; the IRIs then
+# change from localhost:4200 to that host, so update the IRIs in the appended part too.
+
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix prof: <http://www.w3.org/ns/dx/prof/> .
+@prefix pmap: <https://w3id.org/pmap#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix role: <http://www.w3.org/ns/dx/prof/role/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sssom: <https://w3id.org/sssom/> .
+
+<http://localhost:4200/environment>
+  a dcat:Catalog ;
+  dcterms:description "Catalog of semantic assets published in Semantic Treehouse environment located at http://localhost:4200."@en ;
+  dcterms:publisher <http://localhost:4200/communities/-/> ;
+  dcterms:title "Semantic Treehouse"@en ;
+  foaf:homepage <http://localhost:4200> ;
+  dcterms:hasPart <http://localhost:4200/id/project/fair2grow> ;
+  dcat:resource <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0>, <http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties/0.1.0>, <http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements/0.1.0> .
+
+<http://localhost:4200/communities/-/>
+  a foaf:Agent ;
+  foaf:name "Semantic Treehouse"@en .
+
+<http://localhost:4200> a foaf:Document .
+<http://localhost:4200/id/project/fair2grow>
+  a dcat:Catalog, dcat:Dataset ;
+  dcterms:description "Collection of specifications for project DigiLab TK FAIR2Grow"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:title "DigiLab TK FAIR2Grow"@en ;
+  dcat:dataset <http://localhost:4200/id/specification/fair2grow-observed-property>, <http://localhost:4200/id/specification/saref4agri-properties>, <http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties>, <http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform>, <http://localhost:4200/id/specification/fair2grow-saref4agri>, <http://localhost:4200/id/specification/ssn-with-extensions>, <http://localhost:4200/id/specification/saref4agri>, <http://localhost:4200/id/specification/sosa>, <http://localhost:4200/id/specification/sth-greenhouse-bridge> ;
+  foaf:homepage <http://localhost:4200/project/fair2grow> .
+
+<http://localhost:4200/id/group/fair2grow-partners>
+  foaf:name "FAIR2Grow partners (WUR, TNO, NLR)"@en ;
+  a foaf:Agent .
+
+<http://localhost:4200/id/specification/fair2grow-observed-property>
+  a dcat:Dataset ;
+  dcterms:description "Observed properties of the datastreams in the WUR Greenhouse Data Platform export for FAIR2Grow (Autonomous Greenhouse Challenge 4, Reference compartment and weather). Generated from datastreams.csv."@en ;
+  dcterms:title "FAIR2Grow observed properties"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/fair2grow-observed-property"@en ;
+  dcat:landingPage <http://localhost:4200/specification/fair2grow-observed-property> .
+
+<http://localhost:4200/specification/fair2grow-observed-property> a foaf:Document .
+<http://localhost:4200/id/specification/saref4agri-properties>
+  a dcat:Dataset ;
+  dcterms:description "The 122 property individuals of the SAREF4AGRI properties vocabulary (saref4hort working copy, v2.1.1), as a codelist so they can be a mapping target. Derived from the ontology, which stays the source of truth."@en ;
+  dcterms:title "SAREF4AGRI properties (derived codelist)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/saref4agri-properties"@en ;
+  dcat:landingPage <http://localhost:4200/specification/saref4agri-properties> .
+
+<http://localhost:4200/specification/saref4agri-properties> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties>
+  a dcat:Dataset ;
+  dcterms:description "Value-level alignment of the 42 FAIR2Grow observed properties to the SAREF4AGRI properties, taken from the SSSOM draft fair2grow/alignment/fair2grow-to-saref4agri.sssom.tsv. Proposed with AI assistance; to be reviewed by WUR and the SAREF4AGRI maintainers."@en ;
+  dcterms:title "FAIR2Grow observed properties to SAREF4AGRI properties (values)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:hasVersion <http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties/0.1.0> ;
+  dcterms:identifier "http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties"@en ;
+  dcat:landingPage <http://localhost:4200/specification/fair2grow-to-saref4agri-properties> .
+
+<http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties/0.1.0>
+  a dcat:Dataset, dcterms:Standard, prof:Profile, pmap:ProfileAlignment ;
+  dcterms:description "Value-level alignment of the 42 FAIR2Grow observed properties to the SAREF4AGRI properties, taken from the SSSOM draft fair2grow/alignment/fair2grow-to-saref4agri.sssom.tsv. Proposed with AI assistance; to be reviewed by WUR and the SAREF4AGRI maintainers."@en ;
+  dcterms:title "FAIR2Grow observed properties to SAREF4AGRI properties (values) v0.1.0"@en ;
+  dcat:distribution <http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties/0.1.0/distributions/mapping-spec>, _:genid1 ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties/0.1.0"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/MappingVersion_185b8aa2-f84a-43cb-8242-b49a7d150bb2> ;
+  owl:versionInfo "0.1.0 (draft)" ;
+  dcterms:type <http://purl.org/adms/assettype/Mapping> ;
+  pmap:sourceProfile <http://localhost:4200/api/codelist/-/version/CodelistVersion_c0647659-a58d-4e01-8dad-c572f9788516> ;
+  pmap:targetProfile <http://localhost:4200/api/codelist/-/version/CodelistVersion_0e540e1e-a966-4517-a47f-95c0be12a03c> ;
+  prof:hasResource _:genid1 .
+
+<http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties/0.1.0/distributions/mapping-spec>
+  a dcat:Distribution ;
+  dcat:accessURL <http://localhost:4200/spec-version-canvas-redirect/MappingVersion_185b8aa2-f84a-43cb-8242-b49a7d150bb2> ;
+  dcterms:description "Distribution of type mapping for specification FAIR2Grow observed properties to SAREF4AGRI properties (values) v0.1.0"@en ;
+  dcterms:title "mapping distribution for FAIR2Grow observed properties to SAREF4AGRI properties (values) v0.1.0"@en .
+
+<http://localhost:4200/spec-version-canvas-redirect/MappingVersion_185b8aa2-f84a-43cb-8242-b49a7d150bb2> a foaf:Document .
+<http://localhost:4200/specification/fair2grow-to-saref4agri-properties> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements>
+  a dcat:Dataset ;
+  dcterms:description "Element-level alignment of the WUR logical model of the FAIR2Grow export to the message model derived from SAREF4AGRI and SOSA. Draft, to be reviewed by WUR and the SAREF4AGRI maintainers."@en ;
+  dcterms:title "FAIR2Grow WUR model to SAREF4AGRI model (elements)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:hasVersion <http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements/0.1.0> ;
+  dcterms:identifier "http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements"@en ;
+  dcat:landingPage <http://localhost:4200/specification/fair2grow-to-saref4agri-elements> .
+
+<http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements/0.1.0>
+  a dcat:Dataset, dcterms:Standard, prof:Profile, pmap:ProfileAlignment ;
+  dcterms:description "Element-level alignment of the WUR logical model of the FAIR2Grow export to the message model derived from SAREF4AGRI and SOSA. Draft, to be reviewed by WUR and the SAREF4AGRI maintainers."@en ;
+  dcterms:title "FAIR2Grow WUR model to SAREF4AGRI model (elements) v0.1.0"@en ;
+  dcat:distribution <http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements/0.1.0/distributions/mapping-spec>, _:genid8 ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements/0.1.0"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/MappingVersion_bbbb09c3-3e43-43c8-9f68-ab2cf0656a47> ;
+  owl:versionInfo "0.1.0 (draft)" ;
+  dcterms:type <http://purl.org/adms/assettype/Mapping> ;
+  pmap:sourceProfile <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0> ;
+  pmap:targetProfile <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0> ;
+  prof:hasResource _:genid8 .
+
+<http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements/0.1.0/distributions/mapping-spec>
+  a dcat:Distribution ;
+  dcat:accessURL <http://localhost:4200/spec-version-canvas-redirect/MappingVersion_bbbb09c3-3e43-43c8-9f68-ab2cf0656a47> ;
+  dcterms:description "Distribution of type mapping for specification FAIR2Grow WUR model to SAREF4AGRI model (elements) v0.1.0"@en ;
+  dcterms:title "mapping distribution for FAIR2Grow WUR model to SAREF4AGRI model (elements) v0.1.0"@en .
+
+<http://localhost:4200/spec-version-canvas-redirect/MappingVersion_bbbb09c3-3e43-43c8-9f68-ab2cf0656a47> a foaf:Document .
+<http://localhost:4200/specification/fair2grow-to-saref4agri-elements> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform>
+  a dcat:Dataset ;
+  dcterms:description "Logical data model of a cultivation export from the Wageningen University & Research (WUR) Greenhouse Data Platform, as delivered for the FAIR2Grow use case of DigiLab TK. It describes the files of the export: the cultivation configuration (_cultivation.json), the data dictionary (datastreams.csv), the Frictionless Data Package (datapackage.json) and one CSV file per datastream. A cultivation is organised as a tree of components; each component holds datastreams; each datastream is a time series of observations (DateTime, value). The model follows WUR's own terms (bottom-up). It is not aligned to an ontology; that alignment is a separate mapping in Semantic Treehouse."@en ;
+  dcterms:title "FAIR2Grow: WUR Greenhouse Data Platform export"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:hasVersion <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0> ;
+  dcterms:identifier "http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform"@en ;
+  dcat:landingPage <http://localhost:4200/specification/fair2grow-greenhouse-data-platform> .
+
+<http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0>
+  a dcat:Dataset, dcterms:Standard, prof:Profile ;
+  dcterms:description "Logical data model of a cultivation export from the Wageningen University & Research (WUR) Greenhouse Data Platform, as delivered for the FAIR2Grow use case of DigiLab TK. It describes the files of the export: the cultivation configuration (_cultivation.json), the data dictionary (datastreams.csv), the Frictionless Data Package (datapackage.json) and one CSV file per datastream. A cultivation is organised as a tree of components; each component holds datastreams; each datastream is a time series of observations (DateTime, value). The model follows WUR's own terms (bottom-up). It is not aligned to an ontology; that alignment is a separate mapping in Semantic Treehouse."@en ;
+  dcterms:title "FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  dcat:distribution <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-xsd>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-json-schema-json>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-json-schema-yaml>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-oas-json>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-oas-yaml>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-rdf-shacl-ttl>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-spreadsheet>, _:genid2, _:genid3, _:genid4 ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176> ;
+  owl:versionInfo "0.1.0 (draft)" ;
+  dcterms:type <http://purl.org/adms/assettype/InformationExchangePackageDescription> ;
+  prof:hasResource <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-xsd>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-json-schema-json>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-json-schema-yaml>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-oas-json>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-oas-yaml>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-rdf-shacl-ttl>, <http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-spreadsheet>, _:genid2, _:genid3, _:genid4 .
+
+<http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-xsd>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/xml/schema?style=doll> ;
+  dcterms:description "Distribution of type XSD for specification FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/SCHEMA_XML> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/xml/schema?style=doll> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/xml> ;
+  dcterms:title "XSD schema distribution for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  dcterms:conformsTo <http://www.w3.org/2001/XMLSchema> ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/xml/schema?style=doll> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/xml/schema?style=doll> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/SCHEMA_XML> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/application/xml> a dcterms:MediaType .
+<http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-json-schema-json>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/json/schema?format=json> ;
+  dcterms:description "Distribution of type JSON schema JSON for specification FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/JSON> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/json/schema?format=json> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> ;
+  dcterms:title "JSON schema (JSON format) distribution for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  dcterms:conformsTo <https://json-schema.org/draft/2020-12/schema> ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/json/schema?format=json> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/json/schema?format=json> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/JSON> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/application/json> a dcterms:MediaType .
+<http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-json-schema-yaml>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/json/schema?format=yaml> ;
+  dcterms:description "Distribution of type JSON schema YAML for specification FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/YAML> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/json/schema?format=yaml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/yaml> ;
+  dcterms:title "JSON schema (YAML format) distribution for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  dcterms:conformsTo <https://json-schema.org/draft/2020-12/schema> ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/json/schema?format=yaml> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/json/schema?format=yaml> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/YAML> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/application/yaml> a dcterms:MediaType .
+<http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-oas-json>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/openapi?format=json> ;
+  dcterms:description "Distribution of type OpenAPI (JSON syntax) for specification FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/JSON> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/openapi?format=json> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> ;
+  dcterms:title "OpenAPI schema JSON distribution for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/openapi?format=json> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/openapi?format=json> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-oas-yaml>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/openapi?format=yaml> ;
+  dcterms:description "Distribution of OpenAPI (YAML syntax) for specification FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/YAML> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/openapi?format=yaml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/yaml> ;
+  dcterms:title "OpenAPI schema YAML distribution for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/openapi?format=yaml> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/openapi?format=yaml> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-rdf-shacl-ttl>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rdf/shacl?format=ttl> ;
+  dcterms:description "Distribution of type RDF SHACL (TTL syntax) for specification FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rdf/shacl?format=ttl> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "RDF SHACL TTL distribution for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  prof:hasRole role:validation ;
+  dcterms:conformsTo sh: ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rdf/shacl?format=ttl> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rdf/shacl?format=ttl> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/text/turtle> a dcterms:MediaType, dcterms:MediaTypeOrExtent .
+<http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0/distributions/message-spreadsheet>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/element/Element_074a158c-0e00-4ff4-949d-472a06f1b90f/export/spreadsheet> ;
+  dcterms:description "Distribution of type spreadsheet (Office Open XML format, .xlsx file) for specification FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/XLSX> ;
+  dcat:downloadURL <http://localhost:4200/api/element/Element_074a158c-0e00-4ff4-949d-472a06f1b90f/export/spreadsheet> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/vnd.ms-excel> ;
+  dcterms:title "Spreadsheet distribution for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0"@en ;
+  prof:hasRole role:specification ;
+  prof:hasArtifact <http://localhost:4200/api/element/Element_074a158c-0e00-4ff4-949d-472a06f1b90f/export/spreadsheet> .
+
+<http://localhost:4200/api/element/Element_074a158c-0e00-4ff4-949d-472a06f1b90f/export/spreadsheet> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/XLSX> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/application/vnd.ms-excel> a dcterms:MediaType .
+<http://localhost:4200/spec-version-canvas-redirect/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176> a foaf:Document .
+<http://localhost:4200/specification/fair2grow-greenhouse-data-platform> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-saref4agri>
+  a dcat:Dataset ;
+  dcterms:description "Message model derived with the Semantic Treehouse wizard from SAREF4AGRI, SAREF core, SOSA/SSN and the STH greenhouse bridge, with root class ghb:Experiment. Mapping target for the FAIR2Grow logical model of WUR."@en ;
+  dcterms:title "FAIR2Grow on SAREF4AGRI (derived from ontologies)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:hasVersion <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0> ;
+  dcterms:identifier "http://localhost:4200/id/specification/fair2grow-saref4agri"@en ;
+  dcat:landingPage <http://localhost:4200/specification/fair2grow-saref4agri> .
+
+<http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0>
+  a dcat:Dataset, dcterms:Standard, prof:Profile ;
+  dcterms:description "Message model derived with the Semantic Treehouse wizard from SAREF4AGRI, SAREF core, SOSA/SSN and the STH greenhouse bridge, with root class ghb:Experiment. Mapping target for the FAIR2Grow logical model of WUR."@en ;
+  dcterms:title "FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  dcat:distribution <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-xsd>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-json-schema-json>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-json-schema-yaml>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-oas-json>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-oas-yaml>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-rdf-shacl-ttl>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-spreadsheet>, _:genid5, _:genid6, _:genid7 ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2> ;
+  owl:versionInfo "0.1.0 (draft)" ;
+  dcterms:type <http://purl.org/adms/assettype/InformationExchangePackageDescription> ;
+  prof:isProfileOf <http://localhost:4200/id/specification/ssn-with-extensions/2017>, <http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft>, <http://localhost:4200/id/specification/sosa/2017>, <http://localhost:4200/id/specification/saref-core/4.1.1>, <http://localhost:4200/id/specification/saref4agri/2.1.1> ;
+  prof:hasResource <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-xsd>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-json-schema-json>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-json-schema-yaml>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-oas-json>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-oas-yaml>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-rdf-shacl-ttl>, <http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-spreadsheet>, _:genid5, _:genid6, _:genid7 .
+
+<http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-xsd>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/xml/schema?style=doll> ;
+  dcterms:description "Distribution of type XSD for specification FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/SCHEMA_XML> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/xml/schema?style=doll> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/xml> ;
+  dcterms:title "XSD schema distribution for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  dcterms:conformsTo <http://www.w3.org/2001/XMLSchema> ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/xml/schema?style=doll> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/xml/schema?style=doll> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-json-schema-json>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/json/schema?format=json> ;
+  dcterms:description "Distribution of type JSON schema JSON for specification FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/JSON> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/json/schema?format=json> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> ;
+  dcterms:title "JSON schema (JSON format) distribution for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  dcterms:conformsTo <https://json-schema.org/draft/2020-12/schema> ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/json/schema?format=json> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/json/schema?format=json> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-json-schema-yaml>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/json/schema?format=yaml> ;
+  dcterms:description "Distribution of type JSON schema YAML for specification FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/YAML> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/json/schema?format=yaml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/yaml> ;
+  dcterms:title "JSON schema (YAML format) distribution for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  dcterms:conformsTo <https://json-schema.org/draft/2020-12/schema> ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/json/schema?format=yaml> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/json/schema?format=yaml> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-oas-json>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/openapi?format=json> ;
+  dcterms:description "Distribution of type OpenAPI (JSON syntax) for specification FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/JSON> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/openapi?format=json> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> ;
+  dcterms:title "OpenAPI schema JSON distribution for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/openapi?format=json> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/openapi?format=json> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-oas-yaml>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/openapi?format=yaml> ;
+  dcterms:description "Distribution of OpenAPI (YAML syntax) for specification FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/YAML> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/openapi?format=yaml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/yaml> ;
+  dcterms:title "OpenAPI schema YAML distribution for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  prof:hasRole role:schema ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/openapi?format=yaml> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/openapi?format=yaml> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-rdf-shacl-ttl>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rdf/shacl?format=ttl> ;
+  dcterms:description "Distribution of type RDF SHACL (TTL syntax) for specification FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rdf/shacl?format=ttl> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "RDF SHACL TTL distribution for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  prof:hasRole role:validation ;
+  dcterms:conformsTo sh: ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rdf/shacl?format=ttl> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rdf/shacl?format=ttl> a foaf:Document .
+<http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0/distributions/message-spreadsheet>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/element/Element_4e92e8da-1160-4f56-a1cc-4b6dfd85c695/export/spreadsheet> ;
+  dcterms:description "Distribution of type spreadsheet (Office Open XML format, .xlsx file) for specification FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/XLSX> ;
+  dcat:downloadURL <http://localhost:4200/api/element/Element_4e92e8da-1160-4f56-a1cc-4b6dfd85c695/export/spreadsheet> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/vnd.ms-excel> ;
+  dcterms:title "Spreadsheet distribution for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0"@en ;
+  prof:hasRole role:specification ;
+  prof:hasArtifact <http://localhost:4200/api/element/Element_4e92e8da-1160-4f56-a1cc-4b6dfd85c695/export/spreadsheet> .
+
+<http://localhost:4200/api/element/Element_4e92e8da-1160-4f56-a1cc-4b6dfd85c695/export/spreadsheet> a foaf:Document .
+<http://localhost:4200/spec-version-canvas-redirect/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2> a foaf:Document .
+<http://localhost:4200/specification/fair2grow-saref4agri> a foaf:Document .
+<http://localhost:4200/id/specification/ssn-with-extensions>
+  a dcat:Dataset ;
+  dcterms:description "Specification 'SSN with SSN extensions' of type Ontology"@en ;
+  dcterms:title "SSN with SSN extensions"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:hasVersion <http://localhost:4200/id/specification/ssn-with-extensions/2017> ;
+  dcterms:identifier "http://localhost:4200/id/specification/ssn-with-extensions"@en ;
+  dcat:landingPage <http://localhost:4200/specification/ssn-with-extensions> .
+
+<http://localhost:4200/id/specification/ssn-with-extensions/2017>
+  a dcat:Dataset, dcterms:Standard, owl:Ontology ;
+  dcterms:description "Specification 'SSN with SSN extensions' of type Ontology"@en ;
+  dcterms:title "SSN with SSN extensions v2017"@en ;
+  dcat:distribution <http://localhost:4200/id/specification/ssn-with-extensions/2017/distributions/ontology-ttl>, <http://localhost:4200/id/specification/ssn-with-extensions/2017/distributions/ontology-rdf> ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/ssn-with-extensions/2017"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9> ;
+  owl:versionInfo "2017 (draft)" ;
+  dcterms:type <http://purl.org/adms/assettype/Ontology> ;
+  prof:hasResource <http://localhost:4200/id/specification/ssn-with-extensions/2017/distributions/ontology-ttl>, <http://localhost:4200/id/specification/ssn-with-extensions/2017/distributions/ontology-rdf> .
+
+<http://localhost:4200/id/specification/ssn-with-extensions/2017/distributions/ontology-ttl>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9/export?format=turtle> ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9/export?format=turtle> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "Ontology distribution for SSN with SSN extensions v2017"@en ;
+  prof:hasRole role:vocabulary ;
+  prof:hasArtifact <http://localhost:4200/api/ontology/-/version/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9/export?format=turtle> .
+
+<http://localhost:4200/api/ontology/-/version/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9/export?format=turtle> a foaf:Document .
+<http://localhost:4200/id/specification/ssn-with-extensions/2017/distributions/ontology-rdf>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9/export?format=rdfxml> ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_XML> ;
+  dcat:downloadURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9/export?format=rdfxml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/xml> ;
+  dcterms:title "Ontology distribution for SSN with SSN extensions v2017"@en ;
+  prof:hasRole role:vocabulary ;
+  prof:hasArtifact <http://localhost:4200/api/ontology/-/version/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9/export?format=rdfxml> .
+
+<http://localhost:4200/api/ontology/-/version/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9/export?format=rdfxml> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/RDF_XML> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<http://localhost:4200/spec-version-canvas-redirect/OntologyVersion_73f66b01-b241-4497-add8-26de32cc2fc9> a foaf:Document .
+<http://localhost:4200/specification/ssn-with-extensions> a foaf:Document .
+<http://localhost:4200/id/specification/saref4agri>
+  a dcat:Dataset ;
+  dcterms:description "Specification 'SAREF4AGRI (with properties vocabulary)' of type Ontology"@en ;
+  dcterms:title "SAREF4AGRI (with properties vocabulary)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:hasVersion <http://localhost:4200/id/specification/saref4agri/2.1.1> ;
+  dcterms:identifier "http://localhost:4200/id/specification/saref4agri"@en ;
+  dcat:landingPage <http://localhost:4200/specification/saref4agri> .
+
+<http://localhost:4200/id/specification/saref4agri/2.1.1>
+  a dcat:Dataset, dcterms:Standard, owl:Ontology ;
+  dcterms:description "Specification 'SAREF4AGRI (with properties vocabulary)' of type Ontology"@en ;
+  dcterms:title "SAREF4AGRI (with properties vocabulary) v2.1.1"@en ;
+  dcat:distribution <http://localhost:4200/id/specification/saref4agri/2.1.1/distributions/ontology-ttl>, <http://localhost:4200/id/specification/saref4agri/2.1.1/distributions/ontology-rdf> ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/saref4agri/2.1.1"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672> ;
+  owl:versionInfo "2.1.1 (draft)" ;
+  dcterms:type <http://purl.org/adms/assettype/Ontology> ;
+  prof:hasResource <http://localhost:4200/id/specification/saref4agri/2.1.1/distributions/ontology-ttl>, <http://localhost:4200/id/specification/saref4agri/2.1.1/distributions/ontology-rdf> .
+
+<http://localhost:4200/id/specification/saref4agri/2.1.1/distributions/ontology-ttl>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672/export?format=turtle> ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672/export?format=turtle> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "Ontology distribution for SAREF4AGRI (with properties vocabulary) v2.1.1"@en ;
+  prof:hasRole role:vocabulary ;
+  prof:hasArtifact <http://localhost:4200/api/ontology/-/version/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672/export?format=turtle> .
+
+<http://localhost:4200/api/ontology/-/version/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672/export?format=turtle> a foaf:Document .
+<http://localhost:4200/id/specification/saref4agri/2.1.1/distributions/ontology-rdf>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672/export?format=rdfxml> ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_XML> ;
+  dcat:downloadURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672/export?format=rdfxml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/xml> ;
+  dcterms:title "Ontology distribution for SAREF4AGRI (with properties vocabulary) v2.1.1"@en ;
+  prof:hasRole role:vocabulary ;
+  prof:hasArtifact <http://localhost:4200/api/ontology/-/version/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672/export?format=rdfxml> .
+
+<http://localhost:4200/api/ontology/-/version/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672/export?format=rdfxml> a foaf:Document .
+<http://localhost:4200/spec-version-canvas-redirect/OntologyVersion_d8dff69d-f7af-41ed-8fad-9b749b81b672> a foaf:Document .
+<http://localhost:4200/specification/saref4agri> a foaf:Document .
+<http://localhost:4200/id/specification/sosa>
+  a dcat:Dataset ;
+  dcterms:description "Specification 'SOSA (Sensor, Observation, Sample, and Actuator)' of type Ontology"@en ;
+  dcterms:title "SOSA (Sensor, Observation, Sample, and Actuator)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:hasVersion <http://localhost:4200/id/specification/sosa/2017> ;
+  dcterms:identifier "http://localhost:4200/id/specification/sosa"@en ;
+  dcat:landingPage <http://localhost:4200/specification/sosa> .
+
+<http://localhost:4200/id/specification/sosa/2017>
+  a dcat:Dataset, dcterms:Standard, owl:Ontology ;
+  dcterms:description "Specification 'SOSA (Sensor, Observation, Sample, and Actuator)' of type Ontology"@en ;
+  dcterms:title "SOSA (Sensor, Observation, Sample, and Actuator) v2017"@en ;
+  dcat:distribution <http://localhost:4200/id/specification/sosa/2017/distributions/ontology-ttl>, <http://localhost:4200/id/specification/sosa/2017/distributions/ontology-rdf> ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/sosa/2017"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b> ;
+  owl:versionInfo "2017 (draft)" ;
+  dcterms:type <http://purl.org/adms/assettype/Ontology> ;
+  prof:hasResource <http://localhost:4200/id/specification/sosa/2017/distributions/ontology-ttl>, <http://localhost:4200/id/specification/sosa/2017/distributions/ontology-rdf> .
+
+<http://localhost:4200/id/specification/sosa/2017/distributions/ontology-ttl>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b/export?format=turtle> ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b/export?format=turtle> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "Ontology distribution for SOSA (Sensor, Observation, Sample, and Actuator) v2017"@en ;
+  prof:hasRole role:vocabulary ;
+  prof:hasArtifact <http://localhost:4200/api/ontology/-/version/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b/export?format=turtle> .
+
+<http://localhost:4200/api/ontology/-/version/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b/export?format=turtle> a foaf:Document .
+<http://localhost:4200/id/specification/sosa/2017/distributions/ontology-rdf>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b/export?format=rdfxml> ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_XML> ;
+  dcat:downloadURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b/export?format=rdfxml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/xml> ;
+  dcterms:title "Ontology distribution for SOSA (Sensor, Observation, Sample, and Actuator) v2017"@en ;
+  prof:hasRole role:vocabulary ;
+  prof:hasArtifact <http://localhost:4200/api/ontology/-/version/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b/export?format=rdfxml> .
+
+<http://localhost:4200/api/ontology/-/version/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b/export?format=rdfxml> a foaf:Document .
+<http://localhost:4200/spec-version-canvas-redirect/OntologyVersion_83031df2-d6e2-43f4-886f-22ca481eb13b> a foaf:Document .
+<http://localhost:4200/specification/sosa> a foaf:Document .
+<http://localhost:4200/id/specification/sth-greenhouse-bridge>
+  a dcat:Dataset ;
+  dcterms:description "Specification 'STH greenhouse bridge (with property typing)' of type Ontology"@en ;
+  dcterms:title "STH greenhouse bridge (with property typing)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:hasVersion <http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft> ;
+  dcterms:identifier "http://localhost:4200/id/specification/sth-greenhouse-bridge"@en ;
+  dcat:landingPage <http://localhost:4200/specification/sth-greenhouse-bridge> .
+
+<http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft>
+  a dcat:Dataset, dcterms:Standard, owl:Ontology ;
+  dcterms:description "Specification 'STH greenhouse bridge (with property typing)' of type Ontology"@en ;
+  dcterms:title "STH greenhouse bridge (with property typing) v0.2-draft"@en ;
+  dcat:distribution <http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft/distributions/ontology-ttl>, <http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft/distributions/ontology-rdf> ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831> ;
+  owl:versionInfo "0.2-draft (draft)" ;
+  dcterms:type <http://purl.org/adms/assettype/Ontology> ;
+  prof:hasResource <http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft/distributions/ontology-ttl>, <http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft/distributions/ontology-rdf> .
+
+<http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft/distributions/ontology-ttl>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831/export?format=turtle> ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831/export?format=turtle> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "Ontology distribution for STH greenhouse bridge (with property typing) v0.2-draft"@en ;
+  prof:hasRole role:vocabulary ;
+  prof:hasArtifact <http://localhost:4200/api/ontology/-/version/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831/export?format=turtle> .
+
+<http://localhost:4200/api/ontology/-/version/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831/export?format=turtle> a foaf:Document .
+<http://localhost:4200/id/specification/sth-greenhouse-bridge/0.2-draft/distributions/ontology-rdf>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831/export?format=rdfxml> ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_XML> ;
+  dcat:downloadURL <http://localhost:4200/api/ontology/-/version/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831/export?format=rdfxml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/xml> ;
+  dcterms:title "Ontology distribution for STH greenhouse bridge (with property typing) v0.2-draft"@en ;
+  prof:hasRole role:vocabulary ;
+  prof:hasArtifact <http://localhost:4200/api/ontology/-/version/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831/export?format=rdfxml> .
+
+<http://localhost:4200/api/ontology/-/version/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831/export?format=rdfxml> a foaf:Document .
+<http://localhost:4200/spec-version-canvas-redirect/OntologyVersion_802fb42c-6753-4fb1-848f-346ede68a831> a foaf:Document .
+<http://localhost:4200/specification/sth-greenhouse-bridge> a foaf:Document .
+<http://localhost:4200/project/fair2grow> a foaf:Document .
+<http://purl.org/adms/assettype/Mapping>
+  a skos:Concept ;
+  skos:prefLabel "Mapping"@en .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_c0647659-a58d-4e01-8dad-c572f9788516>
+  a dcterms:Standard, prof:Profile ;
+  dcterms:title "FAIR2Grow observed properties v0.1.0" ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_0e540e1e-a966-4517-a47f-95c0be12a03c>
+  a dcterms:Standard, prof:Profile ;
+  dcterms:title "SAREF4AGRI properties (derived codelist) v2.1.1" ;
+  dcterms:publisher <http://localhost:4200/id/group/fair2grow-partners> .
+
+sssom: a dcterms:Standard .
+<http://purl.org/adms/assettype/InformationExchangePackageDescription>
+  a skos:Concept ;
+  skos:prefLabel "Information Exchange Package Description"@en .
+
+<http://www.w3.org/2001/XMLSchema> a dcterms:Standard .
+<https://json-schema.org/draft/2020-12/schema> a dcterms:Standard .
+sh: a dcterms:Standard .
+<https://w3id.org/rml/> a dcterms:Standard .
+<http://purl.org/adms/assettype/Ontology>
+  a skos:Concept ;
+  skos:prefLabel "Ontology"@en .
+
+<http://localhost:4200/id/specification/saref-core/4.1.1>
+  a dcterms:Standard, owl:Ontology ;
+  dcterms:type <http://purl.org/adms/assettype/Ontology> ;
+  dcterms:title "SAREF core v4.1.1" .
+
+_:genid1
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "SSSOM mapping: FAIR2Grow observed properties to SAREF4AGRI properties (values) v0.1.0" ;
+  prof:hasRole role:mapping ;
+  prof:hasArtifact <http://localhost:4200/api/mapping/-/version/MappingVersion_185b8aa2-f84a-43cb-8242-b49a7d150bb2/export/sssom?format=ttl> ;
+  dcat:accessURL <http://localhost:4200/api/mapping/-/version/MappingVersion_185b8aa2-f84a-43cb-8242-b49a7d150bb2/export/sssom?format=ttl> ;
+  dcat:downloadURL <http://localhost:4200/api/mapping/-/version/MappingVersion_185b8aa2-f84a-43cb-8242-b49a7d150bb2/export/sssom?format=ttl> ;
+  dcterms:conformsTo sssom: ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+_:genid2
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "RML XML mapping for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0" ;
+  prof:hasRole role:mapping ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rml?format=ttl&queryLanguage=xml> ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rml?format=ttl&queryLanguage=xml> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rml?format=ttl&queryLanguage=xml> ;
+  dcterms:conformsTo <https://w3id.org/rml/> ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+_:genid3
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "RML JSON mapping for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0" ;
+  prof:hasRole role:mapping ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rml?format=ttl&queryLanguage=json> ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rml?format=ttl&queryLanguage=json> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rml?format=ttl&queryLanguage=json> ;
+  dcterms:conformsTo <https://w3id.org/rml/> ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+_:genid4
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "RDF example for FAIR2Grow: WUR Greenhouse Data Platform export v0.1.0" ;
+  prof:hasRole role:example ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rdf/example?format=ttl> ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rdf/example?format=ttl> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_b1719a16-f90e-46bc-abfd-f47d074f0176/rdf/example?format=ttl> ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+_:genid5
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "RML XML mapping for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0" ;
+  prof:hasRole role:mapping ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rml?format=ttl&queryLanguage=xml> ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rml?format=ttl&queryLanguage=xml> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rml?format=ttl&queryLanguage=xml> ;
+  dcterms:conformsTo <https://w3id.org/rml/> ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+_:genid6
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "RML JSON mapping for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0" ;
+  prof:hasRole role:mapping ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rml?format=ttl&queryLanguage=json> ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rml?format=ttl&queryLanguage=json> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rml?format=ttl&queryLanguage=json> ;
+  dcterms:conformsTo <https://w3id.org/rml/> ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+_:genid7
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "RDF example for FAIR2Grow on SAREF4AGRI (derived from ontologies) v0.1.0" ;
+  prof:hasRole role:example ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rdf/example?format=ttl> ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rdf/example?format=ttl> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_d128ad46-516a-45e0-9d37-1eae505462b2/rdf/example?format=ttl> ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+_:genid8
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "SSSOM mapping: FAIR2Grow WUR model to SAREF4AGRI model (elements) v0.1.0" ;
+  prof:hasRole role:mapping ;
+  prof:hasArtifact <http://localhost:4200/api/mapping/-/version/MappingVersion_bbbb09c3-3e43-43c8-9f68-ab2cf0656a47/export/sssom?format=ttl> ;
+  dcat:accessURL <http://localhost:4200/api/mapping/-/version/MappingVersion_bbbb09c3-3e43-43c8-9f68-ab2cf0656a47/export/sssom?format=ttl> ;
+  dcat:downloadURL <http://localhost:4200/api/mapping/-/version/MappingVersion_bbbb09c3-3e43-43c8-9f68-ab2cf0656a47/export/sssom?format=ttl> ;
+  dcterms:conformsTo sssom: ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+
+#################################################################
+#  Coverage, proposed extension (see fuse4ccam.ttl). Hand-written,
+#  not part of the STH export.
+#################################################################
+
+@prefix dqv:  <http://www.w3.org/ns/dqv#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix vhx:  <urn:vocabhub:ext:> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+vhx:profileCoverage
+    a dqv:Metric ;
+    skos:prefLabel "Profile coverage"@en ;
+    skos:definition "Share of the target profile's properties an alignment can populate from the source profile."@en ;
+    dqv:inDimension vhx:completeness ;
+    dqv:expectedDataType xsd:decimal .
+
+vhx:completeness
+    a dqv:Dimension ;
+    skos:prefLabel "Completeness"@en .
+
+# 15 of the 18 elements below the root of the derived model are mapped. Not populated from the
+# WUR export: studiesCrop, samplingInterval and qualityFlag.
+<http://localhost:4200/id/specification/fair2grow-to-saref4agri-elements/0.1.0>
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.83"^^xsd:decimal
+    ] .
+
+# 12 of the 122 SAREF4AGRI properties are a target of a FAIR2Grow observed property. Most
+# SAREF4AGRI properties are about crops and greenhouse construction, not climate.
+<http://localhost:4200/id/specification/fair2grow-to-saref4agri-properties/0.1.0>
+    dqv:hasQualityMeasurement [
+        a dqv:QualityMeasurement ;
+        dqv:isMeasurementOf vhx:profileCoverage ;
+        dqv:value "0.10"^^xsd:decimal
+    ] .
