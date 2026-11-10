@@ -207,8 +207,9 @@ datasets, each saying which alignment reached it. The raw logger stream stays ou
 alignments are never chained.
 
 FAIR2Grow (`fair2grow`) is the bottom-up case of DigiLab TK. WUR publishes the logical model
-of its greenhouse data export in Semantic Treehouse, and its record names that model in
-`dct:conformsTo`. The hub holds a real STH catalogue export, with that model, a model derived
+of its greenhouse data in Semantic Treehouse, and its record names that model in the dataset's
+`dct:conformsTo`. The distribution's `dct:conformsTo` names the Frictionless binding: how the
+CSV export packages that model. The hub holds a real STH catalogue export, with that model, a model derived
 from SAREF4AGRI and SOSA, and the alignments between them. Only their coverage is hand-written.
 Switch its hub on, browse as NLR and search for data conforming to "FAIR2Grow on SAREF4AGRI".
 Without alignments, only TNO's illustrative dataset matches. With alignments, WUR's export

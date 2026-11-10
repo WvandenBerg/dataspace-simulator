@@ -181,7 +181,7 @@
           ],
           "dct:conformsTo": [
             {
-              "iri": "http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.1.0"
+              "iri": "http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.2.0"
             }
           ],
           "dcat:distribution": [
@@ -190,7 +190,7 @@
               "fields": {
                 "dct:title": [
                   {
-                    "value": "Time series, one CSV file per datastream",
+                    "value": "Time series, Frictionless Data Package with one CSV file per datastream",
                     "lang": "en"
                   }
                 ],
@@ -207,6 +207,11 @@
                 "dct:license": [
                   {
                     "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                  }
+                ],
+                "dct:conformsTo": [
+                  {
+                    "iri": "https://data.sim.local/wur/schemas/greenhouse-data-platform-export/0.2.0/datapackage.json"
                   }
                 ]
               }
