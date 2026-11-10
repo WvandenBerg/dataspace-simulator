@@ -1,7 +1,7 @@
 # Vocabulary Hub contents for the fair2grow scenario.
 #
 # A Semantic Treehouse catalogue export (project "DigiLab TK FAIR2Grow") of a local STH,
-# produced by sth-greenhouse-bundle/fair2grow/tools/sth_publish.py. It holds the WUR logical
+# produced by fair2grow-vocabulary-hub/fair2grow/tools/sth_publish.py. It holds the WUR logical
 # model (MIM level 3) of the Greenhouse Data Platform, the message model derived from SAREF4AGRI
 # and SOSA, the two codelists, the five ontologies, and the element and value alignments.
 # The STH export is unedited. Two things STH cannot export are appended by hand at the end:
@@ -866,7 +866,7 @@ vhx:completeness
     ] .
 
 # The Frictionless binding (MIM level 4) of the WUR logical model: a Data Package descriptor whose
-# Table Schemas link every column to an element of the logical model (sth-greenhouse-bundle/fair2grow/
+# Table Schemas link every column to an element of the logical model (fair2grow-vocabulary-hub/fair2grow/
 # binding). STH cannot host it, so it is a resource of the WUR profile described here. Its location
 # is illustrative: WUR would publish it. Distributions of WUR exports name it in dct:conformsTo.
 <https://data.sim.local/wur/schemas/greenhouse-data-platform-export/0.3.0/datapackage.json>
