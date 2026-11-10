@@ -213,7 +213,7 @@ CSV export packages that model. The hub holds a real STH catalogue export, with 
 from SAREF4AGRI and SOSA, and the alignments between them. Only their coverage is hand-written.
 Switch its hub on, browse as NLR and search for data conforming to "FAIR2Grow on SAREF4AGRI".
 Without alignments, only TNO's illustrative dataset matches. With alignments, WUR's export
-joins at 83% coverage. The 4TU publication of the same experiment never appears, because its
+joins at 78% coverage. The 4TU publication of the same experiment never appears, because its
 record names no data standard. The scenario's subset is `catalog-profiles/fair2grow/vocabulary-subset.ttl`,
 generated from `fair2grow.json`.
 

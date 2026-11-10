@@ -181,7 +181,7 @@
           ],
           "dct:conformsTo": [
             {
-              "iri": "http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.2.0"
+              "iri": "http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.3.0"
             }
           ],
           "dcat:distribution": [
@@ -211,7 +211,7 @@
                 ],
                 "dct:conformsTo": [
                   {
-                    "iri": "https://data.sim.local/wur/schemas/greenhouse-data-platform-export/0.2.0/datapackage.json"
+                    "iri": "https://data.sim.local/wur/schemas/greenhouse-data-platform-export/0.3.0/datapackage.json"
                   }
                 ]
               }
