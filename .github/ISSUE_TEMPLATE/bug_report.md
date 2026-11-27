@@ -15,9 +15,10 @@ assignees: ""
 <!-- Describe what must/should happen instead. -->
 
 ### Context information
-* Version info: e.g. v2.17.0
-* Environment: e.g. 'SETU staging'
-* Resource links: e.g. to message model identifier
+* Commit: e.g. f57f353 (`git rev-parse --short HEAD`)
+* Scenario and dataspace: e.g. 'pliades-uc4', dataspace 'PLIADES UC4'
+* Dataspace services: e.g. Vocabulary Service on, Metadata Validator off
+* Resources involved: e.g. participant, catalog entry, hub profile IRI
 
 ### Steps to reproduce
 <!-- Describe how one can reproduce the issue - this is very important. Please use an ordered list. -->
