@@ -206,6 +206,17 @@ SensorThings data: with alignments, the search also returns lab, tower, air qual
 datasets, each saying which alignment reached it. The raw logger stream stays out, because
 alignments are never chained.
 
+FAIR2Grow (`fair2grow`) is the bottom-up case of DigiLab TK. WUR publishes the logical model
+of its greenhouse data in Semantic Treehouse, and its record names that model in the dataset's
+`dct:conformsTo`. The distribution's `dct:conformsTo` names the Frictionless binding: how the
+CSV export packages that model. The hub holds a real STH catalogue export, with that model, a model derived
+from SAREF4AGRI and SOSA, and the alignments between them. Only their coverage is hand-written.
+Switch its hub on, browse as NLR and search for data conforming to "FAIR2Grow on SAREF4AGRI".
+Without alignments, only TNO's illustrative dataset matches. With alignments, WUR's export
+joins at 78% coverage. The 4TU publication of the same experiment never appears, because its
+record names no data standard. The scenario's subset is `catalog-profiles/fair2grow/vocabulary-subset.ttl`,
+generated from `fair2grow.json`.
+
 PLIADES UC4 (`pliades-uc4`) is about finding vehicle data in the shape a consumer can use. It
 uses mobilityDCAT-AP 3.0.0 with its own subset, `vocabulary-subset-pliades-uc4.ttl`, generated
 from `pliades-uc4.json`. Switch its hub on, browse as AVL and search for data conforming to

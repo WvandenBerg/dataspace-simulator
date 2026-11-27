@@ -1,0 +1,455 @@
+{
+  "id": "fair2grow",
+  "name": "DigiLab TK: FAIR2Grow",
+  "description": "Wageningen University & Research, TNO and NLR from the FAIR2Grow use case, sharing greenhouse experiment data. WUR publishes the logical model of its Greenhouse Data Platform export in Semantic Treehouse (bottom-up), and its record names that model in dct:conformsTo. The Vocabulary Hub holds a Semantic Treehouse export with the WUR model, a model derived from SAREF4AGRI and SOSA, and the alignments between them. Records follow DCAT-AP 3.0.1. The WUR export and the 4TU publication are real; the TNO dataset is illustrative. Licence of the export assumed from the 4TU publication (CC BY 4.0), to be confirmed by WUR. Access policies are not modelled.",
+  "catalogExport": "catalog-exports/fair2grow.ttl",
+  "metadataLanguage": "en",
+  "catalogProfiles": [
+    {
+      "profileId": "urn:vocabhub:profile:dcat-ap-3.0.1",
+      "files": [
+        "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_shapes.ttl",
+        "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_range.ttl",
+        "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_deprecateduris.ttl",
+        "catalog-profiles/fair2grow/vocabulary-subset.ttl"
+      ],
+      "dataStandardPath": [
+        "http://purl.org/dc/terms/conformsTo"
+      ]
+    }
+  ],
+  "participants": [
+    {
+      "id": "wur",
+      "name": "Wageningen University & Research",
+      "bpn": "did:web:wur.nl",
+      "location": "Bleiswijk, Netherlands",
+      "domain": "Research",
+      "roles": {
+        "provider": true,
+        "consumer": true
+      },
+      "credentials": {
+        "industry": "agriculture",
+        "orgRole": "research institute"
+      },
+      "ontologies": [
+        "WUR Greenhouse Data Platform",
+        "Frictionless Data Package"
+      ],
+      "dataCategories": [
+        "Greenhouse climate",
+        "Crop experiments"
+      ],
+      "formats": [
+        "CSV",
+        "JSON"
+      ],
+      "tags": [
+        "Use case lead",
+        "Experimental greenhouses"
+      ]
+    },
+    {
+      "id": "tno",
+      "name": "TNO",
+      "bpn": "did:web:tno.nl",
+      "location": "Delft, Netherlands",
+      "domain": "Research",
+      "roles": {
+        "provider": true,
+        "consumer": true
+      },
+      "credentials": {
+        "industry": "agriculture",
+        "orgRole": "research institute"
+      },
+      "ontologies": [
+        "SAREF4AGRI",
+        "SOSA/SSN",
+        "Common Greenhouse Ontology"
+      ],
+      "dataCategories": [
+        "Greenhouse simulation",
+        "Greenhouse assets"
+      ],
+      "formats": [
+        "CSV",
+        "JSON",
+        "RDF"
+      ],
+      "tags": [
+        "Vocabulary Hub",
+        "Hortivation Hub"
+      ]
+    },
+    {
+      "id": "nlr",
+      "name": "Royal NLR",
+      "bpn": "did:web:nlr.nl",
+      "location": "Amsterdam, Netherlands",
+      "domain": "Research",
+      "roles": {
+        "provider": false,
+        "consumer": true
+      },
+      "credentials": {
+        "industry": "aerospace",
+        "orgRole": "research institute"
+      },
+      "ontologies": [],
+      "dataCategories": [
+        "Space farming"
+      ],
+      "formats": [
+        "CSV"
+      ],
+      "tags": [
+        "Growth chambers"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "wur-agc4-reference-306",
+      "ownerId": "wur",
+      "name": "Autonomous Greenhouse Challenge 4: Reference compartment and weather",
+      "description": "Climate, control and weather time series of the Reference compartment (306) of the 4th Autonomous Greenhouse Challenge, a dwarf tomato cultivation in Bleiswijk, September to November 2024. Exported from the WUR Greenhouse Data Platform: 55 datastreams, one CSV file each (DateTime, value), mostly at 5-minute intervals, with a Frictionless data package and a data dictionary.",
+      "fileName": "agc4-reference-306.zip",
+      "policyId": "sys-open",
+      "dcatFields": {
+        "record": {
+          "dcat:keyword": [
+            {
+              "value": "greenhouse",
+              "lang": "en"
+            },
+            {
+              "value": "autonomous greenhouse",
+              "lang": "en"
+            },
+            {
+              "value": "dwarf tomato",
+              "lang": "en"
+            },
+            {
+              "value": "greenhouse climate",
+              "lang": "en"
+            },
+            {
+              "value": "setpoints",
+              "lang": "en"
+            },
+            {
+              "value": "time series",
+              "lang": "en"
+            }
+          ],
+          "dcat:theme": [
+            {
+              "iri": "http://publications.europa.eu/resource/authority/data-theme/AGRI"
+            }
+          ],
+          "dct:accrualPeriodicity": [
+            {
+              "iri": "http://publications.europa.eu/resource/authority/frequency/NEVER"
+            }
+          ],
+          "dct:spatial": [
+            {
+              "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+            }
+          ],
+          "dct:temporal": [
+            {
+              "type": "dct:PeriodOfTime",
+              "fields": {
+                "dcat:startDate": [
+                  {
+                    "value": "2024-09-02",
+                    "datatype": "xsd:date"
+                  }
+                ],
+                "dcat:endDate": [
+                  {
+                    "value": "2024-11-22",
+                    "datatype": "xsd:date"
+                  }
+                ]
+              }
+            }
+          ],
+          "dct:conformsTo": [
+            {
+              "iri": "http://localhost:4200/id/specification/fair2grow-greenhouse-data-platform/0.3.0"
+            }
+          ],
+          "dcat:distribution": [
+            {
+              "type": "dcat:Distribution",
+              "fields": {
+                "dct:title": [
+                  {
+                    "value": "Time series, Frictionless Data Package with one CSV file per datastream",
+                    "lang": "en"
+                  }
+                ],
+                "dcat:accessURL": [
+                  {
+                    "iri": "https://data.sim.local/wur/agc4-reference-306.zip"
+                  }
+                ],
+                "dct:format": [
+                  {
+                    "iri": "http://publications.europa.eu/resource/authority/file-type/ZIP"
+                  }
+                ],
+                "dct:license": [
+                  {
+                    "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                  }
+                ],
+                "dct:conformsTo": [
+                  {
+                    "iri": "https://data.sim.local/wur/schemas/greenhouse-data-platform-export/0.3.0/datapackage.json"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "dcat:Distribution",
+              "fields": {
+                "dct:title": [
+                  {
+                    "value": "Data package description (Frictionless)",
+                    "lang": "en"
+                  }
+                ],
+                "dcat:accessURL": [
+                  {
+                    "iri": "https://data.sim.local/wur/agc4-reference-306/datapackage.json"
+                  }
+                ],
+                "dct:format": [
+                  {
+                    "iri": "http://publications.europa.eu/resource/authority/file-type/JSON"
+                  }
+                ],
+                "dct:license": [
+                  {
+                    "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "content": {
+        "cultivation": "autonomous_greenhouse_challenge4",
+        "components": [
+          "reference/compartment_306",
+          "weather",
+          "weather_forecast"
+        ],
+        "datastreams": 55,
+        "intervalMinutes": 5,
+        "columns": [
+          "DateTime",
+          "value"
+        ]
+      }
+    },
+    {
+      "assetId": "wur-agc4-4tu",
+      "ownerId": "wur",
+      "name": "4th Autonomous Greenhouse Challenge: dwarf tomato time series and images (4TU.ResearchData)",
+      "description": "The published dataset of the same experiment, all six compartments: 5-minute climate, control and weather data, plant measurements and canopy images. DOI 10.4121/fa102772-32db-4b30-bace-12f2016722ce.v1. Its record names no data standard: there is no semantic profile for this layout.",
+      "fileName": "Timeseries.zip",
+      "policyId": "sys-open",
+      "dcatFields": {
+        "record": {
+          "dcat:keyword": [
+            {
+              "value": "Autonomous Greenhouse Challenge",
+              "lang": "en"
+            },
+            {
+              "value": "dwarf tomato",
+              "lang": "en"
+            },
+            {
+              "value": "greenhouse control",
+              "lang": "en"
+            },
+            {
+              "value": "sensors",
+              "lang": "en"
+            },
+            {
+              "value": "computer vision",
+              "lang": "en"
+            }
+          ],
+          "dcat:theme": [
+            {
+              "iri": "http://publications.europa.eu/resource/authority/data-theme/AGRI"
+            }
+          ],
+          "dct:accrualPeriodicity": [
+            {
+              "iri": "http://publications.europa.eu/resource/authority/frequency/NEVER"
+            }
+          ],
+          "dct:spatial": [
+            {
+              "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+            }
+          ],
+          "dct:temporal": [
+            {
+              "type": "dct:PeriodOfTime",
+              "fields": {
+                "dcat:startDate": [
+                  {
+                    "value": "2024-09-02",
+                    "datatype": "xsd:date"
+                  }
+                ],
+                "dcat:endDate": [
+                  {
+                    "value": "2024-11-22",
+                    "datatype": "xsd:date"
+                  }
+                ]
+              }
+            }
+          ],
+          "dcat:distribution": [
+            {
+              "type": "dcat:Distribution",
+              "fields": {
+                "dct:title": [
+                  {
+                    "value": "Time series and canopy images",
+                    "lang": "en"
+                  }
+                ],
+                "dcat:accessURL": [
+                  {
+                    "iri": "https://data.4tu.nl/datasets/fa102772-32db-4b30-bace-12f2016722ce/1"
+                  }
+                ],
+                "dct:format": [
+                  {
+                    "iri": "http://publications.europa.eu/resource/authority/file-type/ZIP"
+                  }
+                ],
+                "dct:license": [
+                  {
+                    "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "content": {
+        "compartments": 6,
+        "intervalMinutes": 5,
+        "images": "RGBD canopy camera, 4 times a day"
+      }
+    },
+    {
+      "assetId": "tno-greenhouse-climate-model-input",
+      "ownerId": "tno",
+      "name": "Greenhouse climate observations for simulation (SAREF4AGRI)",
+      "description": "Illustrative. Greenhouse climate time series as input for greenhouse simulation models, annotated per observation collection with SAREF4AGRI properties and SOSA. Conforms to the message model derived from SAREF4AGRI that the Vocabulary Hub aligns to the WUR model.",
+      "fileName": "greenhouse-climate-observations.json",
+      "policyId": "sys-open",
+      "dcatFields": {
+        "record": {
+          "dcat:keyword": [
+            {
+              "value": "greenhouse",
+              "lang": "en"
+            },
+            {
+              "value": "SAREF4AGRI",
+              "lang": "en"
+            },
+            {
+              "value": "SOSA",
+              "lang": "en"
+            },
+            {
+              "value": "simulation",
+              "lang": "en"
+            },
+            {
+              "value": "digital twin",
+              "lang": "en"
+            }
+          ],
+          "dcat:theme": [
+            {
+              "iri": "http://publications.europa.eu/resource/authority/data-theme/AGRI"
+            }
+          ],
+          "dct:accrualPeriodicity": [
+            {
+              "iri": "http://publications.europa.eu/resource/authority/frequency/IRREG"
+            }
+          ],
+          "dct:spatial": [
+            {
+              "iri": "http://publications.europa.eu/resource/authority/country/NLD"
+            }
+          ],
+          "dct:conformsTo": [
+            {
+              "iri": "http://localhost:4200/id/specification/fair2grow-saref4agri/0.1.0"
+            }
+          ],
+          "dcat:distribution": [
+            {
+              "type": "dcat:Distribution",
+              "fields": {
+                "dct:title": [
+                  {
+                    "value": "Observation collections, JSON",
+                    "lang": "en"
+                  }
+                ],
+                "dcat:accessURL": [
+                  {
+                    "iri": "https://data.sim.local/tno/greenhouse-climate-observations.json"
+                  }
+                ],
+                "dct:format": [
+                  {
+                    "iri": "http://publications.europa.eu/resource/authority/file-type/JSON"
+                  }
+                ],
+                "dct:license": [
+                  {
+                    "iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "content": {
+        "observationCollections": [
+          "AirTemperature",
+          "CO2Level",
+          "WindowPosition"
+        ],
+        "illustrative": true
+      }
+    }
+  ]
+}
