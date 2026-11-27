@@ -200,6 +200,10 @@ docker run --rm -v "$PWD":/w --entrypoint sh $IMG -c \
   > $DIR/vocabulary-subset.ttl
 ```
 
+FUSE4CCAM UC3 (`fuse4ccam-uc3`) covers traffic management at the Helmond and Hamburg pilot
+sites with the same profile, and has its own subset, `vocabulary-subset-fuse4ccam-uc3.ttl`.
+Regenerate it the same way, from `fuse4ccam-uc3.json`.
+
 The DigiLab scenario shows the same discovery outside mobility. Its records follow DCAT-AP
 3.0.1 and name their data standard in `dct:conformsTo`. Switch its hub on and search for OGC
 SensorThings data: with alignments, the search also returns lab, tower, air quality and flux

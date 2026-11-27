@@ -1,0 +1,527 @@
+# Vocabulary Hub contents for the fuse4ccam-uc3 scenario.
+#
+# Same shape as catalog-exports/fuse4ccam.ttl, which follows Semantic
+# Treehouse's catalogue export v2. Holds the data standards the UC3
+# distributions conform to, and the C-ITS code lists that SPATEM uses.
+# No alignments: the scenario is about finding C-ITS and traffic data,
+# not translating between standards.
+
+@prefix adms:    <http://www.w3.org/ns/adms#> .
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix prof:    <http://www.w3.org/ns/dx/prof/> .
+@prefix role:    <http://www.w3.org/ns/dx/prof/role/> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+
+
+#################################################################
+#  Catalogue
+#################################################################
+
+<urn:vocabhub:catalog:fuse4ccam-uc3>
+    a dcat:Catalog, adms:AssetRepository ;
+    dcterms:title "FUSE4CCAM UC3 Vocabulary Hub"@en ;
+    dcterms:description "Schema registry for the UC3 traffic management data space. Holds the data standards that the Helmond and Hamburg datasets are written in, and the C-ITS code lists SPATEM uses."@en ;
+    dcterms:publisher <urn:vocabhub:agent:fuse4ccam> ;
+    dcat:landingPage <https://www.semantic-treehouse.nl/> ;
+    dcat:resource
+        <http://localhost:4200/id/specification/spatem/2.3.1> ,
+        <http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f> ,
+        <http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25> ,
+        <http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9> ,
+        <urn:vocabhub:profile:etsi-ts-103-301-2.3.1> ,
+        <urn:vocabhub:profile:etsi-en-302-637-2-1.4.1> ,
+        <urn:vocabhub:profile:etsi-en-302-637-3-1.3.1> ,
+        <urn:vocabhub:profile:etsi-ts-103-324-2.1.1> ,
+        <urn:vocabhub:profile:datex-ii-3.3> ,
+        <urn:vocabhub:profile:ocit-c> ,
+        <urn:vocabhub:profile:ogc-sensorthings-1.1> ,
+        <urn:vocabhub:profile:asam-opendrive-1.7> .
+
+
+#################################################################
+#  Publishers
+#################################################################
+
+<urn:vocabhub:agent:fuse4ccam>    a foaf:Agent ; foaf:name "FUSE4CCAM consortium" .
+<urn:vocabhub:agent:etsi>         a foaf:Agent ; foaf:name "ETSI TC ITS" .
+<urn:vocabhub:agent:datex>        a foaf:Agent ; foaf:name "DATEX II / CEN TC 278" .
+<urn:vocabhub:agent:ocit>         a foaf:Agent ; foaf:name "OCIT Developer Group" .
+<urn:vocabhub:agent:ogc>          a foaf:Agent ; foaf:name "Open Geospatial Consortium" .
+<urn:vocabhub:agent:asam>         a foaf:Agent ; foaf:name "ASAM e.V." .
+
+
+#################################################################
+#  C-ITS messages
+#################################################################
+
+<urn:vocabhub:profile:etsi-ts-103-301-2.3.1>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ETSI TS 103 301 2.3.1 (SPATEM, MAPEM, SREM, SSEM)"@en ;
+    dcterms:description "C-ITS infrastructure messages: signal phase and timing, intersection topology, and signal priority requests and responses. Payloads follow ISO TS 19091."@en ;
+    dcterms:publisher <urn:vocabhub:agent:etsi> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its> ;
+    owl:versionInfo "2.3.1" ;
+    prof:hasResource _:r-ts103301-schema ;
+    dcat:distribution _:r-ts103301-schema .
+
+_:r-ts103301-schema
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:schema ;
+    prof:hasArtifact <https://forge.etsi.org/rep/ITS/asn1/is_ts103301> ;
+    dcat:accessURL <https://forge.etsi.org/rep/ITS/asn1/is_ts103301> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:etsi-en-302-637-2-1.4.1>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ETSI EN 302 637-2 1.4.1 (CAM)"@en ;
+    dcterms:description "Cooperative awareness messages: position, speed and heading broadcast by vehicles."@en ;
+    dcterms:publisher <urn:vocabhub:agent:etsi> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its> ;
+    owl:versionInfo "1.4.1" ;
+    prof:hasResource _:r-cam-schema ;
+    dcat:distribution _:r-cam-schema .
+
+_:r-cam-schema
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:schema ;
+    prof:hasArtifact <https://forge.etsi.org/rep/ITS/asn1/cam_en302637_2> ;
+    dcat:accessURL <https://forge.etsi.org/rep/ITS/asn1/cam_en302637_2> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:etsi-en-302-637-3-1.3.1>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ETSI EN 302 637-3 1.3.1 (DENM)"@en ;
+    dcterms:description "Decentralized environmental notification messages: warnings about events such as road works, hazards and approaching emergency vehicles."@en ;
+    dcterms:publisher <urn:vocabhub:agent:etsi> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its> ;
+    owl:versionInfo "1.3.1" ;
+    prof:hasResource _:r-denm-schema ;
+    dcat:distribution _:r-denm-schema .
+
+_:r-denm-schema
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:schema ;
+    prof:hasArtifact <https://forge.etsi.org/rep/ITS/asn1/denm_en302637_3> ;
+    dcat:accessURL <https://forge.etsi.org/rep/ITS/asn1/denm_en302637_3> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:etsi-ts-103-324-2.1.1>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ETSI TS 103 324 2.1.1 (CPM)"@en ;
+    dcterms:description "Collective perception messages: objects detected by vehicles or roadside sensors, shared with others."@en ;
+    dcterms:publisher <urn:vocabhub:agent:etsi> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its> ;
+    owl:versionInfo "2.1.1" ;
+    prof:hasResource _:r-cpm-schema ;
+    dcat:distribution _:r-cpm-schema .
+
+_:r-cpm-schema
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:schema ;
+    prof:hasArtifact <https://forge.etsi.org/rep/ITS/asn1/cpm_ts103324> ;
+    dcat:accessURL <https://forge.etsi.org/rep/ITS/asn1/cpm_ts103324> ;
+    dcterms:format "text/html" .
+
+
+#################################################################
+#  Traffic data exchange
+#################################################################
+
+<urn:vocabhub:profile:datex-ii-3.3>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "DATEX II 3.3"@en ;
+    dcterms:description "European exchange standard for traffic and travel information, such as measured traffic data and situations."@en ;
+    dcterms:publisher <urn:vocabhub:agent:datex> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/datex-II> ;
+    owl:versionInfo "3.3" ;
+    prof:hasResource _:r-datex-spec ;
+    dcat:distribution _:r-datex-spec .
+
+_:r-datex-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://docs.datex2.eu/downloads/modelv33/> ;
+    dcat:accessURL <https://docs.datex2.eu/downloads/modelv33/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:ocit-c>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "OCIT-C"@en ;
+    dcterms:description "Open communication interface between central traffic computers and other centres, used for traffic controller data in Germany."@en ;
+    dcterms:publisher <urn:vocabhub:agent:ocit> ;
+    dcterms:isVersionOf <https://w3id.org/mobilitydcat-ap/mobility-data-standard/ocit-c> ;
+    prof:hasResource _:r-ocit-spec ;
+    dcat:distribution _:r-ocit-spec .
+
+_:r-ocit-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.ocit.org/> ;
+    dcat:accessURL <https://www.ocit.org/> ;
+    dcterms:format "text/html" .
+
+
+<urn:vocabhub:profile:ogc-sensorthings-1.1>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "OGC SensorThings API 1.1"@en ;
+    dcterms:description "Web API and data model for sensor observations, used by Hamburg's Urban Data Platform."@en ;
+    dcterms:publisher <urn:vocabhub:agent:ogc> ;
+    owl:versionInfo "1.1" ;
+    prof:hasResource _:r-sta-spec ;
+    dcat:distribution _:r-sta-spec .
+
+_:r-sta-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://docs.ogc.org/is/18-088/18-088.html> ;
+    dcat:accessURL <https://docs.ogc.org/is/18-088/18-088.html> ;
+    dcterms:format "text/html" .
+
+
+#################################################################
+#  Road network
+#################################################################
+
+<urn:vocabhub:profile:asam-opendrive-1.7>
+    a adms:Asset, dcterms:Standard, prof:Profile, dcat:Dataset ;
+    adms:assetType <http://purl.org/adms/assettype/Ontology> ;
+    dcterms:title "ASAM OpenDRIVE 1.7"@en ;
+    dcterms:description "Logical road network description: geometry, lanes, junctions, signals."@en ;
+    dcterms:publisher <urn:vocabhub:agent:asam> ;
+    owl:versionInfo "1.7" ;
+    prof:hasResource _:r-opendrive-spec ;
+    dcat:distribution _:r-opendrive-spec .
+
+_:r-opendrive-spec
+    a adms:AssetDistribution, dcat:Distribution, prof:ResourceDescriptor ;
+    prof:hasRole role:specification ;
+    prof:hasArtifact <https://www.asam.net/standards/detail/opendrive/> ;
+    dcat:accessURL <https://www.asam.net/standards/detail/opendrive/> ;
+    dcterms:format "text/html" .
+
+
+#################################################################
+#  SPATEM and its C-ITS code lists, from Semantic Treehouse
+#
+#  Excerpt of the export of project "FUSE4CCAM kick-off demo" from a
+#  local STH instance (localhost:4200, 2026-11-05), so these IRIs only
+#  resolve there. Since STH epic &115 a spec version is named by its
+#  slug and version number, so the SPATEM IRIs survive a new import as
+#  long as the slug stays; its download URLs still carry database ids.
+#  Code list versions are still named by their database id, as
+#  CodelistVersion::getUri bypasses the permalink.
+#  Left out: the STH environment and project catalogues. Only
+#  prof:isProfileOf is added here; the export does not state it.
+#################################################################
+
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+
+<http://localhost:4200/id/specification/spatem/2.3.1>
+  prof:isProfileOf <urn:vocabhub:profile:etsi-ts-103-301-2.3.1> .
+
+<http://localhost:4200/id/group/fuse4ccam-consortium-partners>
+  foaf:name "FUSE4CCAM consortium partners"@en ;
+  a foaf:Agent .
+
+<http://localhost:4200/id/specification/advisoryspeedtype>
+  a dcat:Dataset ;
+  dcterms:description "What an advised approach speed in a SPATEM is for, such as a green wave or eco-driving."@en ;
+  dcterms:title "Advisory speed type (C-ITS)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fuse4ccam-consortium-partners> ;
+  dcterms:hasVersion <http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f> ;
+  dcterms:identifier "http://localhost:4200/id/specification/advisoryspeedtype"@en ;
+  dcat:landingPage <http://localhost:4200/specification/advisoryspeedtype> .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f>
+  a dcat:Dataset ;
+  dcterms:description "What an advised approach speed in a SPATEM is for, such as a green wave or eco-driving."@en ;
+  dcterms:title "Advisory speed type (C-ITS) v2.3.1"@en ;
+  dcat:distribution <http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/distributions/codelist-skos-ttl>, <http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/distributions/codelist-spreadsheet> ;
+  dcterms:publisher <http://localhost:4200/id/group/fuse4ccam-consortium-partners> ;
+  dcterms:identifier "http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f> ;
+  owl:versionInfo "2.3.1" .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/distributions/codelist-skos-ttl>
+  a dcat:Distribution ;
+  dcat:accessURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/export/skos?format=ttl> ;
+  dcterms:description "Distribution of type SKOS Codelist (Turtle syntax) for STH Codelist Advisory speed type (C-ITS) v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/export/skos?format=ttl> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "SKOS TTL distribution for Advisory speed type (C-ITS) v2.3.1"@en .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/export/skos?format=ttl> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/text/turtle> a dcterms:MediaType, dcterms:MediaTypeOrExtent .
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/distributions/codelist-spreadsheet>
+  a dcat:Distribution ;
+  dcat:accessURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/export/spreadsheet> ;
+  dcterms:description "Distribution of type spreadsheet (Office Open XML format, .xlsx file) for codelist Advisory speed type (C-ITS) v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/XLSX> ;
+  dcat:downloadURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/export/spreadsheet> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/vnd.ms-excel> ;
+  dcterms:title "Spreadsheet distribution for Advisory speed type (C-ITS) v2.3.1"@en .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f/export/spreadsheet> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/XLSX> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/application/vnd.ms-excel> a dcterms:MediaType .
+<http://localhost:4200/spec-version-canvas-redirect/CodelistVersion_c907bae5-296c-475f-b6ce-8dc9cad0d58f> a foaf:Document .
+<http://localhost:4200/specification/advisoryspeedtype> a foaf:Document .
+<http://localhost:4200/id/specification/intersectionstatusobject>
+  a dcat:Dataset ;
+  dcterms:description "Status flags of a traffic controller, such as signal priority active or fixed-time operation, as sent in a SPATEM."@en ;
+  dcterms:title "Traffic controller status (C-ITS)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fuse4ccam-consortium-partners> ;
+  dcterms:hasVersion <http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25> ;
+  dcterms:identifier "http://localhost:4200/id/specification/intersectionstatusobject"@en ;
+  dcat:landingPage <http://localhost:4200/specification/intersectionstatusobject> .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25>
+  a dcat:Dataset ;
+  dcterms:description "Status flags of a traffic controller, such as signal priority active or fixed-time operation, as sent in a SPATEM."@en ;
+  dcterms:title "Traffic controller status (C-ITS) v2.3.1"@en ;
+  dcat:distribution <http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/distributions/codelist-skos-ttl>, <http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/distributions/codelist-spreadsheet> ;
+  dcterms:publisher <http://localhost:4200/id/group/fuse4ccam-consortium-partners> ;
+  dcterms:identifier "http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25> ;
+  owl:versionInfo "2.3.1" .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/distributions/codelist-skos-ttl>
+  a dcat:Distribution ;
+  dcat:accessURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/export/skos?format=ttl> ;
+  dcterms:description "Distribution of type SKOS Codelist (Turtle syntax) for STH Codelist Traffic controller status (C-ITS) v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/export/skos?format=ttl> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "SKOS TTL distribution for Traffic controller status (C-ITS) v2.3.1"@en .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/export/skos?format=ttl> a foaf:Document .
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/distributions/codelist-spreadsheet>
+  a dcat:Distribution ;
+  dcat:accessURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/export/spreadsheet> ;
+  dcterms:description "Distribution of type spreadsheet (Office Open XML format, .xlsx file) for codelist Traffic controller status (C-ITS) v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/XLSX> ;
+  dcat:downloadURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/export/spreadsheet> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/vnd.ms-excel> ;
+  dcterms:title "Spreadsheet distribution for Traffic controller status (C-ITS) v2.3.1"@en .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25/export/spreadsheet> a foaf:Document .
+<http://localhost:4200/spec-version-canvas-redirect/CodelistVersion_99007a6b-8a05-4662-b8e1-aa39a680ff25> a foaf:Document .
+<http://localhost:4200/specification/intersectionstatusobject> a foaf:Document .
+<http://localhost:4200/id/specification/movementphasestate>
+  a dcat:Dataset ;
+  dcterms:description "The state of a signal group, such as red, protected green or flashing yellow, as sent in a SPATEM."@en ;
+  dcterms:title "Signal phase state (C-ITS)"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fuse4ccam-consortium-partners> ;
+  dcterms:hasVersion <http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9> ;
+  dcterms:identifier "http://localhost:4200/id/specification/movementphasestate"@en ;
+  dcat:landingPage <http://localhost:4200/specification/movementphasestate> .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9>
+  a dcat:Dataset ;
+  dcterms:description "The state of a signal group, such as red, protected green or flashing yellow, as sent in a SPATEM."@en ;
+  dcterms:title "Signal phase state (C-ITS) v2.3.1"@en ;
+  dcat:distribution <http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/distributions/codelist-skos-ttl>, <http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/distributions/codelist-spreadsheet> ;
+  dcterms:publisher <http://localhost:4200/id/group/fuse4ccam-consortium-partners> ;
+  dcterms:identifier "http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9> ;
+  owl:versionInfo "2.3.1" .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/distributions/codelist-skos-ttl>
+  a dcat:Distribution ;
+  dcat:accessURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/export/skos?format=ttl> ;
+  dcterms:description "Distribution of type SKOS Codelist (Turtle syntax) for STH Codelist Signal phase state (C-ITS) v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/export/skos?format=ttl> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "SKOS TTL distribution for Signal phase state (C-ITS) v2.3.1"@en .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/export/skos?format=ttl> a foaf:Document .
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/distributions/codelist-spreadsheet>
+  a dcat:Distribution ;
+  dcat:accessURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/export/spreadsheet> ;
+  dcterms:description "Distribution of type spreadsheet (Office Open XML format, .xlsx file) for codelist Signal phase state (C-ITS) v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/XLSX> ;
+  dcat:downloadURL <http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/export/spreadsheet> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/vnd.ms-excel> ;
+  dcterms:title "Spreadsheet distribution for Signal phase state (C-ITS) v2.3.1"@en .
+
+<http://localhost:4200/api/codelist/-/version/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9/export/spreadsheet> a foaf:Document .
+<http://localhost:4200/spec-version-canvas-redirect/CodelistVersion_e5ad21df-a39d-48c9-bc34-85918b2c15b9> a foaf:Document .
+<http://localhost:4200/specification/movementphasestate> a foaf:Document .
+<http://localhost:4200/id/specification/spatem>
+  a dcat:Dataset ;
+  dcterms:description """Signal phase and timing of one or more signalised intersections.
+
+Covers the SPAT data frame that ETSI TS 103 301 carries in a SPATEM, as defined in module ETSI-ITS-DSRC
+
+Written for a FUSE4CCAM demo, and regional extensions and SpeedConfidence are left out. Plus the ITS PDU header of the SPATEM is not modelled."""@en ;
+  dcterms:title "SPATEM"@en ;
+  dcterms:publisher <http://localhost:4200/id/group/fuse4ccam-consortium-partners> ;
+  dcterms:hasVersion <http://localhost:4200/id/specification/spatem/2.3.1> ;
+  dcterms:identifier "http://localhost:4200/id/specification/spatem"@en ;
+  dcat:landingPage <http://localhost:4200/specification/spatem> .
+
+<http://localhost:4200/id/specification/spatem/2.3.1>
+  a dcat:Dataset, dcterms:Standard, prof:Profile ;
+  dcterms:description """Signal phase and timing of one or more signalised intersections.
+
+Covers the SPAT data frame that ETSI TS 103 301 carries in a SPATEM, as defined in module ETSI-ITS-DSRC
+
+Written for a FUSE4CCAM demo, and regional extensions and SpeedConfidence are left out. Plus the ITS PDU header of the SPATEM is not modelled."""@en ;
+  dcterms:title "SPATEM v2.3.1"@en ;
+  dcat:distribution <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-xsd>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-json-schema-json>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-json-schema-yaml>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-oas-json>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-oas-yaml>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-rdf-shacl-ttl>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-spreadsheet>, _:genid1, _:genid2, _:genid3 ;
+  dcterms:publisher <http://localhost:4200/id/group/fuse4ccam-consortium-partners> ;
+  dcterms:identifier "http://localhost:4200/id/specification/spatem/2.3.1"@en ;
+  dcat:landingPage <http://localhost:4200/spec-version-canvas-redirect/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9> ;
+  owl:versionInfo "2.3.1 (Published)" ;
+  dcterms:type <http://purl.org/adms/assettype/InformationExchangePackageDescription> ;
+  prof:hasResource <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-xsd>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-json-schema-json>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-json-schema-yaml>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-oas-json>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-oas-yaml>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-rdf-shacl-ttl>, <http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-spreadsheet>, _:genid1, _:genid2, _:genid3 .
+
+<http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-xsd>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/xml/schema?style=doll> ;
+  dcterms:description "Distribution of type XSD for specification SPATEM v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/SCHEMA_XML> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/xml/schema?style=doll> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/xml> ;
+  dcterms:title "XSD schema distribution for SPATEM v2.3.1"@en ;
+  prof:hasRole role:schema ;
+  dcterms:conformsTo <http://www.w3.org/2001/XMLSchema> ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/xml/schema?style=doll> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/xml/schema?style=doll> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/SCHEMA_XML> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/application/xml> a dcterms:MediaType .
+<http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-json-schema-json>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/json/schema?format=json> ;
+  dcterms:description "Distribution of type JSON schema JSON for specification SPATEM v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/JSON> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/json/schema?format=json> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> ;
+  dcterms:title "JSON schema (JSON format) distribution for SPATEM v2.3.1"@en ;
+  prof:hasRole role:schema ;
+  dcterms:conformsTo <https://json-schema.org/draft/2020-12/schema> ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/json/schema?format=json> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/json/schema?format=json> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/JSON> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/application/json> a dcterms:MediaType .
+<http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-json-schema-yaml>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/json/schema?format=yaml> ;
+  dcterms:description "Distribution of type JSON schema YAML for specification SPATEM v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/YAML> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/json/schema?format=yaml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/yaml> ;
+  dcterms:title "JSON schema (YAML format) distribution for SPATEM v2.3.1"@en ;
+  prof:hasRole role:schema ;
+  dcterms:conformsTo <https://json-schema.org/draft/2020-12/schema> ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/json/schema?format=yaml> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/json/schema?format=yaml> a foaf:Document .
+<http://publications.europa.eu/resource/authority/file-type/YAML> a dcterms:FileFormat, dcterms:MediaTypeOrExtent .
+<https://www.iana.org/assignments/media-types/application/yaml> a dcterms:MediaType .
+<http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-oas-json>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/openapi?format=json> ;
+  dcterms:description "Distribution of type OpenAPI (JSON syntax) for specification SPATEM v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/JSON> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/openapi?format=json> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> ;
+  dcterms:title "OpenAPI schema JSON distribution for SPATEM v2.3.1"@en ;
+  prof:hasRole role:schema ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/openapi?format=json> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/openapi?format=json> a foaf:Document .
+<http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-oas-yaml>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/openapi?format=yaml> ;
+  dcterms:description "Distribution of OpenAPI (YAML syntax) for specification SPATEM v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/YAML> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/openapi?format=yaml> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/yaml> ;
+  dcterms:title "OpenAPI schema YAML distribution for SPATEM v2.3.1"@en ;
+  prof:hasRole role:schema ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/openapi?format=yaml> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/openapi?format=yaml> a foaf:Document .
+<http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-rdf-shacl-ttl>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rdf/shacl?format=ttl> ;
+  dcterms:description "Distribution of type RDF SHACL (TTL syntax) for specification SPATEM v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/RDF_TURTLE> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rdf/shacl?format=ttl> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+  dcterms:title "RDF SHACL TTL distribution for SPATEM v2.3.1"@en ;
+  prof:hasRole role:validation ;
+  dcterms:conformsTo sh: ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rdf/shacl?format=ttl> .
+
+<http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rdf/shacl?format=ttl> a foaf:Document .
+<http://localhost:4200/id/specification/spatem/2.3.1/distributions/message-spreadsheet>
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcat:accessURL <http://localhost:4200/api/element/Element_697cc41f-7507-4dee-b398-54f28a35a35f/export/spreadsheet> ;
+  dcterms:description "Distribution of type spreadsheet (Office Open XML format, .xlsx file) for specification SPATEM v2.3.1"@en ;
+  dcterms:format <http://publications.europa.eu/resource/authority/file-type/XLSX> ;
+  dcat:downloadURL <http://localhost:4200/api/element/Element_697cc41f-7507-4dee-b398-54f28a35a35f/export/spreadsheet> ;
+  dcat:mediaType <https://www.iana.org/assignments/media-types/application/vnd.ms-excel> ;
+  dcterms:title "Spreadsheet distribution for SPATEM v2.3.1"@en ;
+  prof:hasRole role:specification ;
+  prof:hasArtifact <http://localhost:4200/api/element/Element_697cc41f-7507-4dee-b398-54f28a35a35f/export/spreadsheet> .
+
+<http://localhost:4200/api/element/Element_697cc41f-7507-4dee-b398-54f28a35a35f/export/spreadsheet> a foaf:Document .
+<http://localhost:4200/spec-version-canvas-redirect/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9> a foaf:Document .
+<http://localhost:4200/specification/spatem> a foaf:Document .
+<http://purl.org/adms/assettype/InformationExchangePackageDescription>
+  a skos:Concept ;
+  skos:prefLabel "Information Exchange Package Description"@en .
+
+<http://www.w3.org/2001/XMLSchema> a dcterms:Standard .
+<https://json-schema.org/draft/2020-12/schema> a dcterms:Standard .
+sh: a dcterms:Standard .
+<https://w3id.org/rml/> a dcterms:Standard .
+_:genid1
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "RML XML mapping for SPATEM v2.3.1" ;
+  prof:hasRole role:mapping ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rml?format=ttl&queryLanguage=xml> ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rml?format=ttl&queryLanguage=xml> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rml?format=ttl&queryLanguage=xml> ;
+  dcterms:conformsTo <https://w3id.org/rml/> ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+_:genid2
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "RML JSON mapping for SPATEM v2.3.1" ;
+  prof:hasRole role:mapping ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rml?format=ttl&queryLanguage=json> ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rml?format=ttl&queryLanguage=json> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rml?format=ttl&queryLanguage=json> ;
+  dcterms:conformsTo <https://w3id.org/rml/> ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .
+
+_:genid3
+  a dcat:Distribution, prof:ResourceDescriptor ;
+  dcterms:title "RDF example for SPATEM v2.3.1" ;
+  prof:hasRole role:example ;
+  prof:hasArtifact <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rdf/example?format=ttl> ;
+  dcat:accessURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rdf/example?format=ttl> ;
+  dcat:downloadURL <http://localhost:4200/api/wizard/export/MessageModelVersion_5edadcdf-18ca-4723-b28b-edddb099bbc9/rdf/example?format=ttl> ;
+  dcterms:format <https://www.iana.org/assignments/media-types/text/turtle> .

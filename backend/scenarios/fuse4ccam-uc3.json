@@ -1,0 +1,765 @@
+{
+    "id": "fuse4ccam-uc3",
+    "name": "FUSE4CCAM UC3: microscopic traffic management",
+    "description": "Use case 3 of FUSE4CCAM: federated real-time traffic data from the Helmond and Hamburg pilot sites, feeding digital twins and traffic management. Only the participants and their link to UC3 come from the proposal: task T7.4 (DLR, AKKODIS, Monotch, TNO, Yunex), the pilot sites Helmond and Hamburg, and NDW as partner in the Helmond DITM data space. Everything else is made up for this simulation, including which datasets each party publishes, locations, formats, sizes and access terms; WP7 has not started. Entries are described in mobilityDCAT-AP 3.0.0 (draft), and each distribution points at its data standard in the Vocabulary Hub.",
+    "catalogExport": "catalog-exports/fuse4ccam-uc3.ttl",
+    "metadataLanguage": "en",
+    "catalogProfiles": [{
+        "profileId": "urn:vocabhub:profile:mobilitydcat-ap-3.0.0",
+        "title": "mobilityDCAT-AP 3.0.0 (draft)",
+        "version": "3.0.0",
+        "description": "The stable draft of mobilityDCAT-AP 3.0.0, extending DCAT-AP 3.0.1, whose shapes it imports and which are included here. Its release as a NAPCORE Recommendation is being voted on.",
+        "files": [
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_shapes.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_ranges.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_mdr-vocabularies.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/mobilitydcat-ap_3.0.0_deprecated-uris.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_shapes.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_range.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/dcat-ap_3.0.1_deprecateduris.ttl",
+            "catalog-profiles/mobilitydcat-ap-3.0.0/vocabulary-subset-fuse4ccam-uc3.ttl"
+        ],
+        "dataStandardPath": [
+            "http://www.w3.org/ns/dcat#distribution",
+            "http://purl.org/dc/terms/conformsTo"
+        ]
+    }],
+    "participants": [
+        {
+            "id": "monotch",
+            "name": "Monotch",
+            "bpn": "did:web:monotch.com",
+            "location": "Netherlands",
+            "domain": "Data platform",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "service-provider" },
+            "ontologies": ["ETSI C-ITS", "mobilityDCAT-AP"],
+            "dataCategories": ["C-ITS", "Real-time traffic"],
+            "formats": ["ASN.1 UPER", "JSON"],
+            "tags": ["T7.4 (UC3)", "DITM", "TLEX", "UDAP", "MobiliData"]
+        },
+        {
+            "id": "tno",
+            "name": "TNO",
+            "bpn": "did:web:tno.nl",
+            "location": "Helmond, Netherlands",
+            "domain": "Research",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "research" },
+            "ontologies": ["ASAM OpenDRIVE", "mobilityDCAT-AP"],
+            "dataCategories": ["Simulation", "Digital twin"],
+            "formats": ["XODR", "JSON"],
+            "tags": ["T7.4 (UC3)", "DITM"]
+        },
+        {
+            "id": "helmond",
+            "name": "Gemeente Helmond",
+            "bpn": "did:web:helmond.nl",
+            "location": "Helmond, Netherlands",
+            "domain": "Public authority",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "road-authority" },
+            "ontologies": ["DATEX II", "mobilityDCAT-AP"],
+            "dataCategories": ["Traffic", "Detectors"],
+            "formats": ["XML"],
+            "tags": ["UC3 pilot site", "DITM"]
+        },
+        {
+            "id": "ndw",
+            "name": "NDW",
+            "bpn": "did:web:ndw.nu",
+            "location": "Netherlands",
+            "domain": "National access point",
+            "roles": { "provider": true, "consumer": false },
+            "credentials": { "industry": "mobility", "orgRole": "road-authority" },
+            "ontologies": ["DATEX II", "mobilityDCAT-AP"],
+            "dataCategories": ["Traffic", "SRTI"],
+            "formats": ["XML"],
+            "tags": ["UC3 via DITM", "DITM"]
+        },
+        {
+            "id": "hamburg",
+            "name": "Freie und Hansestadt Hamburg",
+            "bpn": "did:web:hamburg.de",
+            "location": "Hamburg, Germany",
+            "domain": "Public authority",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "road-authority" },
+            "ontologies": ["OGC SensorThings API", "mobilityDCAT-AP"],
+            "dataCategories": ["Traffic", "Traffic lights"],
+            "formats": ["JSON"],
+            "tags": ["UC3 pilot site", "Urban Data Platform", "MITHOS"]
+        },
+        {
+            "id": "dlr",
+            "name": "DLR",
+            "bpn": "did:web:dlr.de",
+            "location": "Braunschweig, Germany",
+            "domain": "Research",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "research" },
+            "ontologies": ["ETSI C-ITS", "mobilityDCAT-AP"],
+            "dataCategories": ["Perception", "Trajectories"],
+            "formats": ["ASN.1 UPER", "JSON"],
+            "tags": ["T7.4 (UC3)", "MITHOS"]
+        },
+        {
+            "id": "yunex",
+            "name": "Yunex Traffic",
+            "bpn": "did:web:yunextraffic.com",
+            "location": "Munich, Germany",
+            "domain": "Traffic management",
+            "roles": { "provider": true, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "manufacturer" },
+            "ontologies": ["OCIT-C"],
+            "dataCategories": ["Signal control", "Detectors"],
+            "formats": ["XML"],
+            "tags": ["T7.4 (UC3)"]
+        },
+        {
+            "id": "akkodis",
+            "name": "AKKODIS",
+            "bpn": "did:web:akkodis.com",
+            "location": "France",
+            "domain": "Data space operator",
+            "roles": { "provider": false, "consumer": true },
+            "credentials": { "industry": "mobility", "orgRole": "service-provider" },
+            "ontologies": ["mobilityDCAT-AP"],
+            "dataCategories": ["Analytics"],
+            "formats": ["JSON"],
+            "tags": ["T7.4 (UC3)", "Data exchange platform"]
+        }
+    ],
+    "assets": [
+        {
+            "assetId": "monotch-spat-map-helmond",
+            "ownerId": "monotch",
+            "name": "Signal phase and timing with intersection maps, Helmond",
+            "description": "Live signal states (SPaT) and intersection topology (MAP) of the connected traffic lights in Helmond, streamed through TLEX.",
+            "fileName": "helmond-spat-map.uper",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "C-ITS", "lang": "en"}, {"value": "SPaT", "lang": "en"}, {"value": "MAP", "lang": "en"}, {"value": "traffic light", "lang": "en"}, {"value": "green wave", "lang": "en"}, {"value": "real-time", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/dynamic-traffic-signs-and-regulations"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "mobilitydcatap:intendedInformationService": [{"iri": "https://w3id.org/mobilitydcat-ap/intended-information-service/dynamic-information-service"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "SPATEM stream", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/monotch/helmond/spatem"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ETSI TS 103 301 SPATEM", "lang": "en"}],
+                                    "dcat:version": [{"value": "2.3.1"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "http://localhost:4200/id/specification/spatem/2.3.1"}]
+                        } },
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "MAPEM intersection topology", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/monotch/helmond/mapem"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ETSI TS 103 301 MAPEM", "lang": "en"}],
+                                    "dcat:version": [{"value": "2.3.1"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:etsi-ts-103-301-2.3.1"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "platform": "TLEX",
+                "intersections": 31,
+                "messageTypes": ["SPATEM", "MAPEM"],
+                "spatUpdateIntervalMs": 100,
+                "timingFields": ["minEndTime", "maxEndTime", "likelyTime", "confidence"]
+            }
+        },
+        {
+            "assetId": "monotch-srem-ssem-helmond",
+            "ownerId": "monotch",
+            "name": "Signal priority requests and responses, Helmond",
+            "description": "Priority requests from emergency vehicles and public transport to the Helmond traffic lights (SREM), with the controllers' answers (SSEM). Shows when priority was granted, rejected or overruled.",
+            "fileName": "helmond-srem-ssem.uper",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "C-ITS", "lang": "en"}, {"value": "SREM", "lang": "en"}, {"value": "SSEM", "lang": "en"}, {"value": "signal priority", "lang": "en"}, {"value": "emergency vehicle", "lang": "en"}, {"value": "public transport", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/dynamic-traffic-signs-and-regulations"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "mobilitydcatap:intendedInformationService": [{"iri": "https://w3id.org/mobilitydcat-ap/intended-information-service/dynamic-information-service"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "SREM and SSEM stream", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/monotch/helmond/srem-ssem"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ETSI TS 103 301 SREM and SSEM", "lang": "en"}],
+                                    "dcat:version": [{"value": "2.3.1"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:etsi-ts-103-301-2.3.1"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "platform": "TLEX",
+                "requestorRoles": ["ambulance", "fire", "police", "publicTransport"],
+                "responseStatuses": ["granted", "rejected", "watchOtherTraffic"],
+                "requestsPerDay": 420
+            }
+        },
+        {
+            "assetId": "monotch-cam-helmond",
+            "ownerId": "monotch",
+            "name": "Cooperative awareness probe data, Helmond corridor",
+            "description": "Position, speed and heading broadcast by connected vehicles on the Helmond corridor (CAM), as input for microscopic traffic analysis and digital twins.",
+            "fileName": "helmond-cam.uper",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "C-ITS", "lang": "en"}, {"value": "CAM", "lang": "en"}, {"value": "probe vehicles", "lang": "en"}, {"value": "floating car data", "lang": "en"}, {"value": "real-time", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/speed"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}, {"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/motorways"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "CAM stream", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/monotch/helmond/cam"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-fee-required"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ETSI EN 302 637-2 CAM", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.4.1"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:etsi-en-302-637-2-1.4.1"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "platform": "TLEX",
+                "messageType": "CAM",
+                "fields": ["stationID", "referencePosition", "speed", "heading", "vehicleRole"],
+                "pseudonymised": true
+            }
+        },
+        {
+            "assetId": "monotch-denm-nl",
+            "ownerId": "monotch",
+            "name": "Road hazard and event warnings, Netherlands",
+            "description": "Event warnings exchanged over C-ITS in the Netherlands (DENM), such as road works, stationary vehicles and an approaching emergency vehicle.",
+            "fileName": "nl-denm.uper",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "C-ITS", "lang": "en"}, {"value": "DENM", "lang": "en"}, {"value": "road works", "lang": "en"}, {"value": "emergency vehicle", "lang": "en"}, {"value": "hazard warning", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/accidents-and-incidents"}, {"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/short-term-road-works"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/motorways"}, {"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "mobilitydcatap:intendedInformationService": [{"iri": "https://w3id.org/mobilitydcat-ap/intended-information-service/dynamic-information-service"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "DENM stream", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/monotch/nl/denm"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ETSI EN 302 637-3 DENM", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.3.1"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:etsi-en-302-637-3-1.3.1"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "platform": "UDAP",
+                "messageType": "DENM",
+                "causeCodes": ["roadworks", "stationaryVehicle", "emergencyVehicleApproaching", "dangerousEndOfQueue"]
+            }
+        },
+        {
+            "assetId": "helmond-detectors",
+            "ownerId": "helmond",
+            "name": "Intersection detector counts, Helmond",
+            "description": "Vehicle counts and occupancy from the induction loops at the signalised intersections in Helmond, aggregated per minute.",
+            "fileName": "helmond-detectors.xml",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "induction loops", "lang": "en"}, {"value": "traffic counts", "lang": "en"}, {"value": "occupancy", "lang": "en"}, {"value": "intersection", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/traffic-volume"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Measured data, DATEX II", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/helmond/detectors"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/XML"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/datex-II"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "DATEX II", "lang": "en"}],
+                                    "dcat:version": [{"value": "3.3"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:datex-ii-3.3"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "intersections": 31,
+                "detectors": 412,
+                "aggregationSeconds": 60,
+                "measures": ["vehicleFlow", "occupancy"]
+            }
+        },
+        {
+            "assetId": "ndw-speed-flow",
+            "ownerId": "ndw",
+            "name": "Traffic speed and flow, national road network",
+            "description": "Speed and flow per measurement site on the Dutch main and regional roads, from the national access point.",
+            "fileName": "ndw-trafficspeed.xml",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "traffic speed", "lang": "en"}, {"value": "traffic flow", "lang": "en"}, {"value": "RTTI", "lang": "en"}, {"value": "national access point", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/speed"}, {"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/traffic-volume"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/motorways"}, {"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/ten-network"}],
+                    "mobilitydcatap:intendedInformationService": [{"iri": "https://w3id.org/mobilitydcat-ap/intended-information-service/dynamic-information-service"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-01-01", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Measured data, DATEX II", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/ndw/trafficspeed"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/XML"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/datex-II"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "DATEX II", "lang": "en"}],
+                                    "dcat:version": [{"value": "3.3"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:datex-ii-3.3"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "measurementSites": 24000,
+                "aggregationSeconds": 60,
+                "measures": ["averageVehicleSpeed", "vehicleFlow"]
+            }
+        },
+        {
+            "assetId": "ndw-srti",
+            "ownerId": "ndw",
+            "name": "Safety-related traffic information, Netherlands",
+            "description": "Safety-related traffic events on Dutch roads (SRTI), such as wrong-way drivers, obstacles and unprotected accident areas, from the national access point.",
+            "fileName": "ndw-srti.xml",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "SRTI", "lang": "en"}, {"value": "safety", "lang": "en"}, {"value": "incidents", "lang": "en"}, {"value": "national access point", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/accidents-and-incidents"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/motorways"}, {"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/ten-network"}],
+                    "mobilitydcatap:intendedInformationService": [{"iri": "https://w3id.org/mobilitydcat-ap/intended-information-service/dynamic-information-service"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-01-01", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Situation publication, DATEX II", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/ndw/srti"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/XML"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/datex-II"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "DATEX II", "lang": "en"}],
+                                    "dcat:version": [{"value": "3.3"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:datex-ii-3.3"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "srtiCategories": ["wrongWayDriver", "obstacleOnRoad", "unprotectedAccidentArea", "shortTermRoadWorks", "reducedVisibility"]
+            }
+        },
+        {
+            "assetId": "hamburg-signal-forecasts",
+            "ownerId": "hamburg",
+            "name": "Traffic light state forecasts, Hamburg",
+            "description": "Current and forecast signal states of Hamburg's traffic lights, published on the Urban Data Platform as OGC SensorThings observations.",
+            "fileName": "hamburg-signal-forecasts.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "traffic light", "lang": "en"}, {"value": "signal forecast", "lang": "en"}, {"value": "SensorThings", "lang": "en"}, {"value": "Urban Data Platform", "lang": "en"}, {"value": "real-time", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/dynamic-traffic-signs-and-regulations"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "mobilitydcatap:intendedInformationService": [{"iri": "https://w3id.org/mobilitydcat-ap/intended-information-service/dynamic-information-service"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/DEU"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Observations, OGC SensorThings API", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/hamburg/sta/signal-forecasts"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/JSON"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "OGC SensorThings API", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.1"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:ogc-sensorthings-1.1"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/DLDE_BY_2_0"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "platform": "Urban Data Platform",
+                "signalisedIntersections": 1800,
+                "observedProperties": ["signalState", "forecastStateChange"]
+            }
+        },
+        {
+            "assetId": "hamburg-traffic-counts",
+            "ownerId": "hamburg",
+            "name": "Traffic counts, Hamburg",
+            "description": "Vehicle and cyclist counts from detectors across Hamburg, published on the Urban Data Platform as OGC SensorThings observations.",
+            "fileName": "hamburg-traffic-counts.json",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "traffic counts", "lang": "en"}, {"value": "SensorThings", "lang": "en"}, {"value": "Urban Data Platform", "lang": "en"}, {"value": "cyclists", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/traffic-volume"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/DEU"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-01-01", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Observations, OGC SensorThings API", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/hamburg/sta/traffic-counts"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/JSON"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "OGC SensorThings API", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.1"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:ogc-sensorthings-1.1"}],
+                            "dct:license": [{"iri": "http://publications.europa.eu/resource/authority/licence/DLDE_BY_2_0"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "platform": "Urban Data Platform",
+                "countingStations": 650,
+                "aggregationMinutes": 15,
+                "observedProperties": ["vehicleCount", "cyclistCount"]
+            }
+        },
+        {
+            "assetId": "yunex-signal-plans-hamburg",
+            "ownerId": "yunex",
+            "name": "Signal programmes and controller events, Hamburg",
+            "description": "Signal programmes, detector events and controller status from traffic controllers in Hamburg, exchanged with the central traffic computer over OCIT.",
+            "fileName": "hamburg-ocit.xml",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "traffic controller", "lang": "en"}, {"value": "signal programme", "lang": "en"}, {"value": "OCIT", "lang": "en"}, {"value": "detectors", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/dynamic-traffic-signs-and-regulations"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/DEU"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Controller data, OCIT-C", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/yunex/hamburg/ocit"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/XML"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-fee-required"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/ocit-c"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "OCIT-C", "lang": "en"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:ocit-c"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "controllers": 120,
+                "dataTypes": ["signalProgramme", "detectorEvent", "controllerStatus", "publicTransportTelegram"]
+            }
+        },
+        {
+            "assetId": "dlr-trajectories-hamburg",
+            "ownerId": "dlr",
+            "name": "Road user trajectories from roadside perception, Hamburg",
+            "description": "Trajectories of vehicles, cyclists and pedestrians at an instrumented Hamburg intersection, detected by roadside cameras and radar and shared as collective perception messages (CPM).",
+            "fileName": "hamburg-cpm.uper",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "C-ITS", "lang": "en"}, {"value": "CPM", "lang": "en"}, {"value": "trajectories", "lang": "en"}, {"value": "roadside perception", "lang": "en"}, {"value": "vulnerable road users", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/real-time-traffic-data"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}],
+                    "mobilitydcatap:georeferencingMethod": [{"iri": "https://w3id.org/mobilitydcat-ap/georeferencing-method/geocoordinates"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/DEU"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-03-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "CPM stream", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/dlr/hamburg/cpm"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/BIN"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/c-its"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ETSI TS 103 324 CPM", "lang": "en"}],
+                                    "dcat:version": [{"value": "2.1.1"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:etsi-ts-103-324-2.1.1"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "project": "MITHOS",
+                "sensors": ["camera", "radar"],
+                "objectClasses": ["car", "truck", "cyclist", "pedestrian"],
+                "updateIntervalMs": 100
+            }
+        },
+        {
+            "assetId": "tno-microsim-helmond",
+            "ownerId": "tno",
+            "name": "Microscopic traffic simulation model, Helmond corridor",
+            "description": "Calibrated microscopic simulation of the Helmond corridor: road network, signal control and demand, used as the digital twin in which traffic management strategies for mixed CCAM traffic are tested.",
+            "fileName": "helmond-microsim.zip",
+            "policyId": "sys-open",
+            "dcatFields": {
+                "record": {
+                    "dcat:keyword": [{"value": "microscopic simulation", "lang": "en"}, {"value": "digital twin", "lang": "en"}, {"value": "traffic management", "lang": "en"}, {"value": "mixed traffic", "lang": "en"}],
+                    "dcat:theme": [{"iri": "http://publications.europa.eu/resource/authority/data-theme/TRAN"}, {"iri": "http://publications.europa.eu/resource/authority/data-theme/TECH"}],
+                    "mobilitydcatap:mobilityTheme": [{"iri": "https://w3id.org/mobilitydcat-ap/mobility-theme/other"}],
+                    "mobilitydcatap:transportMode": [{"iri": "https://w3id.org/mobilitydcat-ap/transport-mode/car"}],
+                    "mobilitydcatap:networkCoverage": [{"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/urban-and-local-roads"}, {"iri": "https://w3id.org/mobilitydcat-ap/network-coverage/motorways"}],
+                    "dct:accrualPeriodicity": [{"iri": "http://publications.europa.eu/resource/authority/frequency/QUARTERLY"}],
+                    "dct:spatial": [{"iri": "http://publications.europa.eu/resource/authority/country/NLD"}],
+                    "dct:temporal": [
+                        { "type": "dct:PeriodOfTime", "fields": {
+                            "dcat:startDate": [{"value": "2027-06-01", "datatype": "xsd:date"}],
+                            "dcat:endDate": [{"value": "2029-03-31", "datatype": "xsd:date"}]
+                        } }
+                    ],
+                    "dcat:distribution": [
+                        { "type": "dcat:Distribution", "fields": {
+                            "dct:title": [{"value": "Road network, ASAM OpenDRIVE", "lang": "en"}],
+                            "dcat:accessURL": [{"iri": "https://data.sim.local/tno/helmond-microsim.xodr"}],
+                            "dct:format": [{"iri": "http://publications.europa.eu/resource/authority/file-type/XML"}],
+                            "dct:rights": [
+                                { "type": "dct:RightsStatement", "fields": {
+                                    "dct:type": [{"iri": "https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement-free-of-charge"}]
+                                } }
+                            ],
+                            "mobilitydcatap:mobilityDataStandard": [
+                                {"iri": "https://w3id.org/mobilitydcat-ap/mobility-data-standard/other"},
+                                { "type": "mobilitydcatap:MobilityDataStandard", "fields": {
+                                    "dct:title": [{"value": "ASAM OpenDRIVE", "lang": "en"}],
+                                    "dcat:version": [{"value": "1.7"}]
+                                } }
+                            ],
+                            "dct:conformsTo": [{"iri": "urn:vocabhub:profile:asam-opendrive-1.7"}]
+                        } }
+                    ]
+                }
+            },
+            "content": {
+                "lengthKm": 14.5,
+                "signalisedIntersections": 31,
+                "inputs": ["monotch-spat-map-helmond", "monotch-cam-helmond", "helmond-detectors"],
+                "kpis": ["travelTime", "stops", "co2"]
+            }
+        }
+    ]
+}
