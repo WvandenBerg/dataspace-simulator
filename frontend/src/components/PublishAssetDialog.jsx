@@ -5,7 +5,7 @@ import {
     X, Upload, FileJson, FileText, CheckCircle, AlertCircle,
     Globe, Users, Factory, Briefcase, Plus, XCircle, Info
 } from 'lucide-react';
-import { BASIC_PATHS, STATUSES, flattenFields, shortIri, valuesAt } from './catalogFields';
+import { BASIC_PATHS, STATUSES, flattenFields, labelWithin, nodesAt, repeatableNodes, shortIri, valuesAt } from './catalogFields';
 import { INDUSTRIES, ORG_ROLES, credentialOptions } from './credentials';
 
 const API_BASE = '/api';
@@ -21,7 +21,8 @@ const textOf = (f, values) => {
     return isMulti(f) ? texts.join(', ') : (texts[0] || '');
 };
 
-// One node per nested path, so two distributions come back as one.
+// One node per nested path, except that each node of a repeatable top-level field, such as each
+// distribution, is its own group in the form and comes back as a node of its own.
 const LANG_STRING = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString';
 const literalOf = (f, text, language) => (f.datatypeIri && f.datatypeIri !== LANG_STRING
     ? { value: text, datatype: f.datatypeIri }
@@ -37,13 +38,19 @@ const buildRecord = (fields, entries, language) => {
         let node = record;
         f.path.slice(0, -1).forEach((p, i) => {
             const type = f.nodeTypes[i];
-            if (!node[p]) node[p] = [{ ...(type ? { type } : {}), fields: {} }];
-            node = node[p][0].fields;
+            const at = i === 0 ? (entry.group ?? 0) : 0;
+            node[p] = node[p] || [];
+            node[p][at] = node[p][at] || { ...(type ? { type } : {}), fields: {} };
+            node = node[p][at].fields;
         });
         node[f.path[f.path.length - 1]] = texts.map((t) => (asIri(f, t) ? { iri: t } : literalOf(f, t, language)));
     }
+    // A removed or empty group leaves a hole.
+    for (const p of Object.keys(record)) record[p] = record[p].filter(Boolean);
     return record;
 };
+
+const entryId = (key, group) => (group === undefined ? key : `${key}@${group}`);
 
 /* ── policy definitions ─────────────────────────────────────────── */
 const POLICIES = [
@@ -124,9 +131,11 @@ export default function PublishAssetDialog({
     const [modelError, setModelError] = useState(null);
     const [stored, setStored] = useState(null);
     const [entries, setEntries] = useState([]);
+    // The nodes of repeatable top-level fields in the form, as { path, n }.
+    const [groups, setGroups] = useState([]);
     // Top-level paths the user changed; the rest of a stored record is written back as it was.
     const [touched, setTouched] = useState(new Set());
-    const [picker, setPicker] = useState('');
+    const [picker, setPicker] = useState({});
 
     const [publishing, setPublishing] = useState(false);
     const [error, setError] = useState(null);
@@ -159,7 +168,7 @@ export default function PublishAssetDialog({
             setFile(null); setTitle(''); setDescription('');
             setSelectedPolicy('sys-open'); setSelectedValues([]);
         }
-        setEntries([]); setTouched(new Set()); setPicker('');
+        setEntries([]); setGroups([]); setTouched(new Set()); setPicker({});
         setError(null); setDone(false); setPublishing(false);
     }, [isOpen, mode, initialAsset]);
 
@@ -175,9 +184,25 @@ export default function PublishAssetDialog({
         ]).then(([m, record]) => {
             if (cancelled) return;
             setModel(m); setStored(record); setModelError(null);
-            setEntries(formFields(m)
-                .filter((f) => f.status === 'mandatory' || valuesAt(record, f.path).length > 0)
-                .map((f) => ({ key: f.key, text: textOf(f, valuesAt(record, f.path)) })));
+            const repeatable = repeatableNodes(m.fields);
+            const all = formFields(m);
+            const filled = (rec, group, fs) => fs
+                .filter((f) => f.status === 'mandatory' || valuesAt(rec, f.path).length > 0)
+                .map((f) => ({ id: entryId(f.key, group), key: f.key, group, text: textOf(f, valuesAt(rec, f.path)) }));
+            const loaded = filled(record, undefined, all.filter((f) => !repeatable.some((g) => g.path === f.path[0])));
+            const loadedGroups = [];
+            for (const g of repeatable) {
+                const nodes = nodesAt(record, g.path);
+                const own = all.filter((f) => f.path[0] === g.path);
+                const required = own.some((f) => f.status === 'mandatory');
+                const recs = nodes.length > 0 ? nodes.map((node) => ({ [g.path]: [node] })) : (required ? [{}] : []);
+                recs.forEach((rec, n) => {
+                    loadedGroups.push({ path: g.path, n });
+                    loaded.push(...filled(rec, n, own));
+                });
+            }
+            setEntries(loaded);
+            setGroups(loadedGroups);
         }).catch((err) => {
             if (cancelled) return;
             setModel(null); setStored(null); setModelError(err.message);
@@ -215,23 +240,45 @@ export default function PublishAssetDialog({
     };
 
     const fields = formFields(model);
+    const repeatable = model ? repeatableNodes(model.fields) : [];
+    const groupOf = (f) => repeatable.find((g) => g.path === f.path[0]);
 
+    const touchPath = (path) => setTouched((prev) => new Set(prev).add(path));
     const touch = (key) => {
         const path = fields.find((f) => f.key === key)?.path[0];
-        if (path) setTouched((prev) => new Set(prev).add(path));
+        if (path) touchPath(path);
     };
-    const setEntryText = (key, text) => {
-        setEntries((prev) => prev.map((e) => (e.key === key ? { ...e, text } : e)));
-        touch(key);
+    const setEntryText = (id, text) => {
+        const entry = entries.find((e) => e.id === id);
+        setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, text } : e)));
+        if (entry) touch(entry.key);
     };
-    const addEntry = (key) => {
-        if (!key || entries.some((e) => e.key === key)) return;
-        setEntries((prev) => [...prev, { key, text: '' }]);
-        setPicker('');
+    // A field of a repeatable node picked while there is none yet starts its first one.
+    const addEntry = (key, group) => {
+        const g = groupOf(fields.find((f) => f.key === key) || { path: [] });
+        const n = g && group === undefined ? 0 : group;
+        if (!key || entries.some((e) => e.id === entryId(key, n))) return;
+        if (g && !groups.some((x) => x.path === g.path && x.n === n)) setGroups((prev) => [...prev, { path: g.path, n }]);
+        setEntries((prev) => [...prev, { id: entryId(key, n), key, group: n, text: '' }]);
+        setPicker({});
     };
-    const removeEntry = (key) => {
-        setEntries((prev) => prev.filter((e) => e.key !== key));
-        touch(key);
+    const removeEntry = (id) => {
+        const entry = entries.find((e) => e.id === id);
+        setEntries((prev) => prev.filter((e) => e.id !== id));
+        if (entry) touch(entry.key);
+    };
+    const addGroup = (g) => {
+        const n = Math.max(-1, ...groups.filter((x) => x.path === g.path).map((x) => x.n)) + 1;
+        setGroups((prev) => [...prev, { path: g.path, n }]);
+        setEntries((prev) => [...prev, ...fields
+            .filter((f) => f.path[0] === g.path && f.status === 'mandatory')
+            .map((f) => ({ id: entryId(f.key, n), key: f.key, group: n, text: '' }))]);
+        touchPath(g.path);
+    };
+    const removeGroup = (g, n) => {
+        setGroups((prev) => prev.filter((x) => !(x.path === g.path && x.n === n)));
+        setEntries((prev) => prev.filter((e) => !(e.group === n && fields.find((f) => f.key === e.key)?.path[0] === g.path)));
+        touchPath(g.path);
     };
 
     const buildDcatPayload = () => {
@@ -313,9 +360,80 @@ export default function PublishAssetDialog({
 
     if (!isOpen) return null;
 
-    const usedKeys = new Set(entries.map(e => e.key));
-    const available = fields.filter(f => !usedKeys.has(f.key));
+    const groupEntries = (g, n) => entries.filter((e) => e.group === n && fields.find((f) => f.key === e.key)?.path[0] === g.path);
+    const ungrouped = entries.filter((e) => e.group === undefined);
+    // Fields of a repeatable node that the form already holds are added from within that node instead.
+    const available = fields.filter((f) => {
+        const g = groupOf(f);
+        return g ? !groups.some((x) => x.path === g.path) : !ungrouped.some((e) => e.key === f.key);
+    });
     const activePol = POLICIES.find(p => p.id === selectedPolicy);
+
+    const renderEntry = (e, label) => {
+        const f = fields.find(x => x.key === e.key);
+        if (!f) return null;
+        const notIri = f.kind === 'iri' && (isMulti(f) ? e.text.split(',') : [e.text])
+            .map(t => t.trim()).some(t => t && !IRI_PATTERN.test(t));
+        const placeholder = [f.kind === 'iri' ? 'https://…' : f.datatype, isMulti(f) ? 'comma-separated' : null].filter(Boolean).join(', ');
+        return (
+            <div key={e.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <label title={f.description || f.curie} style={{ color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>
+                        {label ?? f.label}{f.status === 'mandatory' ? ' *' : ''}
+                    </label>
+                    {f.status !== 'mandatory' && (
+                        <button type="button" onClick={() => removeEntry(e.id)}
+                            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 2px' }}>
+                            <XCircle size={13} />
+                        </button>
+                    )}
+                </div>
+                {f.in ? (
+                    <select value={e.text} onChange={ev => setEntryText(e.id, ev.target.value)} style={inp}>
+                        <option value="">Choose…</option>
+                        {f.in.map(v => <option key={v} value={v}>{shortIri(v)}</option>)}
+                    </select>
+                ) : (
+                    <input
+                        type="text"
+                        value={e.text}
+                        onChange={ev => setEntryText(e.id, ev.target.value)}
+                        placeholder={placeholder}
+                        style={inp}
+                        spellCheck={false}
+                    />
+                )}
+                {notIri && <div style={{ color: '#d97706', fontSize: '0.72rem', marginTop: '3px' }}>Needs a full IRI, such as https://…; other text is dropped.</div>}
+            </div>
+        );
+    };
+
+    const renderPicker = (slot, options, onAdd, labelOf) => options.length > 0 && (
+        <div style={{ display: 'flex', gap: '8px' }}>
+            <select
+                value={picker[slot] || ''}
+                onChange={(e) => setPicker((prev) => ({ ...prev, [slot]: e.target.value }))}
+                style={{ ...inp, flex: 1 }}
+            >
+                <option value="">Select metadata field...</option>
+                {STATUSES.map(s => {
+                    const group = options.filter(f => f.status === s);
+                    return group.length > 0 && (
+                        <optgroup key={s} label={s[0].toUpperCase() + s.slice(1)}>
+                            {group.map(f => <option key={f.key} value={f.key}>{labelOf(f)}</option>)}
+                        </optgroup>
+                    );
+                })}
+            </select>
+            <button
+                type="button"
+                onClick={() => onAdd(picker[slot])}
+                style={{ padding: '0 12px', borderRadius: '7px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.83rem' }}
+            >
+                <Plus size={14} /> Add
+            </button>
+        </div>
+    );
 
     // Build the options list for the active policy constraint
     const getConstraintOptions = () => {
@@ -479,74 +597,43 @@ export default function PublishAssetDialog({
                                     <AlertCircle size={12} /> Catalog profile unavailable ({modelError}){mode === 'edit' ? ', so the metadata stays as it is' : ''}
                                 </div>
                             )}
-                            {entries.length > 0 && (
+                            {ungrouped.length > 0 && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '10px' }}>
-                                    {entries.map(e => {
-                                        const f = fields.find(x => x.key === e.key);
-                                        if (!f) return null;
-                                        const notIri = f.kind === 'iri' && (isMulti(f) ? e.text.split(',') : [e.text])
-                                            .map(t => t.trim()).some(t => t && !IRI_PATTERN.test(t));
-                                        const placeholder = [f.kind === 'iri' ? 'https://…' : f.datatype, isMulti(f) ? 'comma-separated' : null].filter(Boolean).join(', ');
-                                        return (
-                                            <div key={e.key}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                                                    <label title={f.description || f.curie} style={{ color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>
-                                                        {f.label}{f.status === 'mandatory' ? ' *' : ''}
-                                                    </label>
-                                                    {f.status !== 'mandatory' && (
-                                                        <button type="button" onClick={() => removeEntry(e.key)}
-                                                            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 2px' }}>
-                                                            <XCircle size={13} />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                {f.in ? (
-                                                    <select value={e.text} onChange={ev => setEntryText(e.key, ev.target.value)} style={inp}>
-                                                        <option value="">Choose…</option>
-                                                        {f.in.map(v => <option key={v} value={v}>{shortIri(v)}</option>)}
-                                                    </select>
-                                                ) : (
-                                                    <input
-                                                        type="text"
-                                                        value={e.text}
-                                                        onChange={ev => setEntryText(e.key, ev.target.value)}
-                                                        placeholder={placeholder}
-                                                        style={inp}
-                                                        spellCheck={false}
-                                                    />
-                                                )}
-                                                {notIri && <div style={{ color: '#d97706', fontSize: '0.72rem', marginTop: '3px' }}>Needs a full IRI, such as https://…; other text is dropped.</div>}
-                                            </div>
-                                        );
-                                    })}
+                                    {ungrouped.map(e => renderEntry(e))}
                                 </div>
                             )}
-                            {available.length > 0 && (
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <select
-                                        value={picker}
-                                        onChange={(e) => setPicker(e.target.value)}
-                                        style={{ ...inp, flex: 1 }}
-                                    >
-                                        <option value="">Select metadata field...</option>
-                                        {STATUSES.map(s => {
-                                            const group = available.filter(f => f.status === s);
-                                            return group.length > 0 && (
-                                                <optgroup key={s} label={s[0].toUpperCase() + s.slice(1)}>
-                                                    {group.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
-                                                </optgroup>
+                            {repeatable.map(g => {
+                                const mine = groups.filter(x => x.path === g.path);
+                                if (mine.length === 0) return null;
+                                return (
+                                    <div key={g.path} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '10px' }}>
+                                        {mine.map(({ n }, i) => {
+                                            const held = groupEntries(g, n);
+                                            const options = fields.filter(f => f.path[0] === g.path && !held.some(e => e.key === f.key));
+                                            return (
+                                                <div key={n} style={{ padding: '10px', border: '1px solid var(--border-subtle)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ ...lbl, marginBottom: 0 }}>{mine.length > 1 ? `${g.label} ${i + 1}` : g.label}</span>
+                                                        {(g.status !== 'mandatory' || mine.length > 1) && (
+                                                            <button type="button" title={`Remove this ${g.label}`} onClick={() => removeGroup(g, n)}
+                                                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 2px' }}>
+                                                                <XCircle size={13} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {held.map(e => renderEntry(e, labelWithin(g, fields.find(f => f.key === e.key))))}
+                                                    {renderPicker(`${g.path}@${n}`, options, key => addEntry(key, n), f => labelWithin(g, f))}
+                                                </div>
                                             );
                                         })}
-                                    </select>
-                                    <button
-                                        type="button"
-                                        onClick={() => addEntry(picker)}
-                                        style={{ padding: '0 12px', borderRadius: '7px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.83rem' }}
-                                    >
-                                        <Plus size={14} /> Add
-                                    </button>
-                                </div>
-                            )}
+                                        <button type="button" onClick={() => addGroup(g)}
+                                            style={{ alignSelf: 'flex-start', padding: '6px 12px', borderRadius: '7px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.83rem' }}>
+                                            <Plus size={14} /> Add another {g.label}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                            {renderPicker('', available, key => addEntry(key), f => f.label)}
                         </div>
 
                         {/* Error */}

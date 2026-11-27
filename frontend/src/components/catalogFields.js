@@ -35,6 +35,15 @@ export const BASIC_PATHS = [
     'http://purl.org/dc/terms/publisher',
 ];
 
+// Top-level nodes a record may hold more than once, such as a dataset's distributions. Each is
+// shown and edited on its own, so values of different distributions are not run together.
+export const repeatableNodes = (fields) => fields.filter((f) => f.kind === 'node' && (f.max == null || f.max > 1));
+
+export const nodesAt = (record, path) => (record?.[path] || []).filter((v) => v.fields);
+
+// A field's label below its group, without the group's own label in front.
+export const labelWithin = (group, f) => f.label.slice(group.label.length + 3);
+
 // The IRIs and literals found by following a path of properties down through nested nodes.
 export const valuesAt = (record, path) => {
     let nodes = [record || {}];
